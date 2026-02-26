@@ -137,26 +137,68 @@
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 – AUTH-04 | Phase 1 | Pending |
-| USER-01 – USER-03 | Phase 1 | Pending |
-| MASTER-01 – MASTER-04 | Phase 1 | Pending |
-| AUDIT-01 – AUDIT-02 | Phase 1 | Pending |
-| EMP-01 – EMP-10 | Phase 2 | Pending |
-| ATT-01 – ATT-08 | Phase 3 | Pending |
-| LEAVE-01 – LEAVE-06 | Phase 3 | Pending |
-| PAY-01 – PAY-09 | Phase 4 | Pending |
-| REC-01 – REC-07 | Phase 5 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| USER-01 | Phase 1 | Pending |
+| USER-02 | Phase 1 | Pending |
+| USER-03 | Phase 1 | Pending |
+| MASTER-01 | Phase 1 | Pending |
+| MASTER-02 | Phase 1 | Pending |
+| MASTER-03 | Phase 1 | Pending |
+| MASTER-04 | Phase 1 | Pending |
+| AUDIT-01 | Phase 1 | Pending |
+| AUDIT-02 | Phase 1 | Pending |
 | DASH-01 | Phase 1 | Pending |
+| EMP-01 | Phase 2 | Pending |
+| EMP-02 | Phase 2 | Pending |
+| EMP-03 | Phase 2 | Pending |
+| EMP-04 | Phase 2 | Pending |
+| EMP-05 | Phase 2 | Pending |
+| EMP-06 | Phase 2 | Pending |
+| EMP-07 | Phase 2 | Pending |
+| EMP-08 | Phase 2 | Pending |
+| EMP-09 | Phase 2 | Pending |
+| EMP-10 | Phase 2 | Pending |
+| ATT-01 | Phase 3 | Pending |
+| ATT-02 | Phase 3 | Pending |
+| ATT-03 | Phase 3 | Pending |
+| ATT-04 | Phase 3 | Pending |
+| ATT-05 | Phase 3 | Pending |
+| ATT-06 | Phase 3 | Pending |
+| ATT-07 | Phase 3 | Pending |
+| ATT-08 | Phase 3 | Pending |
+| LEAVE-01 | Phase 3 | Pending |
+| LEAVE-02 | Phase 3 | Pending |
+| LEAVE-03 | Phase 3 | Pending |
+| LEAVE-04 | Phase 3 | Pending |
+| LEAVE-05 | Phase 3 | Pending |
+| LEAVE-06 | Phase 3 | Pending |
+| PAY-01 | Phase 4 | Pending |
+| PAY-02 | Phase 4 | Pending |
+| PAY-03 | Phase 4 | Pending |
+| PAY-04 | Phase 4 | Pending |
+| PAY-05 | Phase 4 | Pending |
+| PAY-06 | Phase 4 | Pending |
+| PAY-07 | Phase 4 | Pending |
+| PAY-08 | Phase 4 | Pending |
+| PAY-09 | Phase 4 | Pending |
+| REC-01 | Phase 5 | Pending |
+| REC-02 | Phase 5 | Pending |
+| REC-03 | Phase 5 | Pending |
+| REC-04 | Phase 5 | Pending |
+| REC-05 | Phase 5 | Pending |
+| REC-06 | Phase 5 | Pending |
+| REC-07 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 55 total
-- Mapped to phases: 55
-- Unmapped: 0 ✓
+- v1 requirements: 54 total
+- Mapped to phases: 54
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 after roadmap creation*
