@@ -10,7 +10,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | Foundation | ◐ In Progress (2/9 plans) | 14 |
+| 1 | Foundation | ◐ In Progress (4/9 plans) | 14 |
 | 2 | Employee Data Management | ○ Pending | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
@@ -21,9 +21,9 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 Phase: 1 of 5 (Foundation)
 Plan: 4 of 9
 Status: In progress
-Last activity: 2026-02-27 - Completed 01-04-PLAN.md (Audit Infrastructure)
+Last activity: 2026-02-27 - Completed 01-03-PLAN.md (Dashboard Layout)
 
-Progress: [██░░░░░░░] 2/9 plans (~22%)
+Progress: [████░░░░░] 4/9 plans (~44%)
 
 ## Decisions
 
@@ -36,6 +36,12 @@ Progress: [██░░░░░░░] 2/9 plans (~22%)
 | 5 | Zod 4.x with @hookform/resolvers v5 | Latest versions, compatible | 01-01 |
 | 6 | Cast JSON fields to Prisma InputJsonValue for Prisma 6 compatibility | Record<string, unknown> not assignable to Prisma 6 JSON types | 01-04 |
 | 7 | Explicit audit logging via helper, not middleware | Prevents infinite recursion; service functions call createAuditLog explicitly | 01-04 |
+| 8 | Auth config split: auth.config.ts (Edge) and auth.ts (Node) | Middleware runs in Edge runtime which cannot use Prisma/bcrypt | 01-02 |
+| 9 | 8-hour JWT maxAge for work-day sessions | Matches typical work day; balances security and UX | 01-02 |
+| 10 | Generic login error message for all failures | Security: never reveal whether email exists in system | 01-02 |
+| 11 | SessionProvider as separate client component for dashboard routes only | Keeps root layout clean; session context only where needed | 01-03 |
+| 12 | Dark sidebar theme (slate-800/900) for visual distinction | Contrasts with white content area for clear navigation affordance | 01-03 |
+| 13 | DataTable defaults to 25 rows matching DEFAULT_PAGE_SIZE | Consistent with constants.ts page size convention | 01-03 |
 
 ## Blockers / Concerns
 
@@ -44,8 +50,8 @@ Progress: [██░░░░░░░] 2/9 plans (~22%)
 
 ## Session Continuity
 
-Last session: 2026-02-27T16:25:30Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-02-27T16:28:34Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
 
 ## Notes
@@ -58,4 +64,4 @@ Resume file: None
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
 
 ---
-*Last updated: 2026-02-27T16:25:30Z*
+*Last updated: 2026-02-27T16:28:34Z*
