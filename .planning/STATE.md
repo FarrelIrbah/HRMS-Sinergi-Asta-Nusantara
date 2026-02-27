@@ -10,7 +10,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | Foundation | ◐ In Progress (4/9 plans) | 14 |
+| 1 | Foundation | ◐ In Progress (8/9 plans) | 14 |
 | 2 | Employee Data Management | ○ Pending | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 1 of 5 (Foundation)
-Plan: 4 of 9
+Plan: 8 of 9
 Status: In progress
-Last activity: 2026-02-27 - Completed 01-03-PLAN.md (Dashboard Layout)
+Last activity: 2026-02-28 - Completed 01-08-PLAN.md (Audit Log Viewer)
 
-Progress: [████░░░░░] 4/9 plans (~44%)
+Progress: [████████░] 8/9 plans (~89%)
 
 ## Decisions
 
@@ -42,6 +42,15 @@ Progress: [████░░░░░] 4/9 plans (~44%)
 | 11 | SessionProvider as separate client component for dashboard routes only | Keeps root layout clean; session context only where needed | 01-03 |
 | 12 | Dark sidebar theme (slate-800/900) for visual distinction | Contrasts with white content area for clear navigation affordance | 01-03 |
 | 13 | DataTable defaults to 25 rows matching DEFAULT_PAGE_SIZE | Consistent with constants.ts page size convention | 01-03 |
+| 14 | Zod 4 uses `error` not `errorMap` for nativeEnum; `issues` not `errors` on ZodError | Zod 4 breaking API change from Zod 3 | 01-05 |
+| 15 | Separate create/edit forms in single dialog component | Avoids optional password complexity in shared schema | 01-05 |
+| 16 | requireSuperAdmin() helper in server actions | Centralizes auth check pattern for admin-only operations | 01-05 |
+| 17 | Service/action files structured with section comments for Plan 07 append | Prevents merge conflicts when parallel plans modify same files | 01-06 |
+| 18 | Read actions with date serialization for client components | Client components cannot call service functions directly; dates must be serialized | 01-06 |
+| 19 | NuqsAdapter added to root layout for nuqs v2 | nuqs v2 requires provider wrapper for useQueryState to work | 01-06 |
+| 20 | dateTo end-of-day adjustment (setHours 23:59:59:999) | Makes date-to filter inclusive of the full selected day | 01-08 |
+| 21 | nuqs _all sentinel for Select empty state | Empty string not valid as SelectItem value; _all maps to empty URL param | 01-08 |
+| 22 | DiffView renders union of old+new keys | All keys aligned vertically in both columns even when key only in one side | 01-08 |
 
 ## Blockers / Concerns
 
@@ -50,8 +59,8 @@ Progress: [████░░░░░] 4/9 plans (~44%)
 
 ## Session Continuity
 
-Last session: 2026-02-27T16:29:00Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-02-27T17:30:27Z
+Stopped at: Completed 01-08-PLAN.md (Audit Log Viewer)
 Resume file: None
 
 ## Notes
@@ -66,4 +75,4 @@ Resume file: None
 - **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog, loading skeletons).
 
 ---
-*Last updated: 2026-02-27T16:29:00Z*
+*Last updated: 2026-02-28T17:30:27Z*
