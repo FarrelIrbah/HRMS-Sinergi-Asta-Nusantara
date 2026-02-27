@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
@@ -31,8 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthSessionProvider>
-          {children}
-          <Toaster />
+          <NuqsAdapter>
+            {children}
+            <Toaster />
+          </NuqsAdapter>
         </AuthSessionProvider>
       </body>
     </html>

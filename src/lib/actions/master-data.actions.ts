@@ -4,9 +4,13 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { departmentSchema, positionSchema } from "@/lib/validations/master-data";
 import {
+  getDepartments,
+  getAllDepartments,
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  getPositions,
+  getAllPositions,
   createPosition,
   updatePosition,
   deletePosition,
@@ -15,6 +19,8 @@ import {
 interface ActionResult {
   success: boolean;
   error?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
 }
 
 async function getAuthenticatedSuperAdmin(): Promise<string> {
@@ -29,6 +35,39 @@ async function getAuthenticatedSuperAdmin(): Promise<string> {
 }
 
 // ===== DEPARTMENT ACTIONS =====
+
+export async function getDepartmentsAction(): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const result = await getDepartments();
+    // Serialize dates for client components
+    const data = result.data.map((d) => ({
+      ...d,
+      createdAt: d.createdAt.toISOString(),
+      updatedAt: d.updatedAt.toISOString(),
+      deletedAt: d.deletedAt?.toISOString() ?? null,
+    }));
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal memuat departemen",
+    };
+  }
+}
+
+export async function getAllDepartmentsAction(): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const data = await getAllDepartments();
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal memuat departemen",
+    };
+  }
+}
 
 export async function createDepartmentAction(
   formData: unknown
@@ -83,6 +122,40 @@ export async function deleteDepartmentAction(
 }
 
 // ===== POSITION ACTIONS =====
+
+export async function getPositionsAction(): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const result = await getPositions();
+    const data = result.data.map((p) => ({
+      ...p,
+      createdAt: p.createdAt.toISOString(),
+      updatedAt: p.updatedAt.toISOString(),
+      deletedAt: p.deletedAt?.toISOString() ?? null,
+    }));
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal memuat jabatan",
+    };
+  }
+}
+
+export async function getAllPositionsAction(
+  departmentId?: string
+): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const data = await getAllPositions(departmentId);
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal memuat jabatan",
+    };
+  }
+}
 
 export async function createPositionAction(
   formData: unknown
