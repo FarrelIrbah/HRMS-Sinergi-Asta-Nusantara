@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { departmentSchema, positionSchema } from "@/lib/validations/master-data";
+import {
+  departmentSchema,
+  positionSchema,
+  officeLocationSchema,
+  leaveTypeSchema,
+} from "@/lib/validations/master-data";
 import {
   getDepartments,
   getAllDepartments,
@@ -14,6 +19,14 @@ import {
   createPosition,
   updatePosition,
   deletePosition,
+  getOfficeLocations,
+  createOfficeLocation,
+  updateOfficeLocation,
+  deleteOfficeLocation,
+  getLeaveTypes,
+  createLeaveType,
+  updateLeaveType,
+  deleteLeaveType,
 } from "@/lib/services/master-data.service";
 
 interface ActionResult {
@@ -208,6 +221,156 @@ export async function deletePositionAction(
   }
 }
 
-// ===== OFFICE LOCATION ACTIONS (to be added by Plan 07) =====
+// ===== OFFICE LOCATION ACTIONS =====
 
-// ===== LEAVE TYPE ACTIONS (to be added by Plan 07) =====
+export async function getOfficeLocationsAction(): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const result = await getOfficeLocations();
+    const data = result.data.map((loc) => ({
+      ...loc,
+      createdAt: loc.createdAt.toISOString(),
+      updatedAt: loc.updatedAt.toISOString(),
+      deletedAt: loc.deletedAt?.toISOString() ?? null,
+    }));
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal memuat lokasi kantor",
+    };
+  }
+}
+
+export async function createOfficeLocationAction(
+  formData: unknown
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    const parsed = officeLocationSchema.parse(formData);
+    await createOfficeLocation(parsed, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal membuat lokasi kantor",
+    };
+  }
+}
+
+export async function updateOfficeLocationAction(
+  id: string,
+  formData: unknown
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    const parsed = officeLocationSchema.parse(formData);
+    await updateOfficeLocation(id, parsed, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal mengubah lokasi kantor",
+    };
+  }
+}
+
+export async function deleteOfficeLocationAction(
+  id: string
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    await deleteOfficeLocation(id, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Gagal menghapus lokasi kantor",
+    };
+  }
+}
+
+// ===== LEAVE TYPE ACTIONS =====
+
+export async function getLeaveTypesAction(): Promise<ActionResult> {
+  try {
+    await getAuthenticatedSuperAdmin();
+    const result = await getLeaveTypes();
+    const data = result.data.map((lt) => ({
+      ...lt,
+      createdAt: lt.createdAt.toISOString(),
+      updatedAt: lt.updatedAt.toISOString(),
+      deletedAt: lt.deletedAt?.toISOString() ?? null,
+    }));
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal memuat jenis cuti",
+    };
+  }
+}
+
+export async function createLeaveTypeAction(
+  formData: unknown
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    const parsed = leaveTypeSchema.parse(formData);
+    await createLeaveType(parsed, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal membuat jenis cuti",
+    };
+  }
+}
+
+export async function updateLeaveTypeAction(
+  id: string,
+  formData: unknown
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    const parsed = leaveTypeSchema.parse(formData);
+    await updateLeaveType(id, parsed, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal mengubah jenis cuti",
+    };
+  }
+}
+
+export async function deleteLeaveTypeAction(
+  id: string
+): Promise<ActionResult> {
+  try {
+    const actorId = await getAuthenticatedSuperAdmin();
+    await deleteLeaveType(id, actorId);
+    revalidatePath("/master-data");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Gagal menghapus jenis cuti",
+    };
+  }
+}
