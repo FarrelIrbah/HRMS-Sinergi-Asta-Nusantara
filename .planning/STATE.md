@@ -50,8 +50,8 @@ Progress: [████░░░░░] 4/9 plans (~44%)
 
 ## Session Continuity
 
-Last session: 2026-02-27T16:28:34Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-02-27T16:29:00Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
 
 ## Notes
@@ -62,6 +62,8 @@ Resume file: None
 - **Requirement count note:** Actual v1 requirement count is 54 (not 55 as previously stated in REQUIREMENTS.md traceability section).
 - **Pattern note:** All future plans must import Prisma types from `@/generated/prisma/client`, NOT `@prisma/client`.
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
+- **Layout pattern:** Dashboard layout uses server component for auth check, wraps children in SessionProvider. Client components use useSession().
+- **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog, loading skeletons).
 
 ---
-*Last updated: 2026-02-27T16:28:34Z*
+*Last updated: 2026-02-27T16:29:00Z*
