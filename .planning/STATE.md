@@ -10,7 +10,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | Foundation | ◐ In Progress (8/9 plans) | 14 |
+| 1 | Foundation | ◐ In Progress (9/9 plans, awaiting checkpoint) | 14 |
 | 2 | Employee Data Management | ○ Pending | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 1 of 5 (Foundation)
-Plan: 8 of 9
-Status: In progress
-Last activity: 2026-02-28 - Completed 01-08-PLAN.md (Audit Log Viewer)
+Plan: 9 of 9
+Status: Awaiting human verification (01-09 checkpoint)
+Last activity: 2026-02-28 - Completed 01-09-PLAN.md tasks, dev server running, pending human verify
 
-Progress: [████████░] 8/9 plans (~89%)
+Progress: [█████████░] 9/9 auto tasks done, checkpoint pending
 
 ## Decisions
 
@@ -51,6 +51,9 @@ Progress: [████████░] 8/9 plans (~89%)
 | 20 | dateTo end-of-day adjustment (setHours 23:59:59:999) | Makes date-to filter inclusive of the full selected day | 01-08 |
 | 21 | nuqs _all sentinel for Select empty state | Empty string not valid as SelectItem value; _all maps to empty URL param | 01-08 |
 | 22 | DiffView renders union of old+new keys | All keys aligned vertically in both columns even when key only in one side | 01-08 |
+| 23 | Client-safe enums in src/types/enums.ts | Role/AuditAction as plain const objects; Prisma runtime cannot bundle in browser (node: scheme URIs) | 01-09 |
+| 24 | getDashboardData() takes no arguments | All roles use same DB queries; role-specific rendering at component level | 01-09 |
+| 25 | Seed uses findFirst-before-create for master data | No unique name constraint on departments/positions/locations/leave-types | 01-09 |
 
 ## Blockers / Concerns
 
@@ -59,8 +62,8 @@ Progress: [████████░] 8/9 plans (~89%)
 
 ## Session Continuity
 
-Last session: 2026-02-27T17:30:27Z
-Stopped at: Completed 01-08-PLAN.md (Audit Log Viewer)
+Last session: 2026-02-28T17:56:15Z
+Stopped at: 01-09 checkpoint - awaiting human verification of Phase 1 end-to-end
 Resume file: None
 
 ## Notes
@@ -72,7 +75,9 @@ Resume file: None
 - **Pattern note:** All future plans must import Prisma types from `@/generated/prisma/client`, NOT `@prisma/client`.
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
 - **Layout pattern:** Dashboard layout uses server component for auth check, wraps children in SessionProvider. Client components use useSession().
-- **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog, loading skeletons).
+- **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog with loading prop, loading skeletons).
+- **Client-safe enums pattern:** ALWAYS import Role/AuditAction from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth).
+- **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 
 ---
-*Last updated: 2026-02-28T17:30:27Z*
+*Last updated: 2026-02-28T17:56:15Z*
