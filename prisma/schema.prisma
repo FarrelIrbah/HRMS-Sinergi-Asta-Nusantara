@@ -1,0 +1,113 @@
+// HRMS PT. Sinergi Asta Nusantara - Phase 1 Database Schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// ─── Models ──────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  hashedPassword String
+  role           Role     @default(EMPLOYEE)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  positions Position[]
+
+  @@map("departments")
+}
+
+model Position {
+  id           String    @id @default(cuid())
+  name         String
+  departmentId String
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@map("positions")
+}
+
+model OfficeLocation {
+  id           String    @id @default(cuid())
+  name         String
+  address      String?
+  allowedIPs   String[]
+  latitude     Float?
+  longitude    Float?
+  radiusMeters Int?
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("office_locations")
+}
+
+model LeaveType {
+  id                String    @id @default(cuid())
+  name              String
+  annualQuota       Int
+  isPaid            Boolean   @default(true)
+  genderRestriction String?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("leave_types")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String
+  action    AuditAction
+  module    String
+  targetId  String
+  oldValue  Json?
+  newValue  Json?
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, module, createdAt])
+  @@map("audit_logs")
+}
