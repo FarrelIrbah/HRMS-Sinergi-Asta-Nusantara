@@ -36,7 +36,7 @@ export function LeaveTypeTab() {
     null
   );
   const [deleteTarget, setDeleteTarget] = useState<LeaveType | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const fetchLeaveTypes = useCallback(async () => {
     setLoading(true);

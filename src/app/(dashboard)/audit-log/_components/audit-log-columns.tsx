@@ -6,7 +6,7 @@ import { id } from "date-fns/locale";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { AUDIT_ACTIONS } from "@/lib/constants";
-import type { AuditAction } from "@/generated/prisma/client";
+import type { AuditAction } from "@/types/enums";
 
 export type AuditLogRow = {
   id: string;

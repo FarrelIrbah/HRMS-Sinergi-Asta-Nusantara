@@ -15,7 +15,7 @@ import {
 import { LogOut } from "lucide-react";
 import { ROLES } from "@/lib/constants";
 import { MobileSidebar } from "@/components/layout/sidebar";
-import type { Role } from "@/generated/prisma/client";
+import type { Role } from "@/types/enums";
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return "?";

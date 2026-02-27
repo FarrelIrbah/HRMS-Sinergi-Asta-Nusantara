@@ -31,7 +31,7 @@ export function OfficeLocationTab() {
   const [editingLocation, setEditingLocation] =
     useState<OfficeLocation | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<OfficeLocation | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const fetchLocations = useCallback(async () => {
     setLoading(true);

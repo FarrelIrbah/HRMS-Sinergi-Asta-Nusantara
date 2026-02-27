@@ -8,7 +8,7 @@ import { getAuditLogById } from "@/lib/services/audit.service";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AUDIT_ACTIONS } from "@/lib/constants";
-import type { AuditAction } from "@/generated/prisma/client";
+import type { AuditAction } from "@/types/enums";
 
 const actionColorMap: Record<AuditAction, string> = {
   CREATE: "bg-green-100 text-green-800 border-green-200",

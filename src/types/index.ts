@@ -1,12 +1,10 @@
-import { Role, AuditAction } from "@/generated/prisma/client";
-
-export { Role, AuditAction };
+export { Role, AuditAction } from "@/types/enums";
 
 export type UserSession = {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: import("@/types/enums").Role;
 };
 
 export type PaginatedResponse<T> = {

@@ -20,7 +20,7 @@ export function UserTable({ data, total }: UserTableProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmUser, setConfirmUser] = useState<UserRow | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   const handleEdit = useCallback((user: UserRow) => {
     setEditUser(user);
@@ -44,7 +44,7 @@ export function UserTable({ data, total }: UserTableProps) {
   const handleConfirmToggle = async () => {
     if (!confirmUser) return;
 
-    setToggleLoading(true);
+    setIsToggling(true);
     try {
       const result = await toggleUserActiveAction(confirmUser.id);
       if (result.success) {
@@ -56,7 +56,7 @@ export function UserTable({ data, total }: UserTableProps) {
     } catch {
       toast.error("Terjadi kesalahan");
     } finally {
-      setToggleLoading(false);
+      setIsToggling(false);
       setConfirmOpen(false);
       setConfirmUser(null);
     }
@@ -102,6 +102,7 @@ export function UserTable({ data, total }: UserTableProps) {
         onConfirm={handleConfirmToggle}
         confirmText={confirmUser?.isActive ? "Nonaktifkan" : "Aktifkan"}
         variant={confirmUser?.isActive ? "destructive" : "default"}
+        loading={isToggling}
       />
     </>
   );

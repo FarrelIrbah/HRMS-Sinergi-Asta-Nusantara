@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Role } from "@/generated/prisma/client";
+import { Role } from "@/types/enums";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
 

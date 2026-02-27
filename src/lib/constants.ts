@@ -1,4 +1,4 @@
-import { Role, AuditAction } from "@/generated/prisma/client";
+import { Role, AuditAction } from "@/types/enums";
 
 export const ROLES: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",

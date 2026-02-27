@@ -27,7 +27,7 @@ export function PositionTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingPosition, setEditingPosition] = useState<Position | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Position | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const fetchPositions = useCallback(async () => {
     setLoading(true);

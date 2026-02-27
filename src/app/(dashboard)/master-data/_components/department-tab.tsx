@@ -29,7 +29,7 @@ export function DepartmentTab() {
     null
   );
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);

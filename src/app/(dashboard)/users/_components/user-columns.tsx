@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ROLES } from "@/lib/constants";
-import type { Role } from "@/generated/prisma/client";
+import type { Role } from "@/types/enums";
 
 export type UserRow = {
   id: string;

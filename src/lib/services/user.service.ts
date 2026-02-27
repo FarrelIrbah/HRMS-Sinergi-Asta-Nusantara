@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import { Role } from "@/generated/prisma/client";
-import type { InputJsonValue } from "@/generated/prisma/internal/prismaNamespace";
 import { prisma, createAuditLog } from "@/lib/prisma";
 import { MODULES } from "@/lib/constants";
 import type { ServiceResult, PaginatedResponse } from "@/types";

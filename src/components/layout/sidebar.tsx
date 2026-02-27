@@ -19,7 +19,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import type { Role } from "@/generated/prisma/client";
+import type { Role } from "@/types/enums";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
