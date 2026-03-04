@@ -11,7 +11,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
-| 2 | Employee Data Management | ◐ In Progress (3/8 plans) | 10 |
+| 2 | Employee Data Management | ◐ In Progress (5/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 2 of 5 (Employee Data Management)
-Plan: 3 of 8
+Plan: 5 of 8
 Status: In progress
-Last activity: 2026-03-04 - Completed 02-03-PLAN.md
+Last activity: 2026-03-04 - Completed 02-05-PLAN.md
 
-Progress: [████████████░░░░░] 12/17 plans complete (Phase 1: 9/9, Phase 2: 3/8)
+Progress: [██████████████░░░] 14/17 plans complete (Phase 1: 9/9, Phase 2: 5/8)
 
 ## Decisions
 
@@ -58,6 +58,8 @@ Progress: [████████████░░░░░] 12/17 plans comp
 | 27 | requireHRAdmin() auth helper for employee actions | Allows both HR_ADMIN and SUPER_ADMIN; separate from requireSuperAdmin() | 02-02 |
 | 28 | NIK generated inside $transaction to prevent race conditions | EMP-YYYY-NNNN format; sequential within year | 02-02 |
 | 29 | Use prisma directly for employee lookup in document access check | Plan 02-02 creates employee.service.ts in parallel; avoids import errors | 02-03 |
+| 30 | Position selector filters by selected department | UX: prevents invalid department+position combos; resets position when department changes | 02-05 |
+| 31 | Resolver type assertion for zod coerce.date() schemas | z.coerce.date().optional().or(literal) infers unknown; cast needed for react-hook-form v5 compatibility | 02-05 |
 
 ## Blockers / Concerns
 
@@ -67,8 +69,8 @@ Progress: [████████████░░░░░] 12/17 plans comp
 
 ## Session Continuity
 
-Last session: 2026-03-04T16:05:00Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-03-04T16:06:00Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
 
 ## Notes
@@ -85,4 +87,4 @@ Resume file: None
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 
 ---
-*Last updated: 2026-03-04T16:05:00Z*
+*Last updated: 2026-03-04T16:06:00Z*
