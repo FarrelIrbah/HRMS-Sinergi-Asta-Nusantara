@@ -94,7 +94,10 @@ export async function getEmployees(params: GetEmployeesParams = {}) {
   };
 }
 
-export async function getEmployeesForManager(userId: string) {
+export async function getEmployeesForManager(
+  userId: string,
+  params: Omit<GetEmployeesParams, "departmentId"> = {}
+) {
   // Look up manager's Employee record to find their department
   const managerEmployee = await prisma.employee.findUnique({
     where: { userId },
@@ -111,7 +114,10 @@ export async function getEmployeesForManager(userId: string) {
     };
   }
 
-  return getEmployees({ departmentId: managerEmployee.departmentId });
+  return getEmployees({
+    ...params,
+    departmentId: managerEmployee.departmentId,
+  });
 }
 
 export async function getEmployeeById(id: string) {

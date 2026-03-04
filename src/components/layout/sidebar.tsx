@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   LayoutDashboard,
   Users,
+  Users2,
   Database,
   FileText,
   Menu,
@@ -34,6 +35,12 @@ const navItems: NavItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
+  },
+  {
+    label: "Karyawan",
+    href: "/employees",
+    icon: Users2,
     roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
   },
   {
