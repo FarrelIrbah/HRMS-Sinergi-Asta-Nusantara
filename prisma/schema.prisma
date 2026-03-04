@@ -1,4 +1,4 @@
-// HRMS PT. Sinergi Asta Nusantara - Phase 1 Database Schema
+// HRMS PT. Sinergi Asta Nusantara - Database Schema
 
 generator client {
   provider = "prisma-client"
@@ -25,6 +25,51 @@ enum AuditAction {
   DELETE
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Religion {
+  ISLAM
+  KRISTEN
+  KATOLIK
+  HINDU
+  BUDDHA
+  KONGHUCU
+}
+
+enum MaritalStatus {
+  TK
+  K
+}
+
+enum ContractType {
+  PKWT
+  PKWTT
+}
+
+enum PTKPStatus {
+  TK_0
+  TK_1
+  TK_2
+  TK_3
+  K_0
+  K_1
+  K_2
+  K_3
+}
+
+enum DocumentType {
+  KTP
+  NPWP
+  BPJS_KESEHATAN
+  BPJS_KETENAGAKERJAAN
+  KONTRAK
+  FOTO
+  LAINNYA
+}
+
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
@@ -38,6 +83,7 @@ model User {
   updatedAt      DateTime @updatedAt
 
   auditLogs AuditLog[]
+  employee  Employee?
 
   @@map("users")
 }
@@ -50,7 +96,8 @@ model Department {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  positions Position[]
+  positions  Position[]
+  employees  Employee[]
 
   @@map("departments")
 }
@@ -64,6 +111,7 @@ model Position {
   updatedAt    DateTime  @updatedAt
 
   department Department @relation(fields: [departmentId], references: [id])
+  employees  Employee[]
 
   @@map("positions")
 }
@@ -110,4 +158,73 @@ model AuditLog {
 
   @@index([userId, module, createdAt])
   @@map("audit_logs")
+}
+
+model Employee {
+  id                     String         @id @default(cuid())
+  nik                    String         @unique
+  userId                 String         @unique
+  namaLengkap            String
+  nikKtp                 String?
+  tempatLahir            String?
+  tanggalLahir           DateTime?
+  jenisKelamin           Gender?
+  statusPernikahan       MaritalStatus?
+  agama                  Religion?
+  alamat                 String?
+  nomorHp                String?
+  email                  String
+  departmentId           String
+  positionId             String
+  officeLocationId       String?
+  contractType           ContractType
+  joinDate               DateTime
+  isActive               Boolean        @default(true)
+  terminationDate        DateTime?
+  terminationReason      String?
+  npwp                   String?
+  ptkpStatus             PTKPStatus?
+  bpjsKesehatanNo        String?
+  bpjsKetenagakerjaanNo  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id])
+  department        Department         @relation(fields: [departmentId], references: [id])
+  position          Position           @relation(fields: [positionId], references: [id])
+  documents         EmployeeDocument[]
+  emergencyContacts EmergencyContact[]
+
+  @@map("employees")
+}
+
+model EmployeeDocument {
+  id           String       @id @default(cuid())
+  employeeId   String
+  documentType DocumentType
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_documents")
+}
+
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  employeeId   String
+  name         String
+  relationship String
+  phone        String
+  address      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
 }
