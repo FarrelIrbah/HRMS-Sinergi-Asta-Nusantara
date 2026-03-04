@@ -17,15 +17,15 @@
 **Plans:** 9 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Project scaffold, Prisma schema, dependencies, base config
-- [ ] 01-02-PLAN.md -- NextAuth v5 config, login page, middleware, session provider
-- [ ] 01-03-PLAN.md -- Dashboard layout shell (sidebar, header, breadcrumbs, shared components)
-- [ ] 01-04-PLAN.md -- Audit logging infrastructure (createAuditLog helper, audit query service)
-- [ ] 01-05-PLAN.md -- User management CRUD (create, edit, deactivate/reactivate, role change)
-- [ ] 01-06-PLAN.md -- Master data: departments and positions (tabbed page, CRUD, soft delete)
-- [ ] 01-07-PLAN.md -- Master data: office locations and leave types (IP/GPS config, quotas)
-- [ ] 01-08-PLAN.md -- Audit log viewer (filterable table, before/after detail view)
-- [ ] 01-09-PLAN.md -- Role-specific dashboards, seed data, end-to-end verification
+- [x] 01-01-PLAN.md -- Project scaffold, Prisma schema, dependencies, base config
+- [x] 01-02-PLAN.md -- NextAuth v5 config, login page, middleware, session provider
+- [x] 01-03-PLAN.md -- Dashboard layout shell (sidebar, header, breadcrumbs, shared components)
+- [x] 01-04-PLAN.md -- Audit logging infrastructure (createAuditLog helper, audit query service)
+- [x] 01-05-PLAN.md -- User management CRUD (create, edit, deactivate/reactivate, role change)
+- [x] 01-06-PLAN.md -- Master data: departments and positions (tabbed page, CRUD, soft delete)
+- [x] 01-07-PLAN.md -- Master data: office locations and leave types (IP/GPS config, quotas)
+- [x] 01-08-PLAN.md -- Audit log viewer (filterable table, before/after detail view)
+- [x] 01-09-PLAN.md -- Role-specific dashboards, seed data, end-to-end verification
 
 **Requirements:**
 - AUTH-01, AUTH-02, AUTH-03, AUTH-04
@@ -48,6 +48,18 @@ Plans:
 **Goal:** HR Admin can manage complete employee profiles with all Indonesian HR fields, documents, and emergency contacts, and each role sees only the employee data their access level permits.
 
 **Dependencies:** Phase 1 (departments, positions, office locations, and user accounts must exist)
+
+**Plans:** 8 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- Prisma schema (Employee, EmployeeDocument, EmergencyContact models), Zod validations, constants
+- [ ] 02-02-PLAN.md -- Employee service layer (CRUD, NIK generation, atomic User+Employee creation, audit logging)
+- [ ] 02-03-PLAN.md -- Document management API routes (upload/download/delete with local filesystem storage)
+- [ ] 02-04-PLAN.md -- Employee list page with role-based scoping, sidebar navigation, DataTable with filters
+- [ ] 02-05-PLAN.md -- Employee creation form (single-page form with all required and optional fields)
+- [ ] 02-06-PLAN.md -- Employee detail/edit page with tabbed layout (Personal Info, Employment, Tax/BPJS)
+- [ ] 02-07-PLAN.md -- Documents tab and Emergency Contacts tab (complete the 5-tab profile)
+- [ ] 02-08-PLAN.md -- Employee deactivation, seed data, dashboard integration, end-to-end verification
 
 **Requirements:**
 - EMP-01, EMP-02, EMP-03, EMP-04, EMP-05, EMP-06, EMP-07, EMP-08, EMP-09, EMP-10
@@ -141,8 +153,8 @@ Plans:
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | Foundation | Planned (9 plans) | 14 |
-| 2 | Employee Data Management | Not Started | 10 |
+| 1 | Foundation | Complete (9 plans) | 14 |
+| 2 | Employee Data Management | Planned (8 plans) | 10 |
 | 3 | Attendance and Leave Management | Not Started | 14 |
 | 4 | Payroll Management | Not Started | 9 |
 | 5 | Recruitment Management | Not Started | 7 |
