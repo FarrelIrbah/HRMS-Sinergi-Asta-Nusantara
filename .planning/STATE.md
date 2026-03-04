@@ -4,26 +4,26 @@
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** HR staff can manage the complete employee lifecycle in one integrated system with accurate Indonesian tax and social insurance compliance.
-**Current focus:** Phase 1
+**Current focus:** Phase 2
 
 ## Phase Status
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | Foundation | ◐ In Progress (9/9 plans, awaiting checkpoint) | 14 |
-| 2 | Employee Data Management | ○ Pending | 10 |
+| 1 | Foundation | Complete | 14 |
+| 2 | Employee Data Management | ◐ In Progress (1/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
-Phase: 1 of 5 (Foundation)
-Plan: 9 of 9
-Status: Awaiting human verification (01-09 checkpoint)
-Last activity: 2026-02-28 - Completed 01-09-PLAN.md tasks, dev server running, pending human verify
+Phase: 2 of 5 (Employee Data Management)
+Plan: 1 of 8
+Status: In progress
+Last activity: 2026-03-04 - Completed 02-01-PLAN.md
 
-Progress: [█████████░] 9/9 auto tasks done, checkpoint pending
+Progress: [██████████░░░░░░░] 10/17 plans complete (Phase 1: 9/9, Phase 2: 1/8)
 
 ## Decisions
 
@@ -54,16 +54,18 @@ Progress: [█████████░] 9/9 auto tasks done, checkpoint pendi
 | 23 | Client-safe enums in src/types/enums.ts | Role/AuditAction as plain const objects; Prisma runtime cannot bundle in browser (node: scheme URIs) | 01-09 |
 | 24 | getDashboardData() takes no arguments | All roles use same DB queries; role-specific rendering at component level | 01-09 |
 | 25 | Seed uses findFirst-before-create for master data | No unique name constraint on departments/positions/locations/leave-types | 01-09 |
+| 26 | Migration pending Docker/PostgreSQL start | Prisma migrate requires live database; schema and client generation succeeded without it | 02-01 |
 
 ## Blockers / Concerns
 
 - PostgreSQL requires Docker Desktop running (uses existing cms-postgres container on port 5432)
 - Prisma deprecation warning on seed config is cosmetic but noisy
+- **02-01 migration not yet applied** -- must run `npx prisma migrate dev --name add-employee-models` before starting 02-02
 
 ## Session Continuity
 
-Last session: 2026-02-28T17:56:15Z
-Stopped at: 01-09 checkpoint - awaiting human verification of Phase 1 end-to-end
+Last session: 2026-03-04T15:45:00Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
 
 ## Notes
@@ -76,8 +78,8 @@ Resume file: None
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
 - **Layout pattern:** Dashboard layout uses server component for auth check, wraps children in SessionProvider. Client components use useSession().
 - **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog with loading prop, loading skeletons).
-- **Client-safe enums pattern:** ALWAYS import Role/AuditAction from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth).
+- **Client-safe enums pattern:** ALWAYS import enums from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth). Now includes Gender, Religion, MaritalStatus, ContractType, PTKPStatus, DocumentType.
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 
 ---
-*Last updated: 2026-02-28T17:56:15Z*
+*Last updated: 2026-03-04T15:45:00Z*
