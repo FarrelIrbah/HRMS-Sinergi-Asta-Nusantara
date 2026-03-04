@@ -35,7 +35,7 @@ async function requireHRAdmin(): Promise<ServiceResult<{ userId: string }>> {
 
 export async function createEmployeeAction(
   formData: unknown
-): Promise<ServiceResult<null>> {
+): Promise<ServiceResult<{ id: string }>> {
   const authResult = await requireHRAdmin();
   if (!authResult.success) {
     return { success: false, error: authResult.error };
@@ -54,7 +54,7 @@ export async function createEmployeeAction(
   }
 
   revalidatePath("/employees");
-  return { success: true };
+  return { success: true, data: { id: result.data!.id } };
 }
 
 export async function updatePersonalInfoAction(

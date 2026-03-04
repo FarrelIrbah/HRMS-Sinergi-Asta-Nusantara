@@ -7,9 +7,11 @@ import { ChevronRight, Home } from "lucide-react";
 const segmentLabels: Record<string, string> = {
   dashboard: "Dashboard",
   users: "Pengguna",
+  employees: "Karyawan",
   "master-data": "Data Master",
   "audit-log": "Log Audit",
   create: "Tambah",
+  new: "Tambah",
   edit: "Ubah",
 };
 
