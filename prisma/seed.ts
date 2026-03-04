@@ -1,4 +1,12 @@
-import { PrismaClient, Role } from "../src/generated/prisma/client";
+import {
+  PrismaClient,
+  Role,
+  Gender,
+  Religion,
+  MaritalStatus,
+  ContractType,
+  PTKPStatus,
+} from "../src/generated/prisma/client";
 import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -190,9 +198,320 @@ async function main() {
 
   console.log(`  Leave Types: ${leaveCount} seeded`);
 
+  // ── 6. Positions lookup (for employee assignment) ────────────────────
+  const positionsMap: Record<string, string> = {};
+  for (const pos of positionData) {
+    const found = await prisma.position.findFirst({
+      where: { name: pos.name, departmentId: departments[pos.departmentName], deletedAt: null },
+    });
+    if (found) {
+      positionsMap[pos.name] = found.id;
+    }
+  }
+
+  // ── 7. Employees for existing users ─────────────────────────────────
+  // Link existing seeded users to employee records
+  const existingUserEmployees = [
+    {
+      nik: "EMP-2026-0001",
+      email: "dewi.hr@ptsan.co.id",
+      namaLengkap: "Dewi Lestari",
+      departmentName: "SDM",
+      positionName: "Staff SDM",
+      contractType: ContractType.PKWTT,
+      joinDate: new Date("2024-01-15"),
+      jenisKelamin: Gender.FEMALE,
+      agama: Religion.ISLAM,
+      statusPernikahan: MaritalStatus.K,
+      ptkpStatus: PTKPStatus.K_1,
+    },
+    {
+      nik: "EMP-2026-0002",
+      email: "budi.mgr@ptsan.co.id",
+      namaLengkap: "Budi Santoso",
+      departmentName: "Penagihan",
+      positionName: "Kepala Penagihan",
+      contractType: ContractType.PKWTT,
+      joinDate: new Date("2023-06-01"),
+      jenisKelamin: Gender.MALE,
+      agama: Religion.ISLAM,
+      statusPernikahan: MaritalStatus.K,
+      ptkpStatus: PTKPStatus.K_2,
+    },
+    {
+      nik: "EMP-2026-0003",
+      email: "rina@ptsan.co.id",
+      namaLengkap: "Rina Wulandari",
+      departmentName: "Keuangan",
+      positionName: "Staff Keuangan",
+      contractType: ContractType.PKWT,
+      joinDate: new Date("2025-03-01"),
+      jenisKelamin: Gender.FEMALE,
+      agama: Religion.KRISTEN,
+      statusPernikahan: MaritalStatus.TK,
+      ptkpStatus: PTKPStatus.TK_0,
+    },
+  ];
+
+  let employeeCount = 0;
+  for (const emp of existingUserEmployees) {
+    const existing = await prisma.employee.findFirst({
+      where: { nik: emp.nik },
+    });
+    if (!existing) {
+      const user = await prisma.user.findUnique({
+        where: { email: emp.email },
+      });
+      if (user) {
+        // Check if user already has an employee record
+        const existingByUser = await prisma.employee.findFirst({
+          where: { userId: user.id },
+        });
+        if (!existingByUser) {
+          await prisma.employee.create({
+            data: {
+              nik: emp.nik,
+              userId: user.id,
+              namaLengkap: emp.namaLengkap,
+              email: emp.email,
+              departmentId: departments[emp.departmentName],
+              positionId: positionsMap[emp.positionName],
+              contractType: emp.contractType,
+              joinDate: emp.joinDate,
+              jenisKelamin: emp.jenisKelamin,
+              agama: emp.agama,
+              statusPernikahan: emp.statusPernikahan,
+              ptkpStatus: emp.ptkpStatus,
+            },
+          });
+          employeeCount++;
+        }
+      }
+    } else {
+      employeeCount++;
+    }
+  }
+
+  console.log(`  Employees (existing users): ${employeeCount} seeded`);
+
+  // ── 8. Additional test employees with new User accounts ─────────────
+  const additionalEmployees = [
+    {
+      nik: "EMP-2026-0004",
+      email: "ahmad.p@ptsan.co.id",
+      name: "Ahmad Prasetyo",
+      departmentName: "Penagihan",
+      positionName: "Staff Penagihan",
+      contractType: ContractType.PKWTT,
+      joinDate: new Date("2024-03-15"),
+      jenisKelamin: Gender.MALE,
+      agama: Religion.ISLAM,
+      statusPernikahan: MaritalStatus.K,
+      ptkpStatus: PTKPStatus.K_1,
+      nikKtp: "3201012345670001",
+      bpjsKesehatanNo: "0001234567890",
+      bpjsKetenagakerjaanNo: "JKT-2024-001234",
+      npwp: "12.345.678.9-012.000",
+      tempatLahir: "Jakarta",
+      tanggalLahir: new Date("1990-05-12"),
+      alamat: "Jl. Kebon Jeruk No. 10, Jakarta Barat",
+      nomorHp: "081234567890",
+    },
+    {
+      nik: "EMP-2026-0005",
+      email: "siti.n@ptsan.co.id",
+      name: "Siti Nurhaliza",
+      departmentName: "Keuangan",
+      positionName: "Kepala Keuangan",
+      contractType: ContractType.PKWTT,
+      joinDate: new Date("2023-01-10"),
+      jenisKelamin: Gender.FEMALE,
+      agama: Religion.ISLAM,
+      statusPernikahan: MaritalStatus.K,
+      ptkpStatus: PTKPStatus.K_0,
+      nikKtp: "3201012345670002",
+      bpjsKesehatanNo: "0001234567891",
+      bpjsKetenagakerjaanNo: "JKT-2023-005678",
+      npwp: "23.456.789.0-012.000",
+      tempatLahir: "Bandung",
+      tanggalLahir: new Date("1988-11-20"),
+      alamat: "Jl. Cikini Raya No. 55, Jakarta Pusat",
+      nomorHp: "081234567891",
+    },
+    {
+      nik: "EMP-2026-0006",
+      email: "doni.s@ptsan.co.id",
+      name: "Doni Setiawan",
+      departmentName: "Penagihan",
+      positionName: "Staff Penagihan",
+      contractType: ContractType.PKWT,
+      joinDate: new Date("2025-06-01"),
+      jenisKelamin: Gender.MALE,
+      agama: Religion.KATOLIK,
+      statusPernikahan: MaritalStatus.TK,
+      ptkpStatus: PTKPStatus.TK_0,
+      // Minimal data - no KTP, BPJS, etc.
+    },
+    {
+      nik: "EMP-2026-0007",
+      email: "maya.r@ptsan.co.id",
+      name: "Maya Rahayu",
+      departmentName: "SDM",
+      positionName: "Staff SDM",
+      contractType: ContractType.PKWT,
+      joinDate: new Date("2025-01-15"),
+      jenisKelamin: Gender.FEMALE,
+      agama: Religion.HINDU,
+      statusPernikahan: MaritalStatus.TK,
+      ptkpStatus: PTKPStatus.TK_0,
+      nomorHp: "081234567893",
+    },
+    {
+      nik: "EMP-2026-0008",
+      email: "hendro.w@ptsan.co.id",
+      name: "Hendro Wijaya",
+      departmentName: "Keuangan",
+      positionName: "Staff Keuangan",
+      contractType: ContractType.PKWTT,
+      joinDate: new Date("2023-09-01"),
+      jenisKelamin: Gender.MALE,
+      agama: Religion.BUDDHA,
+      statusPernikahan: MaritalStatus.K,
+      ptkpStatus: PTKPStatus.K_3,
+      nikKtp: "3201012345670005",
+      npwp: "34.567.890.1-012.000",
+      tempatLahir: "Surabaya",
+      tanggalLahir: new Date("1985-03-25"),
+      alamat: "Jl. Gatot Subroto No. 88, Jakarta Selatan",
+      nomorHp: "081234567894",
+      // This employee is INACTIVE
+      isActive: false,
+      terminationDate: new Date("2025-12-31"),
+      terminationReason: "Kontrak tidak diperpanjang",
+    },
+  ];
+
+  const additionalPassword = await hash("Karyawan123!", 12);
+  let additionalCount = 0;
+
+  for (const emp of additionalEmployees) {
+    const existingEmp = await prisma.employee.findFirst({
+      where: { nik: emp.nik },
+    });
+    if (existingEmp) {
+      additionalCount++;
+      continue;
+    }
+
+    // Create user first
+    const existingUser = await prisma.user.findUnique({
+      where: { email: emp.email },
+    });
+
+    let userId: string;
+    if (existingUser) {
+      userId = existingUser.id;
+    } else {
+      const newUser = await prisma.user.create({
+        data: {
+          name: emp.name,
+          email: emp.email,
+          hashedPassword: additionalPassword,
+          role: Role.EMPLOYEE,
+          isActive: emp.isActive !== false,
+        },
+      });
+      userId = newUser.id;
+    }
+
+    // Check if user already has employee record
+    const existingByUser = await prisma.employee.findFirst({
+      where: { userId },
+    });
+    if (!existingByUser) {
+      await prisma.employee.create({
+        data: {
+          nik: emp.nik,
+          userId,
+          namaLengkap: emp.name,
+          email: emp.email,
+          departmentId: departments[emp.departmentName],
+          positionId: positionsMap[emp.positionName],
+          contractType: emp.contractType,
+          joinDate: emp.joinDate,
+          jenisKelamin: emp.jenisKelamin,
+          agama: emp.agama,
+          statusPernikahan: emp.statusPernikahan,
+          ptkpStatus: emp.ptkpStatus,
+          nikKtp: emp.nikKtp ?? null,
+          bpjsKesehatanNo: emp.bpjsKesehatanNo ?? null,
+          bpjsKetenagakerjaanNo: emp.bpjsKetenagakerjaanNo ?? null,
+          npwp: emp.npwp ?? null,
+          tempatLahir: emp.tempatLahir ?? null,
+          tanggalLahir: emp.tanggalLahir ?? null,
+          alamat: emp.alamat ?? null,
+          nomorHp: emp.nomorHp ?? null,
+          isActive: emp.isActive !== false,
+          terminationDate: emp.terminationDate ?? null,
+          terminationReason: emp.terminationReason ?? null,
+        },
+      });
+    }
+    additionalCount++;
+  }
+
+  console.log(`  Additional employees: ${additionalCount} seeded`);
+
+  // ── 9. Emergency Contacts ───────────────────────────────────────────
+  // Add emergency contacts for Ahmad and Siti
+  const ahmadEmp = await prisma.employee.findFirst({
+    where: { nik: "EMP-2026-0004" },
+  });
+  const sitiEmp = await prisma.employee.findFirst({
+    where: { nik: "EMP-2026-0005" },
+  });
+
+  let ecCount = 0;
+  if (ahmadEmp) {
+    const existing = await prisma.emergencyContact.findFirst({
+      where: { employeeId: ahmadEmp.id },
+    });
+    if (!existing) {
+      await prisma.emergencyContact.create({
+        data: {
+          employeeId: ahmadEmp.id,
+          name: "Sari Prasetyo",
+          relationship: "Istri",
+          phone: "081298765432",
+          address: "Jl. Kebon Jeruk No. 10, Jakarta Barat",
+        },
+      });
+      ecCount++;
+    }
+  }
+  if (sitiEmp) {
+    const existing = await prisma.emergencyContact.findFirst({
+      where: { employeeId: sitiEmp.id },
+    });
+    if (!existing) {
+      await prisma.emergencyContact.create({
+        data: {
+          employeeId: sitiEmp.id,
+          name: "Hasan Nurhaliza",
+          relationship: "Suami",
+          phone: "081387654321",
+          address: "Jl. Cikini Raya No. 55, Jakarta Pusat",
+        },
+      });
+      ecCount++;
+    }
+  }
+
+  console.log(`  Emergency Contacts: ${ecCount} seeded`);
+
   // ── Summary ───────────────────────────────────────────────────────────
   console.log(
-    `\nSeed complete: ${users.length} users, ${Object.keys(departments).length} departments, ${positionCount} positions, ${locationCount} locations, ${leaveCount} leave types`
+    `\nSeed complete: ${users.length} users, ${Object.keys(departments).length} departments, ${positionCount} positions, ${locationCount} locations, ${leaveCount} leave types, ${employeeCount + additionalCount} employees, ${ecCount} emergency contacts`
   );
 }
 

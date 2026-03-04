@@ -4,6 +4,7 @@ export interface DashboardData {
   totalUsers: number
   totalDepartments: number
   totalPositions: number
+  totalEmployees: number
   pendingLeaveRequests: number
   openVacancies: number
   payrollStatus: string
@@ -17,16 +18,18 @@ export interface DashboardData {
  * Attendance, leave, payroll, and vacancy data are placeholders (Phase 3-5).
  */
 export async function getDashboardData(): Promise<DashboardData> {
-  const [totalUsers, totalDepartments, totalPositions] = await Promise.all([
+  const [totalUsers, totalDepartments, totalPositions, totalEmployees] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.department.count({ where: { deletedAt: null } }),
     prisma.position.count({ where: { deletedAt: null } }),
+    prisma.employee.count({ where: { isActive: true } }),
   ])
 
   return {
     totalUsers,
     totalDepartments,
     totalPositions,
+    totalEmployees,
     pendingLeaveRequests: 0, // Phase 3: Leave management
     openVacancies: 0, // Phase 5: Recruitment
     payrollStatus: "Belum diproses", // Phase 4: Payroll

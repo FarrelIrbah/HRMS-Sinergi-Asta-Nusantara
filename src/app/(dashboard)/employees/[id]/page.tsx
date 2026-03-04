@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import {
   getEmployeeById,
@@ -14,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmployeeProfileTabs } from "./_components/employee-profile-tabs";
+import { DeactivateEmployeeDialog } from "./_components/deactivate-employee-dialog";
 import type { Role } from "@/types/enums";
 
 interface EmployeeDetailPageProps {
@@ -113,7 +115,27 @@ export default async function EmployeeDetailPage({
           </div>
           <p className="text-muted-foreground">{employee.nik}</p>
         </div>
+        {mode === "edit" && employee.isActive && (
+          <DeactivateEmployeeDialog
+            employeeId={employee.id}
+            employeeName={employee.namaLengkap}
+          />
+        )}
       </div>
+
+      {/* Inactive banner */}
+      {!employee.isActive && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Karyawan ini tidak aktif. Diberhentikan pada{" "}
+            {employee.terminationDate
+              ? format(employee.terminationDate, "dd MMM yyyy")
+              : "-"}{" "}
+            &mdash; {employee.terminationReason ?? "-"}
+          </span>
+        </div>
+      )}
 
       {/* Tabs */}
       <EmployeeProfileTabs
