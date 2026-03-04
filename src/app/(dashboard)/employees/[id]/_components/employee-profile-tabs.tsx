@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonalInfoTab } from "./personal-info-tab";
 import { EmploymentDetailsTab } from "./employment-details-tab";
 import { TaxBpjsTab } from "./tax-bpjs-tab";
+import { DocumentsTab } from "./documents-tab";
+import { EmergencyContactsTab } from "./emergency-contacts-tab";
 
 interface Department {
   id: string;
@@ -45,6 +47,27 @@ export interface SerializedEmployee {
   terminationReason: string | null;
   department: { id: string; name: string } | null;
   position: { id: string; name: string } | null;
+  documents: {
+    id: string;
+    employeeId: string;
+    documentType: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  emergencyContacts: {
+    id: string;
+    employeeId: string;
+    name: string;
+    relationship: string;
+    phone: string;
+    address: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }[];
 }
 
 interface EmployeeProfileTabsProps {
@@ -92,15 +115,19 @@ export function EmployeeProfileTabs({
       </TabsContent>
 
       <TabsContent value="documents">
-        <div className="rounded-lg border p-8 text-center text-muted-foreground">
-          Manajemen dokumen akan tersedia di pembaruan selanjutnya.
-        </div>
+        <DocumentsTab
+          employeeId={employee.id}
+          documents={employee.documents ?? []}
+          readOnly={readOnly}
+        />
       </TabsContent>
 
       <TabsContent value="emergency">
-        <div className="rounded-lg border p-8 text-center text-muted-foreground">
-          Kontak darurat akan tersedia di pembaruan selanjutnya.
-        </div>
+        <EmergencyContactsTab
+          employeeId={employee.id}
+          contacts={employee.emergencyContacts ?? []}
+          readOnly={readOnly}
+        />
       </TabsContent>
     </Tabs>
   );
