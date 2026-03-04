@@ -1,4 +1,13 @@
-export { Role, AuditAction } from "@/types/enums";
+export {
+  Role,
+  AuditAction,
+  Gender,
+  Religion,
+  MaritalStatus,
+  ContractType,
+  PTKPStatus,
+  DocumentType,
+} from "@/types/enums";
 
 export type UserSession = {
   id: string;
