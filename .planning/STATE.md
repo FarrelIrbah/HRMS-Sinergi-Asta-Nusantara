@@ -11,7 +11,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
-| 2 | Employee Data Management | ◐ In Progress (1/8 plans) | 10 |
+| 2 | Employee Data Management | ◐ In Progress (2/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ○ Pending | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 2 of 5 (Employee Data Management)
-Plan: 1 of 8
+Plan: 2 of 8
 Status: In progress
-Last activity: 2026-03-04 - Completed 02-01-PLAN.md
+Last activity: 2026-03-04 - Completed 02-02-PLAN.md
 
-Progress: [██████████░░░░░░░] 10/17 plans complete (Phase 1: 9/9, Phase 2: 1/8)
+Progress: [███████████░░░░░░] 11/17 plans complete (Phase 1: 9/9, Phase 2: 2/8)
 
 ## Decisions
 
@@ -55,6 +55,8 @@ Progress: [██████████░░░░░░░] 10/17 plans comp
 | 24 | getDashboardData() takes no arguments | All roles use same DB queries; role-specific rendering at component level | 01-09 |
 | 25 | Seed uses findFirst-before-create for master data | No unique name constraint on departments/positions/locations/leave-types | 01-09 |
 | 26 | Migration pending Docker/PostgreSQL start | Prisma migrate requires live database; schema and client generation succeeded without it | 02-01 |
+| 27 | requireHRAdmin() auth helper for employee actions | Allows both HR_ADMIN and SUPER_ADMIN; separate from requireSuperAdmin() | 02-02 |
+| 28 | NIK generated inside $transaction to prevent race conditions | EMP-YYYY-NNNN format; sequential within year | 02-02 |
 
 ## Blockers / Concerns
 
@@ -64,8 +66,8 @@ Progress: [██████████░░░░░░░] 10/17 plans comp
 
 ## Session Continuity
 
-Last session: 2026-03-04T15:45:00Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-04T15:56:00Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
 
 ## Notes
@@ -82,4 +84,4 @@ Resume file: None
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 
 ---
-*Last updated: 2026-03-04T15:45:00Z*
+*Last updated: 2026-03-04T15:56:00Z*
