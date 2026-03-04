@@ -21,7 +21,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 Phase: 2 of 5 (Employee Data Management)
 Plan: 7 of 8
 Status: In progress
-Last activity: 2026-03-05 - Completed 02-07-PLAN.md
+Last activity: 2026-03-05 - Completed 02-06-PLAN.md (filled gap; 02-07 was already done)
 
 Progress: [████████████████░] 16/17 plans complete (Phase 1: 9/9, Phase 2: 7/8)
 
@@ -60,6 +60,7 @@ Progress: [████████████████░] 16/17 plans comp
 | 29 | Use prisma directly for employee lookup in document access check | Plan 02-02 creates employee.service.ts in parallel; avoids import errors | 02-03 |
 | 30 | Position selector filters by selected department | UX: prevents invalid department+position combos; resets position when department changes | 02-05 |
 | 31 | Resolver type assertion for zod coerce.date() schemas | z.coerce.date().optional().or(literal) infers unknown; cast needed for react-hook-form v5 compatibility | 02-05 |
+| 32 | Resolver double-cast (as unknown as Resolver<T>) for coerce.date() schemas | react-hook-form v5 dual-type resolution conflict with zod coerce.date().optional().or(literal) | 02-06 |
 
 ## Blockers / Concerns
 
@@ -69,8 +70,8 @@ Progress: [████████████████░] 16/17 plans comp
 
 ## Session Continuity
 
-Last session: 2026-03-05T05:20:00Z
-Stopped at: Completed 02-07-PLAN.md
+Last session: 2026-03-05T05:18:00Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
 
 ## Notes
@@ -87,4 +88,4 @@ Resume file: None
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 
 ---
-*Last updated: 2026-03-05T05:20:00Z*
+*Last updated: 2026-03-05T05:18:00Z*
