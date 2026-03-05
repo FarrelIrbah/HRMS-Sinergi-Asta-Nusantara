@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ○ Pending | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (1/? plans) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
-Phase: 2 of 5 (Employee Data Management)
-Plan: 8 of 8
-Status: Phase complete
-Last activity: 2026-03-05 - Completed 02-08-PLAN.md (Phase 2 complete)
+Phase: 3 of 5 (Attendance and Leave Management)
+Plan: 1 of ? (Phase 3 in progress)
+Status: In progress
+Last activity: 2026-03-06 - Completed 03-01-PLAN.md (Phase 3 data foundation)
 
-Progress: [█████████████████] 17/17 plans complete (Phase 1: 9/9, Phase 2: 8/8)
+Progress: [██████████████████░░] 18/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 1/?)
 
 ## Decisions
 
@@ -61,6 +61,7 @@ Progress: [█████████████████] 17/17 plans comp
 | 30 | Position selector filters by selected department | UX: prevents invalid department+position combos; resets position when department changes | 02-05 |
 | 31 | Resolver type assertion for zod coerce.date() schemas | z.coerce.date().optional().or(literal) infers unknown; cast needed for react-hook-form v5 compatibility | 02-05 |
 | 32 | Resolver double-cast (as unknown as Resolver<T>) for coerce.date() schemas | react-hook-form v5 dual-type resolution conflict with zod coerce.date().optional().or(literal) | 02-06 |
+| 33 | next.config.mjs used (not next.config.ts) for server action body limit | Project uses .mjs extension; plan referenced .ts but .mjs is the actual file | 03-01 |
 
 ## Blockers / Concerns
 
@@ -69,8 +70,8 @@ Progress: [█████████████████] 17/17 plans comp
 
 ## Session Continuity
 
-Last session: 2026-03-05
-Stopped at: Phase 2 complete — verified and approved
+Last session: 2026-03-06
+Stopped at: Phase 3, Plan 1 complete — data foundation established
 Resume file: None
 
 ## Notes
@@ -83,8 +84,10 @@ Resume file: None
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
 - **Layout pattern:** Dashboard layout uses server component for auth check, wraps children in SessionProvider. Client components use useSession().
 - **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog with loading prop, loading skeletons).
-- **Client-safe enums pattern:** ALWAYS import enums from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth). Now includes Gender, Religion, MaritalStatus, ContractType, PTKPStatus, DocumentType.
+- **Client-safe enums pattern:** ALWAYS import enums from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth). Now includes Gender, Religion, MaritalStatus, ContractType, PTKPStatus, DocumentType, AttendanceStatus, LeaveStatus.
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
+- **Attendance schema pattern:** clockActionSchema for GPS coords (optional), manualAttendanceSchema for admin override with reason required.
+- **Leave schema pattern:** submitLeaveSchema uses .refine() for date range validation (endDate >= startDate).
 
 ---
-*Last updated: 2026-03-05T08:55:00Z*
+*Last updated: 2026-03-06T00:00:00Z*
