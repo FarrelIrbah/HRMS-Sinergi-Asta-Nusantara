@@ -79,6 +79,19 @@ Plans:
 
 **Dependencies:** Phase 2 (employee profiles with office location assignments must exist)
 
+**Plans:** 9 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- Schema migration (AttendanceRecord, LeaveRequest, LeaveBalance models), enums, validations, config
+- [ ] 03-02-PLAN.md -- Location service (IP CIDR + GPS haversine) and attendance actions (clock-in, clock-out, manual override)
+- [ ] 03-03-PLAN.md -- Leave service (working-day calc, balance management, approval transaction) and leave actions
+- [ ] 03-04-PLAN.md -- Employee attendance UI (/attendance page with clock-in button, today status, weekly summary, history)
+- [ ] 03-05-PLAN.md -- Employee leave UI (/leave page with balance cards, request form with inline balance, history + cancel)
+- [ ] 03-06-PLAN.md -- HR Admin attendance admin view (/attendance-admin with monthly summary, drill-down, manual override dialog)
+- [ ] 03-07-PLAN.md -- Leave approval UI (/leave/manage with approve/reject dialogs, role-scoped for Manager)
+- [ ] 03-08-PLAN.md -- Attendance export routes (Excel + PDF via /api/attendance/export Route Handler)
+- [ ] 03-09-PLAN.md -- Leave usage report, dashboard widgets, seed data, end-to-end verification checkpoint
+
 **Requirements:**
 - ATT-01, ATT-02, ATT-03, ATT-04, ATT-05, ATT-06, ATT-07, ATT-08
 - LEAVE-01, LEAVE-02, LEAVE-03, LEAVE-04, LEAVE-05, LEAVE-06
@@ -155,7 +168,7 @@ Plans:
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete (9 plans) | 14 |
 | 2 | Employee Data Management | Complete (8 plans) | 10 |
-| 3 | Attendance and Leave Management | Not Started | 14 |
+| 3 | Attendance and Leave Management | In Progress (0/9 plans) | 14 |
 | 4 | Payroll Management | Not Started | 9 |
 | 5 | Recruitment Management | Not Started | 7 |
 
