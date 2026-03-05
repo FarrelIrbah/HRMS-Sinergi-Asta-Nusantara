@@ -80,3 +80,22 @@ export const DocumentType = {
 
 export type DocumentType =
   (typeof DocumentType)[keyof typeof DocumentType];
+
+export const AttendanceStatus = {
+  ON_TIME: "ON_TIME",
+  LATE: "LATE",
+  EARLY_OUT: "EARLY_OUT",
+  OVERTIME: "OVERTIME",
+  LATE_AND_EARLY_OUT: "LATE_AND_EARLY_OUT",
+  LATE_AND_OVERTIME: "LATE_AND_OVERTIME",
+} as const;
+export type AttendanceStatus =
+  (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
+
+export const LeaveStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  CANCELLED: "CANCELLED",
+} as const;
+export type LeaveStatus = (typeof LeaveStatus)[keyof typeof LeaveStatus];

@@ -7,6 +7,8 @@ import {
   ContractType,
   PTKPStatus,
   DocumentType,
+  AttendanceStatus,
+  LeaveStatus,
 } from "@/types/enums";
 
 export const ROLES: Record<Role, string> = {
@@ -84,3 +86,29 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 export const DEFAULT_PAGE_SIZE = 25;
 
 export const PAGE_SIZE_OPTIONS = [25, 50] as const;
+
+// ─── Attendance and Leave Constants ──────────────────────────────────
+
+export const OVERTIME_THRESHOLD_MINUTES = 30;
+
+export const MODULES_ATTENDANCE = {
+  ATTENDANCE: "Absensi",
+  LEAVE_REQUEST: "Permintaan Cuti",
+  LEAVE_BALANCE: "Saldo Cuti",
+} as const;
+
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  ON_TIME: "Tepat Waktu",
+  LATE: "Terlambat",
+  EARLY_OUT: "Pulang Lebih Awal",
+  OVERTIME: "Lembur",
+  LATE_AND_EARLY_OUT: "Terlambat & Pulang Awal",
+  LATE_AND_OVERTIME: "Terlambat & Lembur",
+};
+
+export const LEAVE_STATUS_LABELS: Record<LeaveStatus, string> = {
+  PENDING: "Menunggu",
+  APPROVED: "Disetujui",
+  REJECTED: "Ditolak",
+  CANCELLED: "Dibatalkan",
+};
