@@ -70,6 +70,22 @@ enum DocumentType {
   LAINNYA
 }
 
+enum AttendanceStatus {
+  ON_TIME
+  LATE
+  EARLY_OUT
+  OVERTIME
+  LATE_AND_EARLY_OUT
+  LATE_AND_OVERTIME
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
@@ -82,8 +98,10 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  auditLogs AuditLog[]
-  employee  Employee?
+  auditLogs           AuditLog[]
+  employee            Employee?
+  attendanceOverrides AttendanceRecord[] @relation("AttendanceOverrides")
+  leaveApprovals      LeaveRequest[]     @relation("LeaveApprovals")
 
   @@map("users")
 }
@@ -117,16 +135,21 @@ model Position {
 }
 
 model OfficeLocation {
-  id           String    @id @default(cuid())
-  name         String
-  address      String?
-  allowedIPs   String[]
-  latitude     Float?
-  longitude    Float?
-  radiusMeters Int?
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  address       String?
+  allowedIPs    String[]
+  latitude      Float?
+  longitude     Float?
+  radiusMeters  Int?
+  workStartTime String?
+  workEndTime   String?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  employees   Employee[]
+  attendances AttendanceRecord[]
 
   @@map("office_locations")
 }
@@ -140,6 +163,9 @@ model LeaveType {
   deletedAt         DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
 
   @@map("leave_types")
 }
@@ -192,8 +218,12 @@ model Employee {
   user              User               @relation(fields: [userId], references: [id])
   department        Department         @relation(fields: [departmentId], references: [id])
   position          Position           @relation(fields: [positionId], references: [id])
+  officeLocation    OfficeLocation?    @relation(fields: [officeLocationId], references: [id])
   documents         EmployeeDocument[]
   emergencyContacts EmergencyContact[]
+  attendances       AttendanceRecord[]
+  leaveRequests     LeaveRequest[]
+  leaveBalances     LeaveBalance[]
 
   @@map("employees")
 }
@@ -227,4 +257,79 @@ model EmergencyContact {
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("emergency_contacts")
+}
+
+model AttendanceRecord {
+  id               String  @id @default(cuid())
+  employeeId       String
+  officeLocationId String
+  date             DateTime @db.Date
+  clockIn          DateTime?
+  clockOut         DateTime?
+  clockInIp        String?
+  clockOutIp       String?
+  clockInLat       Float?
+  clockInLon       Float?
+  isLate           Boolean  @default(false)
+  lateMinutes      Int      @default(0)
+  isEarlyOut       Boolean  @default(false)
+  earlyOutMinutes  Int      @default(0)
+  overtimeMinutes  Int      @default(0)
+  totalMinutes     Int      @default(0)
+  isManualOverride Boolean  @default(false)
+  overrideById     String?
+  overrideReason   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  employee       Employee       @relation(fields: [employeeId], references: [id])
+  officeLocation OfficeLocation @relation(fields: [officeLocationId], references: [id])
+  overrideBy     User?          @relation("AttendanceOverrides", fields: [overrideById], references: [id])
+
+  @@unique([employeeId, date])
+  @@index([employeeId, date])
+  @@map("attendance_records")
+}
+
+model LeaveRequest {
+  id             String      @id @default(cuid())
+  employeeId     String
+  leaveTypeId    String
+  startDate      DateTime    @db.Date
+  endDate        DateTime    @db.Date
+  workingDays    Int
+  reason         String
+  attachmentPath String?
+  attachmentName String?
+  status         LeaveStatus @default(PENDING)
+  approvedById   String?
+  approverNotes  String?
+  approvedAt     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  leaveType  LeaveType @relation(fields: [leaveTypeId], references: [id])
+  approvedBy User?     @relation("LeaveApprovals", fields: [approvedById], references: [id])
+
+  @@index([employeeId, status])
+  @@index([status, createdAt])
+  @@map("leave_requests")
+}
+
+model LeaveBalance {
+  id            String   @id @default(cuid())
+  employeeId    String
+  leaveTypeId   String
+  year          Int
+  allocatedDays Int
+  usedDays      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee  Employee  @relation(fields: [employeeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@map("leave_balances")
 }
