@@ -52,14 +52,14 @@ Plans:
 **Plans:** 8 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Prisma schema (Employee, EmployeeDocument, EmergencyContact models), Zod validations, constants
-- [ ] 02-02-PLAN.md -- Employee service layer (CRUD, NIK generation, atomic User+Employee creation, audit logging)
-- [ ] 02-03-PLAN.md -- Document management API routes (upload/download/delete with local filesystem storage)
-- [ ] 02-04-PLAN.md -- Employee list page with role-based scoping, sidebar navigation, DataTable with filters
-- [ ] 02-05-PLAN.md -- Employee creation form (single-page form with all required and optional fields)
-- [ ] 02-06-PLAN.md -- Employee detail/edit page with tabbed layout (Personal Info, Employment, Tax/BPJS)
-- [ ] 02-07-PLAN.md -- Documents tab and Emergency Contacts tab (complete the 5-tab profile)
-- [ ] 02-08-PLAN.md -- Employee deactivation, seed data, dashboard integration, end-to-end verification
+- [x] 02-01-PLAN.md -- Prisma schema (Employee, EmployeeDocument, EmergencyContact models), Zod validations, constants
+- [x] 02-02-PLAN.md -- Employee service layer (CRUD, NIK generation, atomic User+Employee creation, audit logging)
+- [x] 02-03-PLAN.md -- Document management API routes (upload/download/delete with local filesystem storage)
+- [x] 02-04-PLAN.md -- Employee list page with role-based scoping, sidebar navigation, DataTable with filters
+- [x] 02-05-PLAN.md -- Employee creation form (single-page form with all required and optional fields)
+- [x] 02-06-PLAN.md -- Employee detail/edit page with tabbed layout (Personal Info, Employment, Tax/BPJS)
+- [x] 02-07-PLAN.md -- Documents tab and Emergency Contacts tab (complete the 5-tab profile)
+- [x] 02-08-PLAN.md -- Employee deactivation, seed data, dashboard integration, end-to-end verification
 
 **Requirements:**
 - EMP-01, EMP-02, EMP-03, EMP-04, EMP-05, EMP-06, EMP-07, EMP-08, EMP-09, EMP-10
@@ -154,7 +154,7 @@ Plans:
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete (9 plans) | 14 |
-| 2 | Employee Data Management | Planned (8 plans) | 10 |
+| 2 | Employee Data Management | Complete (8 plans) | 10 |
 | 3 | Attendance and Leave Management | Not Started | 14 |
 | 4 | Payroll Management | Not Started | 9 |
 | 5 | Recruitment Management | Not Started | 7 |

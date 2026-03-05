@@ -34,16 +34,16 @@
 
 ### Employee Data Management (EMP)
 
-- [ ] **EMP-01**: HR Admin can create an employee profile with personal information (nama lengkap, NIK KTP, tanggal lahir, jenis kelamin, agama, alamat, nomor HP, email)
-- [ ] **EMP-02**: HR Admin can record employment details per employee (nomor karyawan, departemen, jabatan, jenis kontrak PKWT/PKWTT, tanggal masuk, status kerja aktif)
-- [ ] **EMP-03**: HR Admin can edit any field on an employee profile
-- [ ] **EMP-04**: HR Admin can deactivate (terminate) an employee with a termination date and reason
-- [ ] **EMP-05**: HR Admin can upload employee documents (KTP, NPWP, kartu BPJS, kontrak kerja, foto) per employee
-- [ ] **EMP-06**: HR Admin can view and download uploaded employee documents
-- [ ] **EMP-07**: HR Admin can add and edit emergency contact(s) per employee (name, relationship, phone)
-- [ ] **EMP-08**: HR Admin can set and update an employee's PTKP category (TK/0, K/0, K/1, K/2, K/3) and store their BPJS Kesehatan and BPJS Ketenagakerjaan numbers
-- [ ] **EMP-09**: Manager can view employee profiles for employees within their own department only
-- [ ] **EMP-10**: Employee can view their own profile (read-only)
+- [x] **EMP-01**: HR Admin can create an employee profile with personal information (nama lengkap, NIK KTP, tanggal lahir, jenis kelamin, agama, alamat, nomor HP, email)
+- [x] **EMP-02**: HR Admin can record employment details per employee (nomor karyawan, departemen, jabatan, jenis kontrak PKWT/PKWTT, tanggal masuk, status kerja aktif)
+- [x] **EMP-03**: HR Admin can edit any field on an employee profile
+- [x] **EMP-04**: HR Admin can deactivate (terminate) an employee with a termination date and reason
+- [x] **EMP-05**: HR Admin can upload employee documents (KTP, NPWP, kartu BPJS, kontrak kerja, foto) per employee
+- [x] **EMP-06**: HR Admin can view and download uploaded employee documents
+- [x] **EMP-07**: HR Admin can add and edit emergency contact(s) per employee (name, relationship, phone)
+- [x] **EMP-08**: HR Admin can set and update an employee's PTKP category (TK/0, K/0, K/1, K/2, K/3) and store their BPJS Kesehatan and BPJS Ketenagakerjaan numbers
+- [x] **EMP-09**: Manager can view employee profiles for employees within their own department only
+- [x] **EMP-10**: Employee can view their own profile (read-only)
 
 ### Attendance Management (ATT)
 
@@ -153,16 +153,16 @@
 | AUDIT-01 | Phase 1 | Pending |
 | AUDIT-02 | Phase 1 | Pending |
 | DASH-01 | Phase 1 | Pending |
-| EMP-01 | Phase 2 | Pending |
-| EMP-02 | Phase 2 | Pending |
-| EMP-03 | Phase 2 | Pending |
-| EMP-04 | Phase 2 | Pending |
-| EMP-05 | Phase 2 | Pending |
-| EMP-06 | Phase 2 | Pending |
-| EMP-07 | Phase 2 | Pending |
-| EMP-08 | Phase 2 | Pending |
-| EMP-09 | Phase 2 | Pending |
-| EMP-10 | Phase 2 | Pending |
+| EMP-01 | Phase 2 | Complete |
+| EMP-02 | Phase 2 | Complete |
+| EMP-03 | Phase 2 | Complete |
+| EMP-04 | Phase 2 | Complete |
+| EMP-05 | Phase 2 | Complete |
+| EMP-06 | Phase 2 | Complete |
+| EMP-07 | Phase 2 | Complete |
+| EMP-08 | Phase 2 | Complete |
+| EMP-09 | Phase 2 | Complete |
+| EMP-10 | Phase 2 | Complete |
 | ATT-01 | Phase 3 | Pending |
 | ATT-02 | Phase 3 | Pending |
 | ATT-03 | Phase 3 | Pending |

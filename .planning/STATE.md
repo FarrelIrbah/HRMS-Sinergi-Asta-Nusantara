@@ -4,7 +4,7 @@
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** HR staff can manage the complete employee lifecycle in one integrated system with accurate Indonesian tax and social insurance compliance.
-**Current focus:** Phase 2
+**Current focus:** Phase 3
 
 ## Phase Status
 
@@ -66,12 +66,11 @@ Progress: [█████████████████] 17/17 plans comp
 
 - PostgreSQL requires Docker Desktop running (uses existing cms-postgres container on port 5432)
 - Prisma deprecation warning on seed config is cosmetic but noisy
-- **02-01 migration not yet applied** -- must run `npx prisma migrate dev --name add-employee-models` before starting 02-02
 
 ## Session Continuity
 
-Last session: 2026-03-05T08:55:00Z
-Stopped at: Completed 02-08-PLAN.md (Phase 2 complete)
+Last session: 2026-03-05
+Stopped at: Phase 2 complete — verified and approved
 Resume file: None
 
 ## Notes
