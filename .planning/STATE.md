@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ● In Progress (1/? plans) | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (4/? plans) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 3 of 5 (Attendance and Leave Management)
-Plan: 1 of ? (Phase 3 in progress)
+Plan: 4 of ? (Phase 3 in progress)
 Status: In progress
-Last activity: 2026-03-06 - Completed 03-01-PLAN.md (Phase 3 data foundation)
+Last activity: 2026-03-06 - Completed 03-04-PLAN.md (employee attendance UI)
 
-Progress: [██████████████████░░] 18/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 1/?)
+Progress: [██████████████████░░] 21/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 4/?)
 
 ## Decisions
 
@@ -62,6 +62,8 @@ Progress: [██████████████████░░] 18/? pl
 | 31 | Resolver type assertion for zod coerce.date() schemas | z.coerce.date().optional().or(literal) infers unknown; cast needed for react-hook-form v5 compatibility | 02-05 |
 | 32 | Resolver double-cast (as unknown as Resolver<T>) for coerce.date() schemas | react-hook-form v5 dual-type resolution conflict with zod coerce.date().optional().or(literal) | 02-06 |
 | 33 | next.config.mjs used (not next.config.ts) for server action body limit | Project uses .mjs extension; plan referenced .ts but .mjs is the actual file | 03-01 |
+| 34 | Local interface for attendance history records with officeLocation relation | getEmployeeAttendance returns Prisma include with officeLocation; local AttendanceRecordWithLocation interface is cleaner than Prisma.AttendanceRecordGetPayload | 03-04 |
+| 35 | GPS-first with IP fallback in ClockInButton | navigator.geolocation with 8s timeout; on error or denial falls back to server-side IP verification in clockInAction/clockOutAction | 03-04 |
 
 ## Blockers / Concerns
 
@@ -71,7 +73,7 @@ Progress: [██████████████████░░] 18/? pl
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 3, Plan 1 complete — data foundation established
+Stopped at: Phase 3, Plan 4 complete — employee attendance UI built
 Resume file: None
 
 ## Notes
@@ -90,4 +92,4 @@ Resume file: None
 - **Leave schema pattern:** submitLeaveSchema uses .refine() for date range validation (endDate >= startDate).
 
 ---
-*Last updated: 2026-03-06T00:00:00Z*
+*Last updated: 2026-03-06T06:35:00Z*
