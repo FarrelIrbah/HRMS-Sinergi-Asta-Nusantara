@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ● In Progress (4/? plans) | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (5/? plans) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 3 of 5 (Attendance and Leave Management)
-Plan: 4 of ? (Phase 3 in progress)
+Plan: 5 of ? (Phase 3 in progress)
 Status: In progress
-Last activity: 2026-03-06 - Completed 03-04-PLAN.md (employee attendance UI)
+Last activity: 2026-03-06 - Completed 03-05-PLAN.md (employee leave management UI)
 
-Progress: [██████████████████░░] 21/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 4/?)
+Progress: [██████████████████░░] 22/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 5/?)
 
 ## Decisions
 
@@ -64,6 +64,8 @@ Progress: [██████████████████░░] 21/? pl
 | 33 | next.config.mjs used (not next.config.ts) for server action body limit | Project uses .mjs extension; plan referenced .ts but .mjs is the actual file | 03-01 |
 | 34 | Local interface for attendance history records with officeLocation relation | getEmployeeAttendance returns Prisma include with officeLocation; local AttendanceRecordWithLocation interface is cleaner than Prisma.AttendanceRecordGetPayload | 03-04 |
 | 35 | GPS-first with IP fallback in ClockInButton | navigator.geolocation with 8s timeout; on error or denial falls back to server-side IP verification in clockInAction/clockOutAction | 03-04 |
+| 36 | Resolver<T> single cast for zodResolver with coerce.date() schemas | `as Resolver<SubmitLeaveInput>` (not ReturnType<typeof zodResolver>) matches established project pattern; prevents TS2322 on FormField control | 03-05 |
+| 37 | LeaveBalanceCard accepts leaveTypes + balances props | Shows cards for all leave types even if balance row not yet created in DB; balanceMap lookup with fallback to lt.annualQuota | 03-05 |
 
 ## Blockers / Concerns
 
@@ -73,7 +75,7 @@ Progress: [██████████████████░░] 21/? pl
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 3, Plan 4 complete — employee attendance UI built
+Stopped at: Phase 3, Plan 5 complete — employee leave management UI built
 Resume file: None
 
 ## Notes
@@ -92,4 +94,4 @@ Resume file: None
 - **Leave schema pattern:** submitLeaveSchema uses .refine() for date range validation (endDate >= startDate).
 
 ---
-*Last updated: 2026-03-06T06:35:00Z*
+*Last updated: 2026-03-06T06:26:00Z*
