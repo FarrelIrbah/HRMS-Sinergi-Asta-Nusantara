@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ● In Progress (7/? plans) | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (8/? plans) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 3 of 5 (Attendance and Leave Management)
-Plan: 7 of ? (Phase 3 in progress)
+Plan: 8 of ? (Phase 3 in progress)
 Status: In progress
-Last activity: 2026-03-06 - Completed 03-07-PLAN.md (leave approval management UI)
+Last activity: 2026-03-06 - Completed 03-08-PLAN.md (attendance export API - XLSX and PDF)
 
-Progress: [████████████████████░░] 24/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 7/?)
+Progress: [████████████████████░░] 25/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 8/?)
 
 ## Decisions
 
@@ -70,6 +70,9 @@ Progress: [████████████████████░░] 2
 | 39 | pendingCount computed from already-fetched serialized list | No extra DB count query needed; list already filtered by status | 03-07 |
 | 40 | ManualRecordDialog created in Task 1 commit (not Task 2) to avoid tsc failure | attendance-summary-table.tsx imports it; creating in same commit keeps type checking clean between tasks | 03-06 |
 | 41 | Resolver<ManualAttendanceInput> single cast for zodResolver on manualAttendanceSchema | coerce.date() schema pattern; matches Decision 36 convention established in 03-05 | 03-06 |
+| 42 | React.createElement cast to ReactElement<DocumentProps> for renderToStream | renderToStream parameter type is more specific than FunctionComponentElement return; cast resolves without runtime impact | 03-08 |
+| 43 | Buffer converted to new Uint8Array(buffer) for Route Handler Response | Web API BodyInit does not include Node.js Buffer; Uint8Array satisfies BodyInit and works at runtime | 03-08 |
+| 44 | ExportButtons restricted to isHRAdmin (not MANAGER) | Matches API route auth check which also restricts to HR_ADMIN/SUPER_ADMIN | 03-08 |
 
 ## Blockers / Concerns
 
@@ -79,7 +82,7 @@ Progress: [████████████████████░░] 2
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 3, Plan 6 complete (executed after 03-07 due to rate limit) — attendance admin view built
+Stopped at: Phase 3, Plan 8 complete — attendance export API (XLSX + PDF) built
 Resume file: None
 
 ## Notes
@@ -100,4 +103,4 @@ Resume file: None
 - **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
 
 ---
-*Last updated: 2026-03-06T08:04:17Z*
+*Last updated: 2026-03-06T08:16:03Z*
