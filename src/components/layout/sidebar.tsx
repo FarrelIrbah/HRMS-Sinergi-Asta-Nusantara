@@ -13,6 +13,8 @@ import {
   X,
   Clock,
   CalendarDays,
+  ClipboardList,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +58,18 @@ const navItems: NavItem[] = [
     href: "/leave",
     icon: CalendarDays,
     roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
+  },
+  {
+    label: "Admin Absensi",
+    href: "/attendance-admin",
+    icon: ClipboardList,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"],
+  },
+  {
+    label: "Kelola Cuti",
+    href: "/leave/manage",
+    icon: CheckSquare,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"],
   },
   {
     label: "Pengguna",
