@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ● In Progress (8/? plans) | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (9/9 plans, awaiting verification) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 3 of 5 (Attendance and Leave Management)
-Plan: 8 of ? (Phase 3 in progress)
-Status: In progress
-Last activity: 2026-03-06 - Completed 03-08-PLAN.md (attendance export API - XLSX and PDF)
+Plan: 9 of 9 (Phase 3 Task 1 complete, awaiting human verification checkpoint)
+Status: In progress — awaiting checkpoint:human-verify
+Last activity: 2026-03-06 - Completed 03-09 Task 1 (leave report, dashboard widgets, seed data)
 
-Progress: [████████████████████░░] 25/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 8/?)
+Progress: [█████████████████████░░] 26/27 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9 pending verification)
 
 ## Decisions
 
@@ -73,6 +73,9 @@ Progress: [████████████████████░░] 2
 | 42 | React.createElement cast to ReactElement<DocumentProps> for renderToStream | renderToStream parameter type is more specific than FunctionComponentElement return; cast resolves without runtime impact | 03-08 |
 | 43 | Buffer converted to new Uint8Array(buffer) for Route Handler Response | Web API BodyInit does not include Node.js Buffer; Uint8Array satisfies BodyInit and works at runtime | 03-08 |
 | 44 | ExportButtons restricted to isHRAdmin (not MANAGER) | Matches API route auth check which also restricts to HR_ADMIN/SUPER_ADMIN | 03-08 |
+| 45 | upcomingLeave for employee fetched in dashboard/page.tsx and passed as prop | Avoids breaking getDashboardData no-args Decision #24 while supporting per-employee data | 03-09 |
+| 46 | pendingLeaveRequests kept for backward compat; pendingLeaveCount is canonical Phase 3 field | super-admin-dashboard uses pendingLeaveRequests; hr-admin and manager use pendingLeaveCount | 03-09 |
+| 47 | Seed attendance records use dynamic date calculation relative to today | Seed is date-agnostic; always seeds last week's data regardless of run date | 03-09 |
 
 ## Blockers / Concerns
 
@@ -82,7 +85,7 @@ Progress: [████████████████████░░] 2
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 3, Plan 8 complete — attendance export API (XLSX + PDF) built
+Stopped at: Phase 3, Plan 9 Task 1 complete — awaiting checkpoint:human-verify for full Phase 3 QA
 Resume file: None
 
 ## Notes
@@ -103,4 +106,4 @@ Resume file: None
 - **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
 
 ---
-*Last updated: 2026-03-06T08:16:03Z*
+*Last updated: 2026-03-06T09:00:00Z*
