@@ -509,6 +509,22 @@ async function main() {
 
   console.log(`  Emergency Contacts: ${ecCount} seeded`);
 
+  // ── 9b. Assign officeLocationId to employees that don't have one ──────
+  // Ensures clock-in/out works for all seeded employees
+  const defaultOffice = await prisma.officeLocation.findFirst({
+    where: { deletedAt: null },
+    select: { id: true },
+  });
+  if (defaultOffice) {
+    const assigned = await prisma.employee.updateMany({
+      where: { officeLocationId: null, isActive: true },
+      data: { officeLocationId: defaultOffice.id },
+    });
+    if (assigned.count > 0) {
+      console.log(`  Office location assigned to ${assigned.count} employees`);
+    }
+  }
+
   // ── 10. Attendance Records (Phase 3) ──────────────────────────────────
   // Seed 5 weekday records (Mon-Fri of last week) for active employees
   // clockIn: 08:00 WIB = 01:00 UTC; clockOut: 17:00 WIB = 10:00 UTC
