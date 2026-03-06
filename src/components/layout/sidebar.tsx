@@ -11,6 +11,8 @@ import {
   FileText,
   Menu,
   X,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +43,18 @@ const navItems: NavItem[] = [
     label: "Karyawan",
     href: "/employees",
     icon: Users2,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
+  },
+  {
+    label: "Absensi",
+    href: "/attendance",
+    icon: Clock,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
+  },
+  {
+    label: "Cuti",
+    href: "/leave",
+    icon: CalendarDays,
     roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
   },
   {
