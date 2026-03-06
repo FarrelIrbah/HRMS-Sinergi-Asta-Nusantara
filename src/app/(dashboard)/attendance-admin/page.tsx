@@ -5,6 +5,7 @@ import { getMonthlyAttendanceRecap } from "@/lib/services/attendance.service";
 import { AttendanceFilters } from "./_components/attendance-filters";
 import { AttendanceSummaryTable } from "./_components/attendance-summary-table";
 import { ManualRecordDialog } from "./_components/manual-record-dialog";
+import { ExportButtons } from "./_components/export-buttons";
 
 interface PageProps {
   searchParams: Promise<{ month?: string; year?: string }>;
@@ -66,6 +67,7 @@ export default async function AttendanceAdminPage({ searchParams }: PageProps) {
         </div>
         <div className="flex gap-2 items-center">
           <AttendanceFilters />
+          {isHRAdmin && <ExportButtons month={month} year={year} />}
           {isHRAdmin && <ManualRecordDialog employees={allEmployees} />}
         </div>
       </div>
