@@ -47,23 +47,23 @@
 
 ### Attendance Management (ATT)
 
-- [ ] **ATT-01**: Employee can clock in via the web — server validates that the request originates from the employee's assigned office location (IP range match or GPS coordinates within configured radius)
-- [ ] **ATT-02**: Employee can clock out via the web — same IP/GPS validation as clock-in
-- [ ] **ATT-03**: System flags late arrival when clock-in time is after the employee's scheduled start time
-- [ ] **ATT-04**: System flags early departure when clock-out time is before the employee's scheduled end time
-- [ ] **ATT-05**: System calculates overtime hours when clock-out time exceeds scheduled end time by at least a configurable minimum threshold
-- [ ] **ATT-06**: HR Admin can view a monthly attendance recap per employee (clock-in/out times, late/early flags, total hours, overtime)
-- [ ] **ATT-07**: HR Admin can export the attendance report as PDF or Excel
-- [ ] **ATT-08**: Manager can view attendance records for employees in their department
+- [x] **ATT-01**: Employee can clock in via the web — server validates that the request originates from the employee's assigned office location (IP range match or GPS coordinates within configured radius)
+- [x] **ATT-02**: Employee can clock out via the web — same IP/GPS validation as clock-in
+- [x] **ATT-03**: System flags late arrival when clock-in time is after the employee's scheduled start time
+- [x] **ATT-04**: System flags early departure when clock-out time is before the employee's scheduled end time
+- [x] **ATT-05**: System calculates overtime hours when clock-out time exceeds scheduled end time by at least a configurable minimum threshold
+- [x] **ATT-06**: HR Admin can view a monthly attendance recap per employee (clock-in/out times, late/early flags, total hours, overtime)
+- [x] **ATT-07**: HR Admin can export the attendance report as PDF or Excel
+- [x] **ATT-08**: Manager can view attendance records for employees in their department
 
 ### Leave Management (LEAVE)
 
-- [ ] **LEAVE-01**: Employee can submit a leave request specifying type, date range, and reason
-- [ ] **LEAVE-02**: System supports all Indonesian statutory leave types per UU No. 13 Tahun 2003: cuti tahunan (12 hari kerja), cuti sakit (with doctor's note), cuti melahirkan (3 bulan), cuti keguguran (1.5 bulan), cuti haid (2 hari pertama), cuti pernikahan (3 hari), cuti pernikahan anak (2 hari), cuti khitan/baptis anak (2 hari), cuti kematian keluarga inti (2 hari), cuti kematian anggota keluarga (1 hari), cuti menjalankan ibadah wajib (durasi sesuai kebutuhan)
-- [ ] **LEAVE-03**: Manager or HR Admin can approve or reject a leave request with optional notes; employee is notified of the decision
-- [ ] **LEAVE-04**: Employee sees remaining leave balance per leave type in real time
-- [ ] **LEAVE-05**: System automatically deducts from leave balance when a leave request is approved
-- [ ] **LEAVE-06**: HR Admin can view a leave usage report per employee or department for a given period
+- [x] **LEAVE-01**: Employee can submit a leave request specifying type, date range, and reason
+- [x] **LEAVE-02**: System supports all Indonesian statutory leave types per UU No. 13 Tahun 2003: cuti tahunan (12 hari kerja), cuti sakit (with doctor's note), cuti melahirkan (3 bulan), cuti keguguran (1.5 bulan), cuti haid (2 hari pertama), cuti pernikahan (3 hari), cuti pernikahan anak (2 hari), cuti khitan/baptis anak (2 hari), cuti kematian keluarga inti (2 hari), cuti kematian anggota keluarga (1 hari), cuti menjalankan ibadah wajib (durasi sesuai kebutuhan)
+- [x] **LEAVE-03**: Manager or HR Admin can approve or reject a leave request with optional notes; employee is notified of the decision
+- [x] **LEAVE-04**: Employee sees remaining leave balance per leave type in real time
+- [x] **LEAVE-05**: System automatically deducts from leave balance when a leave request is approved
+- [x] **LEAVE-06**: HR Admin can view a leave usage report per employee or department for a given period
 
 ### Payroll Management (PAY)
 
@@ -163,20 +163,20 @@
 | EMP-08 | Phase 2 | Complete |
 | EMP-09 | Phase 2 | Complete |
 | EMP-10 | Phase 2 | Complete |
-| ATT-01 | Phase 3 | Pending |
-| ATT-02 | Phase 3 | Pending |
-| ATT-03 | Phase 3 | Pending |
-| ATT-04 | Phase 3 | Pending |
-| ATT-05 | Phase 3 | Pending |
-| ATT-06 | Phase 3 | Pending |
-| ATT-07 | Phase 3 | Pending |
-| ATT-08 | Phase 3 | Pending |
-| LEAVE-01 | Phase 3 | Pending |
-| LEAVE-02 | Phase 3 | Pending |
-| LEAVE-03 | Phase 3 | Pending |
-| LEAVE-04 | Phase 3 | Pending |
-| LEAVE-05 | Phase 3 | Pending |
-| LEAVE-06 | Phase 3 | Pending |
+| ATT-01 | Phase 3 | Complete |
+| ATT-02 | Phase 3 | Complete |
+| ATT-03 | Phase 3 | Complete |
+| ATT-04 | Phase 3 | Complete |
+| ATT-05 | Phase 3 | Complete |
+| ATT-06 | Phase 3 | Complete |
+| ATT-07 | Phase 3 | Complete |
+| ATT-08 | Phase 3 | Complete |
+| LEAVE-01 | Phase 3 | Complete |
+| LEAVE-02 | Phase 3 | Complete |
+| LEAVE-03 | Phase 3 | Complete |
+| LEAVE-04 | Phase 3 | Complete |
+| LEAVE-05 | Phase 3 | Complete |
+| LEAVE-06 | Phase 3 | Complete |
 | PAY-01 | Phase 4 | Pending |
 | PAY-02 | Phase 4 | Pending |
 | PAY-03 | Phase 4 | Pending |
