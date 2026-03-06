@@ -509,9 +509,223 @@ async function main() {
 
   console.log(`  Emergency Contacts: ${ecCount} seeded`);
 
+  // ── 10. Attendance Records (Phase 3) ──────────────────────────────────
+  // Seed 5 weekday records (Mon-Fri of last week) for active employees
+  // clockIn: 08:00 WIB = 01:00 UTC; clockOut: 17:00 WIB = 10:00 UTC
+  // One record per week has isLate=true (Wednesday, clockIn at 08:35 WIB = 01:35 UTC)
+
+  const officeLocation = await prisma.officeLocation.findFirst({
+    where: { deletedAt: null },
+    select: { id: true },
+  });
+
+  let attendanceCount = 0;
+  if (officeLocation) {
+    // Find all active employees (excluding the inactive one EMP-2026-0008)
+    const activeEmployees = await prisma.employee.findMany({
+      where: { isActive: true },
+      select: { id: true, nik: true },
+    });
+
+    // Last week Mon-Fri: calculate dynamically from today
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    // Days since last Monday (if today is Mon=1, go back 7; if Fri=5, go back 11)
+    const daysToLastMonday = dayOfWeek === 0 ? 6 : dayOfWeek + 6;
+    const lastMonday = new Date(today);
+    lastMonday.setUTCDate(today.getUTCDate() - daysToLastMonday);
+    lastMonday.setUTCHours(0, 0, 0, 0);
+
+    // Define last week's weekdays
+    const weekdays = [0, 1, 2, 3, 4].map((offset) => {
+      const d = new Date(lastMonday);
+      d.setUTCDate(lastMonday.getUTCDate() + offset);
+      return d;
+    });
+
+    for (const employee of activeEmployees) {
+      for (let i = 0; i < weekdays.length; i++) {
+        const date = weekdays[i];
+        const isWednesday = i === 2; // Wednesday = index 2 (late record)
+
+        const existing = await prisma.attendanceRecord.findFirst({
+          where: { employeeId: employee.id, date },
+        });
+        if (existing) {
+          attendanceCount++;
+          continue;
+        }
+
+        // clockIn: 08:00 WIB = 01:00 UTC (on-time), or 08:35 WIB = 01:35 UTC (late)
+        const clockIn = new Date(date);
+        if (isWednesday) {
+          clockIn.setUTCHours(1, 35, 0, 0); // 08:35 WIB
+        } else {
+          clockIn.setUTCHours(1, 0, 0, 0); // 08:00 WIB
+        }
+
+        // clockOut: 17:00 WIB = 10:00 UTC
+        const clockOut = new Date(date);
+        clockOut.setUTCHours(10, 0, 0, 0);
+
+        const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / 60000;
+        const lateMinutes = isWednesday ? 35 : 0;
+        const earlyOutMinutes = 0;
+        const overtimeMinutes = 0;
+
+        await prisma.attendanceRecord.create({
+          data: {
+            employeeId: employee.id,
+            officeLocationId: officeLocation.id,
+            date,
+            clockIn,
+            clockOut,
+            isLate: isWednesday,
+            lateMinutes,
+            isEarlyOut: false,
+            earlyOutMinutes,
+            overtimeMinutes,
+            totalMinutes,
+          },
+        });
+        attendanceCount++;
+      }
+    }
+  } else {
+    console.log("  Skipping attendance records: no office location found");
+  }
+
+  console.log(`  Attendance Records: ${attendanceCount} seeded`);
+
+  // ── 11. Leave Balances (Phase 3) ──────────────────────────────────────
+  // Ensure leave balances exist for all active employees for current year
+  const currentYear = new Date().getFullYear();
+  const allLeaveTypes = await prisma.leaveType.findMany({
+    where: { deletedAt: null },
+    select: { id: true, annualQuota: true },
+  });
+
+  const activeEmployeesForBalance = await prisma.employee.findMany({
+    where: { isActive: true },
+    select: { id: true },
+  });
+
+  let balanceCount = 0;
+  for (const emp of activeEmployeesForBalance) {
+    for (const lt of allLeaveTypes) {
+      await prisma.leaveBalance.upsert({
+        where: {
+          employeeId_leaveTypeId_year: {
+            employeeId: emp.id,
+            leaveTypeId: lt.id,
+            year: currentYear,
+          },
+        },
+        create: {
+          employeeId: emp.id,
+          leaveTypeId: lt.id,
+          year: currentYear,
+          allocatedDays: lt.annualQuota,
+          usedDays: 0,
+        },
+        update: {},
+      });
+      balanceCount++;
+    }
+  }
+
+  console.log(`  Leave Balances: ${balanceCount} upserted`);
+
+  // ── 12. Leave Requests (Phase 3) ──────────────────────────────────────
+  // Add one PENDING leave request for the main employee test user (Rina)
+  // and one additional for Ahmad to show variety
+
+  const annualLeaveType = await prisma.leaveType.findFirst({
+    where: { name: "Cuti Tahunan", deletedAt: null },
+    select: { id: true },
+  });
+
+  const rinaEmployee = await prisma.employee.findFirst({
+    where: { nik: "EMP-2026-0003" },
+    select: { id: true },
+  });
+
+  const ahmadEmployee = await prisma.employee.findFirst({
+    where: { nik: "EMP-2026-0004" },
+    select: { id: true },
+  });
+
+  let leaveRequestCount = 0;
+
+  if (rinaEmployee && annualLeaveType) {
+    // Rina's PENDING leave request: next week Mon-Tue
+    const nextMonday = new Date();
+    const dWk = nextMonday.getDay();
+    const daysUntilNextMonday = dWk === 0 ? 1 : 8 - dWk;
+    nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
+    nextMonday.setUTCHours(0, 0, 0, 0);
+    const nextTuesday = new Date(nextMonday);
+    nextTuesday.setUTCDate(nextMonday.getUTCDate() + 1);
+
+    const existingRina = await prisma.leaveRequest.findFirst({
+      where: {
+        employeeId: rinaEmployee.id,
+        status: "PENDING",
+        leaveTypeId: annualLeaveType.id,
+      },
+    });
+    if (!existingRina) {
+      await prisma.leaveRequest.create({
+        data: {
+          employeeId: rinaEmployee.id,
+          leaveTypeId: annualLeaveType.id,
+          startDate: nextMonday,
+          endDate: nextTuesday,
+          workingDays: 2,
+          reason: "Keperluan keluarga",
+          status: "PENDING",
+        },
+      });
+      leaveRequestCount++;
+    }
+  }
+
+  if (ahmadEmployee && annualLeaveType) {
+    // Ahmad's PENDING leave request: next Wednesday
+    const nextWed = new Date();
+    const dWk2 = nextWed.getDay();
+    const daysUntilWed = dWk2 <= 3 ? 3 - dWk2 + 7 : 10 - dWk2;
+    nextWed.setDate(nextWed.getDate() + daysUntilWed);
+    nextWed.setUTCHours(0, 0, 0, 0);
+
+    const existingAhmad = await prisma.leaveRequest.findFirst({
+      where: {
+        employeeId: ahmadEmployee.id,
+        status: "PENDING",
+        leaveTypeId: annualLeaveType.id,
+      },
+    });
+    if (!existingAhmad) {
+      await prisma.leaveRequest.create({
+        data: {
+          employeeId: ahmadEmployee.id,
+          leaveTypeId: annualLeaveType.id,
+          startDate: nextWed,
+          endDate: nextWed,
+          workingDays: 1,
+          reason: "Urusan pribadi",
+          status: "PENDING",
+        },
+      });
+      leaveRequestCount++;
+    }
+  }
+
+  console.log(`  Leave Requests: ${leaveRequestCount} seeded`);
+
   // ── Summary ───────────────────────────────────────────────────────────
   console.log(
-    `\nSeed complete: ${users.length} users, ${Object.keys(departments).length} departments, ${positionCount} positions, ${locationCount} locations, ${leaveCount} leave types, ${employeeCount + additionalCount} employees, ${ecCount} emergency contacts`
+    `\nSeed complete: ${users.length} users, ${Object.keys(departments).length} departments, ${positionCount} positions, ${locationCount} locations, ${leaveCount} leave types, ${employeeCount + additionalCount} employees, ${ecCount} emergency contacts, ${attendanceCount} attendance records, ${balanceCount} leave balances, ${leaveRequestCount} leave requests`
   );
 }
 

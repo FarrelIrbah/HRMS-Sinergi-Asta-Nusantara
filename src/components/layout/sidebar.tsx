@@ -15,6 +15,7 @@ import {
   CalendarDays,
   ClipboardList,
   CheckSquare,
+  BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,6 +71,12 @@ const navItems: NavItem[] = [
     href: "/leave/manage",
     icon: CheckSquare,
     roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"],
+  },
+  {
+    label: "Laporan Cuti",
+    href: "/leave/report",
+    icon: BarChart2,
+    roles: ["SUPER_ADMIN", "HR_ADMIN"],
   },
   {
     label: "Pengguna",
