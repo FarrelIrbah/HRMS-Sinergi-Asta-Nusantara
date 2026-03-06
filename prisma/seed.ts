@@ -129,18 +129,19 @@ async function main() {
     {
       name: "Kantor Pusat Jakarta",
       address: "Jl. Sudirman No. 123, Jakarta Selatan",
-      allowedIPs: ["192.168.1.0/24"],
-      latitude: -6.2088,
-      longitude: 106.8456,
-      radiusMeters: 200,
+      // Dev seed: allowedIPs empty = allow all; GPS null = skip radius check
+      allowedIPs: [] as string[],
+      latitude: null,
+      longitude: null,
+      radiusMeters: null,
     },
     {
       name: "Kantor Cabang Bekasi",
       address: "Jl. Ahmad Yani No. 45, Bekasi",
-      allowedIPs: ["10.0.0.0/24"],
-      latitude: -6.2383,
-      longitude: 106.9756,
-      radiusMeters: 150,
+      allowedIPs: [] as string[],
+      latitude: null,
+      longitude: null,
+      radiusMeters: null,
     },
   ];
 
@@ -151,6 +152,17 @@ async function main() {
     });
     if (!existing) {
       await prisma.officeLocation.create({ data: loc });
+    } else {
+      // Update existing to dev-permissive config
+      await prisma.officeLocation.update({
+        where: { id: existing.id },
+        data: {
+          allowedIPs: loc.allowedIPs,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          radiusMeters: loc.radiusMeters,
+        },
+      });
     }
     locationCount++;
   }
