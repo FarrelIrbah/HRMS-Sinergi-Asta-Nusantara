@@ -12,18 +12,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 |-------|------|--------|--------------|
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
-| 3 | Attendance and Leave Management | ● In Progress (5/? plans) | 14 |
+| 3 | Attendance and Leave Management | ● In Progress (7/? plans) | 14 |
 | 4 | Payroll Management | ○ Pending | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 3 of 5 (Attendance and Leave Management)
-Plan: 5 of ? (Phase 3 in progress)
+Plan: 7 of ? (Phase 3 in progress)
 Status: In progress
-Last activity: 2026-03-06 - Completed 03-05-PLAN.md (employee leave management UI)
+Last activity: 2026-03-06 - Completed 03-07-PLAN.md (leave approval management UI)
 
-Progress: [██████████████████░░] 22/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 5/?)
+Progress: [████████████████████░░] 24/? plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 7/?)
 
 ## Decisions
 
@@ -66,6 +66,10 @@ Progress: [██████████████████░░] 22/? pl
 | 35 | GPS-first with IP fallback in ClockInButton | navigator.geolocation with 8s timeout; on error or denial falls back to server-side IP verification in clockInAction/clockOutAction | 03-04 |
 | 36 | Resolver<T> single cast for zodResolver with coerce.date() schemas | `as Resolver<SubmitLeaveInput>` (not ReturnType<typeof zodResolver>) matches established project pattern; prevents TS2322 on FormField control | 03-05 |
 | 37 | LeaveBalanceCard accepts leaveTypes + balances props | Shows cards for all leave types even if balance row not yet created in DB; balanceMap lookup with fallback to lt.annualQuota | 03-05 |
+| 38 | Reject notes validated client-side before server action call | Avoids round-trip for obvious empty-notes validation; server action (rejectLeaveSchema) also validates for defense in depth | 03-07 |
+| 39 | pendingCount computed from already-fetched serialized list | No extra DB count query needed; list already filtered by status | 03-07 |
+| 40 | ManualRecordDialog created in Task 1 commit (not Task 2) to avoid tsc failure | attendance-summary-table.tsx imports it; creating in same commit keeps type checking clean between tasks | 03-06 |
+| 41 | Resolver<ManualAttendanceInput> single cast for zodResolver on manualAttendanceSchema | coerce.date() schema pattern; matches Decision 36 convention established in 03-05 | 03-06 |
 
 ## Blockers / Concerns
 
@@ -74,8 +78,8 @@ Progress: [██████████████████░░] 22/? pl
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Phase 3, Plan 5 complete — employee leave management UI built
+Last session: 2026-03-06T08:04:17Z
+Stopped at: Phase 3, Plan 7 complete — leave approval management UI built
 Resume file: None
 
 ## Notes
@@ -93,5 +97,7 @@ Resume file: None
 - **Attendance schema pattern:** clockActionSchema for GPS coords (optional), manualAttendanceSchema for admin override with reason required.
 - **Leave schema pattern:** submitLeaveSchema uses .refine() for date range validation (endDate >= startDate).
 
+- **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
+
 ---
-*Last updated: 2026-03-06T06:26:00Z*
+*Last updated: 2026-03-06T08:04:17Z*
