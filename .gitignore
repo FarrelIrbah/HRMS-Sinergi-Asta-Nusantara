@@ -41,3 +41,7 @@ next-env.d.ts
 
 # uploads
 /uploads/
+
+# Claude Code
+.claude/
+.mcp.json
