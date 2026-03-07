@@ -86,6 +86,11 @@ enum LeaveStatus {
   CANCELLED
 }
 
+enum PayrollStatus {
+  DRAFT
+  FINALIZED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
@@ -212,6 +217,7 @@ model Employee {
   ptkpStatus             PTKPStatus?
   bpjsKesehatanNo        String?
   bpjsKetenagakerjaanNo  String?
+  baseSalary             Decimal        @default(0) @db.Decimal(15, 2)
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
@@ -224,6 +230,8 @@ model Employee {
   attendances       AttendanceRecord[]
   leaveRequests     LeaveRequest[]
   leaveBalances     LeaveBalance[]
+  allowances        EmployeeAllowance[]
+  payrollEntries    PayrollEntry[]
 
   @@map("employees")
 }
@@ -332,4 +340,68 @@ model LeaveBalance {
 
   @@unique([employeeId, leaveTypeId, year])
   @@map("leave_balances")
+}
+
+model EmployeeAllowance {
+  id          String   @id @default(cuid())
+  employeeId  String
+  name        String
+  amount      Decimal  @db.Decimal(15, 2)
+  isFixed     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_allowances")
+}
+
+model PayrollRun {
+  id        String        @id @default(cuid())
+  month     Int
+  year      Int
+  status    PayrollStatus @default(DRAFT)
+  createdBy String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  entries PayrollEntry[]
+
+  @@unique([month, year])
+  @@map("payroll_runs")
+}
+
+model PayrollEntry {
+  id               String   @id @default(cuid())
+  payrollRunId     String
+  employeeId       String
+  employeeNik      String
+  employeeName     String
+  baseSalary       Decimal  @db.Decimal(15, 2)
+  totalAllowances  Decimal  @db.Decimal(15, 2)
+  overtimePay      Decimal  @db.Decimal(15, 2)
+  absenceDeduction Decimal  @db.Decimal(15, 2)
+  thrAmount        Decimal  @db.Decimal(15, 2)  @default(0)
+  grossPay         Decimal  @db.Decimal(15, 2)
+  bpjsKesEmp       Decimal  @db.Decimal(15, 2)
+  bpjsKesEmpr      Decimal  @db.Decimal(15, 2)
+  bpjsJhtEmp       Decimal  @db.Decimal(15, 2)
+  bpjsJhtEmpr      Decimal  @db.Decimal(15, 2)
+  bpjsJpEmp        Decimal  @db.Decimal(15, 2)
+  bpjsJpEmpr       Decimal  @db.Decimal(15, 2)
+  bpjsJkk          Decimal  @db.Decimal(15, 2)
+  bpjsJkm          Decimal  @db.Decimal(15, 2)
+  pph21            Decimal  @db.Decimal(15, 2)
+  totalDeductions  Decimal  @db.Decimal(15, 2)
+  netPay           Decimal  @db.Decimal(15, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id])
+
+  @@unique([payrollRunId, employeeId])
+  @@index([payrollRunId])
+  @@index([employeeId])
+  @@map("payroll_entries")
 }
