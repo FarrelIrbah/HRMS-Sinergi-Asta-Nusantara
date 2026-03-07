@@ -114,14 +114,14 @@ Plans:
 **Plans:** 8 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- Schema migration (PayrollRun, PayrollEntry, EmployeeAllowance + Employee.baseSalary), decimal.js, constants (TER tables, BPJS rates, PTKP values), enums, Zod schemas
-- [ ] 04-02-PLAN.md -- Pure calculation services: bpjs.service.ts (all BPJS components with caps) + pph21.service.ts (TER lookup + December annualization)
-- [ ] 04-03-PLAN.md -- Payroll run engine: payroll.service.ts (batch calculation + DB persistence) + payroll.actions.ts + Employee "Gaji & Tunjangan" profile tab
-- [ ] 04-04-PLAN.md -- HR Admin payroll UI: /payroll list page with run form + /payroll/[periodId] detail + finalize button
-- [ ] 04-05-PLAN.md -- Payslip PDF: payslip-pdf.tsx Document component + /api/payroll/payslip/[entryId] route + /payslip employee page
-- [ ] 04-06-PLAN.md -- Payroll summary Excel: /api/payroll-report route + download button on period detail page
-- [ ] 04-07-PLAN.md -- THR: thr.service.ts (Permenaker 6/2016 calculation) + /payroll/thr page + addTHRToPayrollAction
-- [ ] 04-08-PLAN.md -- Dashboard integration, seed salaries, sidebar nav, end-to-end verification checkpoint
+- [x] 04-01-PLAN.md -- Schema migration (PayrollRun, PayrollEntry, EmployeeAllowance + Employee.baseSalary), decimal.js, constants (TER tables, BPJS rates, PTKP values), enums, Zod schemas
+- [x] 04-02-PLAN.md -- Pure calculation services: bpjs.service.ts (all BPJS components with caps) + pph21.service.ts (TER lookup + December annualization)
+- [x] 04-03-PLAN.md -- Payroll run engine: payroll.service.ts (batch calculation + DB persistence) + payroll.actions.ts + Employee "Gaji & Tunjangan" profile tab
+- [x] 04-04-PLAN.md -- HR Admin payroll UI: /payroll list page with run form + /payroll/[periodId] detail + finalize button
+- [x] 04-05-PLAN.md -- Payslip PDF: payslip-pdf.tsx Document component + /api/payroll/payslip/[entryId] route + /payslip employee page
+- [x] 04-06-PLAN.md -- Payroll summary Excel: /api/payroll-report route + download button on period detail page
+- [x] 04-07-PLAN.md -- THR: thr.service.ts (Permenaker 6/2016 calculation) + /payroll/thr page + addTHRToPayrollAction
+- [x] 04-08-PLAN.md -- Dashboard integration, seed salaries, sidebar nav, end-to-end verification checkpoint
 
 **Requirements:**
 - PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-06, PAY-07, PAY-08, PAY-09
@@ -181,7 +181,7 @@ Plans:
 | 1 | Foundation | Complete (9 plans) | 14 |
 | 2 | Employee Data Management | Complete (8 plans) | 10 |
 | 3 | Attendance and Leave Management | Complete (9 plans) | 14 |
-| 4 | Payroll Management | Planning complete (8 plans) | 9 |
+| 4 | Payroll Management | Complete (8 plans) | 9 |
 | 5 | Recruitment Management | Not Started | 7 |
 
 ---

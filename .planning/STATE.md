@@ -4,7 +4,7 @@
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** HR staff can manage the complete employee lifecycle in one integrated system with accurate Indonesian tax and social insurance compliance.
-**Current focus:** Phase 4
+**Current focus:** Phase 5
 
 ## Phase Status
 
@@ -13,17 +13,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ● Complete (9/9 plans) | 14 |
-| 4 | Payroll Management | ○ In Progress (7/8) | 9 |
+| 4 | Payroll Management | ● Complete (8/8 plans) | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
-Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 7 of 8
-Status: Plan 04-07 complete. THR calculation service and HR Admin /payroll/thr page built.
-Last activity: 2026-03-07 - Completed 04-07-PLAN.md (thr.service.ts + /payroll/thr page + addTHRToPayrollAction)
+Phase: 5 of 5 (Recruitment Management) — Not started
+Plan: 0 of TBD
+Status: Phase 4 complete (human-verified 2026-03-08). Phase 5 pending planning.
+Last activity: 2026-03-08 - Completed 04-08-PLAN.md (seed salaries, sidebar nav, dashboard widget, gap fixes)
 
-Progress: [█████████████████████████████░] 7/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 7/8)
+Progress: [████████████████████████████████] 8/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -94,6 +94,7 @@ Progress: [███████████████████████
 | 63 | THR basis = gaji pokok + tunjangan tetap (isFixed=true) only | Permenaker 6/2016; mirrors BPJS basis; non-fixed allowances excluded | 04-07 |
 | 64 | Employees without agama field skipped gracefully in THR page and action | Returns ineligible with explanatory note rather than crashing; agama is nullable in schema | 04-07 |
 | 65 | AddTHRForm is separate client component; page.tsx stays pure server component | Follows run-payroll-form.tsx separation pattern; keeps server component clean | 04-07 |
+| 66 | Payslip download uses direct anchor + buttonVariants, not Button asChild | asChild + disabled={false} can cause Slot interaction issues; direct anchor is simpler and reliable | 04-08 |
 
 ## Blockers / Concerns
 
@@ -102,8 +103,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T13:03:52Z
-Stopped at: Completed 04-07-PLAN.md — THR service + /payroll/thr page + addTHRToPayrollAction
+Last session: 2026-03-08
+Stopped at: Phase 4 complete — all 8 plans executed, human-verified, gap fixes applied
 Resume file: None
 
 ## Notes
