@@ -6,13 +6,17 @@ import {
   runPayrollSchema,
   finalizePayrollSchema,
   updateEmployeeSalarySchema,
+  calculateTHRSchema,
 } from "@/lib/validations/payroll";
 import {
   runPayroll,
   finalizePayroll,
 } from "@/lib/services/payroll.service";
+import { calculateEmployeeTHR } from "@/lib/services/thr.service";
 import { prisma } from "@/lib/prisma";
+import Decimal from "decimal.js";
 import type { ServiceResult } from "@/types";
+import type { Religion } from "@/types/enums";
 
 // ===== AUTH HELPER =====
 
@@ -121,6 +125,131 @@ export async function updateEmployeeSalaryAction(
     }
 
     revalidatePath(`/employees/${employeeId}`);
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+    return { success: false, error: message };
+  }
+}
+
+// ===== THR ACTION =====
+
+/**
+ * Append THR amounts to existing DRAFT PayrollEntry rows for the given month/year.
+ *
+ * - Finds the DRAFT PayrollRun for the specified month/year.
+ * - For each active employee with an entry in that run, calculates THR per
+ *   Permenaker 6/2016 using the employee's agama, joinDate, and fixed allowances.
+ * - Updates thrAmount, grossPay, and netPay on each eligible PayrollEntry.
+ *
+ * @throws if no PayrollRun exists for the month/year, or the run is FINALIZED.
+ */
+export async function addTHRToPayrollAction(
+  input: unknown
+): Promise<ServiceResult<null>> {
+  const authResult = await requireHRAdmin();
+  if (!authResult.success) {
+    return { success: false, error: authResult.error };
+  }
+
+  const parsed = calculateTHRSchema.safeParse(input);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? "Data tidak valid";
+    return { success: false, error: firstError };
+  }
+
+  const { month, year } = parsed.data;
+
+  try {
+    // Find the DRAFT payroll run for this month/year
+    const run = await prisma.payrollRun.findUnique({
+      where: { month_year: { month, year } },
+      include: {
+        entries: { select: { id: true, employeeId: true } },
+      },
+    });
+
+    if (!run) {
+      return {
+        success: false,
+        error: "Jalankan penggajian untuk bulan ini terlebih dahulu",
+      };
+    }
+    if (run.status === "FINALIZED") {
+      return {
+        success: false,
+        error: "Payroll sudah difinalisasi — THR tidak dapat ditambahkan",
+      };
+    }
+
+    // Fetch all active employees with fixed allowances, joinDate, and agama
+    const employees = await prisma.employee.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        baseSalary: true,
+        joinDate: true,
+        agama: true,
+        allowances: {
+          where: { isFixed: true },
+          select: { amount: true },
+        },
+      },
+    });
+
+    // Reference date: first day of the payroll run month
+    const referenceDate = new Date(year, month - 1, 1);
+
+    for (const emp of employees) {
+      // Only process employees who have an entry in this payroll run
+      const entry = run.entries.find((e) => e.employeeId === emp.id);
+      if (!entry) continue;
+
+      // Skip employees without religion recorded
+      if (!emp.agama) continue;
+
+      const baseSalary = new Decimal(emp.baseSalary.toString());
+      const fixedAllowancesTotal = emp.allowances.reduce(
+        (sum, a) => sum.plus(new Decimal(a.amount.toString())),
+        new Decimal(0)
+      );
+
+      const result = calculateEmployeeTHR({
+        joinDate: emp.joinDate,
+        referenceDate,
+        baseSalary,
+        fixedAllowancesTotal,
+        religion: emp.agama as Religion,
+      });
+
+      if (!result.isEligible || result.thrAmount.lte(0)) continue;
+
+      // Fetch current entry values to add THR on top of existing amounts
+      const currentEntry = await prisma.payrollEntry.findUnique({
+        where: { id: entry.id },
+        select: { grossPay: true, netPay: true },
+      });
+      if (!currentEntry) continue;
+
+      const newGross = new Decimal(currentEntry.grossPay.toString()).plus(
+        result.thrAmount
+      );
+      const newNet = new Decimal(currentEntry.netPay.toString()).plus(
+        result.thrAmount
+      );
+
+      await prisma.payrollEntry.update({
+        where: { id: entry.id },
+        data: {
+          thrAmount: result.thrAmount.toNumber(),
+          grossPay: newGross.toNumber(),
+          netPay: newNet.toNumber(),
+        },
+      });
+    }
+
+    revalidatePath("/payroll");
+    revalidatePath("/payroll/thr");
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Terjadi kesalahan";
