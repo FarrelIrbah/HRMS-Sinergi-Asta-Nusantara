@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 2 of 8
-Status: Plan 04-02 complete. BPJS and PPh 21 pure calculation services built and verified.
-Last activity: 2026-03-07 - Completed 04-02-PLAN.md (bpjs.service.ts + pph21.service.ts pure calculation modules)
+Plan: 3 of 8
+Status: Plan 04-03 complete. Payroll batch engine, server actions, and Gaji & Tunjangan tab built.
+Last activity: 2026-03-07 - Completed 04-03-PLAN.md (payroll.service.ts + payroll.actions.ts + salary-tab.tsx)
 
-Progress: [████████████████████████░] 2/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 2/8)
+Progress: [█████████████████████████░] 3/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 3/8)
 
 ## Decisions
 
@@ -82,6 +82,10 @@ Progress: [███████████████████████
 | 51 | annualBpjsEmployee in calculateDecemberPPh21 includes only JHT + JP (not kesEmp) | BPJS Kesehatan is not deductible for PPh 21 per PMK 168/2023 | 04-02 |
 | 52 | decemberPPh21 floored at 0 in service layer; engine handles refund | Keeps pure calculation service clean; business logic (refund vs carry-forward) belongs in engine | 04-02 |
 | 53 | No NPWP surcharge in monthly TER; only in December annualization | PMK 168/2023 §9: 20% surcharge applies only at annual true-up step | 04-02 |
+| 54 | Absence = AttendanceRecord.clockIn IS NULL | AttendanceStatus enum has no ABSENT value; admin-created absent records have no clockIn | 04-03 |
+| 55 | requireHRAdmin() defined locally in payroll.actions.ts | No auth-utils.ts file exists; employee.actions.ts defines it locally — same pattern | 04-03 |
+| 56 | Native checkbox for isFixed in salary-tab | shadcn Checkbox component not installed in this project | 04-03 |
+| 57 | salaryData prop optional on EmployeeProfileTabs; tab hidden unless present | Only HR_ADMIN/SUPER_ADMIN see the Gaji & Tunjangan tab | 04-03 |
 
 ## Blockers / Concerns
 
@@ -90,8 +94,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:21:10Z
-Stopped at: Completed 04-02-PLAN.md — BPJS and PPh 21 pure calculation services
+Last session: 2026-03-07T12:34:29Z
+Stopped at: Completed 04-03-PLAN.md — payroll batch engine, server actions, Gaji & Tunjangan tab
 Resume file: None
 
 ## Notes
@@ -114,4 +118,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T12:21:10Z*
+*Last updated: 2026-03-07T12:34:29Z*
