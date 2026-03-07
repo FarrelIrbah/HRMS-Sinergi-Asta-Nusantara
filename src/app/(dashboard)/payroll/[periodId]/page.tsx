@@ -176,6 +176,7 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
             entries={serializedEntries}
             runId={run.id}
             runStatus={run.status}
+            isHRAdmin={["HR_ADMIN", "SUPER_ADMIN"].includes(role)}
           />
         </CardContent>
       </Card>

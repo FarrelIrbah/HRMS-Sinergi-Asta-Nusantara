@@ -1,6 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
+import { FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
 
@@ -34,6 +35,7 @@ interface PayrollEntryTableProps {
   entries: SerializedPayrollEntry[];
   runId: string;
   runStatus: string;
+  isHRAdmin: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -139,17 +141,34 @@ function buildColumns(
 
 export function PayrollEntryTable({
   entries,
-  runId: _runId,
+  runId,
   runStatus,
+  isHRAdmin,
 }: PayrollEntryTableProps) {
   const columns = buildColumns(runStatus);
 
   return (
-    <DataTable
-      columns={columns}
-      data={entries}
-      searchKey="employeeName"
-      searchPlaceholder="Cari nama karyawan atau NIK..."
-    />
+    <div className="space-y-4">
+      {isHRAdmin && (
+        <div className="flex justify-end">
+          <a
+            href={`/api/payroll-report?runId=${runId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button variant="outline" size="sm">
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Unduh Rekap Excel
+            </Button>
+          </a>
+        </div>
+      )}
+      <DataTable
+        columns={columns}
+        data={entries}
+        searchKey="employeeName"
+        searchPlaceholder="Cari nama karyawan atau NIK..."
+      />
+    </div>
   );
 }
