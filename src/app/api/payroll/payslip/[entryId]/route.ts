@@ -98,25 +98,33 @@ export async function GET(
     netPay: Number(entry.netPay),
   };
 
-  const element = React.createElement(
-    PayslipDocument,
-    { data }
-  ) as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>;
-
-  const stream = await renderToStream(element);
-
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream as AsyncIterable<Buffer | string>) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-  }
-  const pdfBuffer = Buffer.concat(chunks);
-
   const safeFileName = `slip-gaji-${entry.employeeNik}-${periodLabel.replace(" ", "-")}.pdf`;
 
-  return new Response(new Uint8Array(pdfBuffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${safeFileName}"`,
-    },
-  });
+  try {
+    const element = React.createElement(
+      PayslipDocument,
+      { data }
+    ) as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>;
+
+    const stream = await renderToStream(element);
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream as AsyncIterable<Buffer | string>) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    const pdfBuffer = Buffer.concat(chunks);
+
+    return new Response(new Uint8Array(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${safeFileName}"`,
+      },
+    });
+  } catch (err) {
+    console.error("[payslip-route] PDF generation failed:", err);
+    return new Response(
+      `Gagal menghasilkan PDF: ${err instanceof Error ? err.message : "Unknown error"}`,
+      { status: 500 }
+    );
+  }
 }

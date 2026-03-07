@@ -2,8 +2,9 @@
 
 import { type ColumnDef } from "@tanstack/react-table";
 import { FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
+import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -113,26 +114,21 @@ function buildColumns(
     {
       id: "payslip",
       header: "Unduh Slip",
-      cell: ({ row }) => (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={runStatus !== "FINALIZED"}
-          asChild={runStatus === "FINALIZED"}
-        >
-          {runStatus === "FINALIZED" ? (
-            <a
-              href={`/api/payroll/payslip/${row.original.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Unduh
-            </a>
-          ) : (
-            <span>Unduh</span>
-          )}
-        </Button>
-      ),
+      cell: ({ row }) =>
+        runStatus === "FINALIZED" ? (
+          <a
+            href={`/api/payroll/payslip/${row.original.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Unduh
+          </a>
+        ) : (
+          <Button variant="outline" size="sm" disabled>
+            Unduh
+          </Button>
+        ),
     },
   ];
 }

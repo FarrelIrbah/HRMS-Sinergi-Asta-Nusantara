@@ -18,6 +18,7 @@ import {
   BarChart2,
   Banknote,
   Receipt,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +85,12 @@ const navItems: NavItem[] = [
     label: "Penggajian",
     href: "/payroll",
     icon: Banknote,
+    roles: ["SUPER_ADMIN", "HR_ADMIN"],
+  },
+  {
+    label: "Hitung THR",
+    href: "/payroll/thr",
+    icon: Gift,
     roles: ["SUPER_ADMIN", "HR_ADMIN"],
   },
   {
