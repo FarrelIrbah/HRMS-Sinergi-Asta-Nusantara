@@ -13,17 +13,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ● Complete (9/9 plans) | 14 |
-| 4 | Payroll Management | ○ Pending | 9 |
+| 4 | Payroll Management | ○ In Progress (5/8) | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 4 of 8
-Status: Plan 04-04 complete. Payroll management UI built: list page, run form, period detail, entry table, finalize button.
-Last activity: 2026-03-07 - Completed 04-04-PLAN.md (/payroll page + /payroll/[periodId] page + components)
+Plan: 5 of 8
+Status: Plan 04-05 complete. Payslip PDF Document component, API download route, and employee /payslip page built.
+Last activity: 2026-03-07 - Completed 04-05-PLAN.md (payslip-pdf.tsx + /api/payroll/payslip/[entryId] + /payslip page)
 
-Progress: [██████████████████████████░] 4/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 4/8)
+Progress: [███████████████████████████░] 5/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 5/8)
 
 ## Decisions
 
@@ -89,6 +89,8 @@ Progress: [███████████████████████
 | 58 | Resolver<FormValues> single cast for z.coerce.number() schema in RunPayrollForm | as ReturnType<typeof zodResolver> fails with coerce; single cast matches Decision 36 pattern | 04-04 |
 | 59 | Payslip download uses asChild + anchor when FINALIZED; span when DRAFT | Avoids invalid nested <a> inside <button>; Button disabled prop gates DRAFT state | 04-04 |
 | 60 | Summary totals computed server-side by summing serialized entries | No extra DB aggregate query; entries already fetched for the table | 04-04 |
+| 61 | { prisma } named import from @/lib/prisma (not default) | prisma.ts uses export const prisma; plan scaffold used default import which fails in strict TS | 04-05 |
+| 62 | /payslip page for HR roles shows info redirect card to /payroll | HR do not need their own payslip; redirect gives clear affordance without 403 | 04-05 |
 
 ## Blockers / Concerns
 
@@ -97,8 +99,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:42:38Z
-Stopped at: Completed 04-04-PLAN.md — payroll management UI (/payroll list + /payroll/[periodId] detail + components)
+Last session: 2026-03-07T12:50:58Z
+Stopped at: Completed 04-05-PLAN.md — payslip PDF component + API route + /payslip employee page
 Resume file: None
 
 ## Notes
@@ -121,4 +123,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T12:42:38Z*
+*Last updated: 2026-03-07T12:50:58Z*
