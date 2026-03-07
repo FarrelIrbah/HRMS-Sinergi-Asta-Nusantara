@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,23 +49,89 @@ export default async function PayslipPage() {
 
   const role = session.user.role;
 
-  // HR and Super Admin: redirect info to payroll management page
+  // HR and Super Admin: show all employees' finalized payslips
   if (role === "HR_ADMIN" || role === "SUPER_ADMIN") {
+    const allEntries = await prisma.payrollEntry.findMany({
+      where: { payrollRun: { status: "FINALIZED" } },
+      include: {
+        payrollRun: { select: { month: true, year: true } },
+      },
+      orderBy: [
+        { payrollRun: { year: "desc" } },
+        { payrollRun: { month: "desc" } },
+        { employeeName: "asc" },
+      ],
+    });
+
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Slip Gaji</h1>
-          <p className="text-muted-foreground">Unduh slip gaji karyawan</p>
+          <h1 className="text-2xl font-bold">Slip Gaji Karyawan</h1>
+          <p className="text-muted-foreground">
+            Unduh slip gaji semua karyawan dari periode yang telah difinalisasi
+          </p>
         </div>
         <Card>
-          <CardContent className="flex flex-col items-start gap-4 pt-6">
-            <p className="text-muted-foreground">
-              Untuk melihat semua slip gaji karyawan, buka halaman Penggajian
-              dan pilih periode yang ingin ditampilkan.
-            </p>
-            <Button asChild>
-              <Link href="/payroll">Buka Halaman Penggajian</Link>
-            </Button>
+          <CardHeader>
+            <CardTitle>Riwayat Slip Gaji</CardTitle>
+            <CardDescription>
+              Hanya periode yang sudah difinalisasi yang tersedia
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allEntries.length === 0 ? (
+              <div className="flex h-24 items-center justify-center text-muted-foreground">
+                Belum ada slip gaji tersedia. Jalankan dan finalisasi penggajian
+                terlebih dahulu.
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Periode</TableHead>
+                      <TableHead>NIK</TableHead>
+                      <TableHead>Nama Karyawan</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allEntries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-medium">
+                          {formatPeriod(
+                            entry.payrollRun.month,
+                            entry.payrollRun.year
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {entry.employeeNik}
+                        </TableCell>
+                        <TableCell>{entry.employeeName}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Difinalisasi
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <a
+                            href={`/api/payroll/payslip/${entry.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              buttonVariants({ variant: "outline", size: "sm" })
+                            )}
+                          >
+                            Unduh PDF
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -158,16 +224,16 @@ export default async function PayslipPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" asChild>
-                          <a
-                            href={`/api/payroll/payslip/${entry.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download
-                          >
-                            Unduh PDF
-                          </a>
-                        </Button>
+                        <a
+                          href={`/api/payroll/payslip/${entry.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({ variant: "outline", size: "sm" })
+                          )}
+                        >
+                          Unduh PDF
+                        </a>
                       </TableCell>
                     </TableRow>
                   ))}
