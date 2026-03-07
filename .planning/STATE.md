@@ -18,12 +18,12 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Work
 
-Phase: 3 of 5 (Attendance and Leave Management) — COMPLETE
-Plan: 9 of 9 — verified 2026-03-06
-Status: Phase 3 complete. Ready for Phase 4.
-Last activity: 2026-03-06 - Human verification approved for 03-09 (all Phase 3 checks passed)
+Phase: 4 of 5 (Payroll Management) — In progress
+Plan: 1 of 8
+Status: Plan 04-01 complete. Payroll foundation (schema, constants, enums, validations) ready.
+Last activity: 2026-03-07 - Completed 04-01-PLAN.md (schema migration + regulatory constants)
 
-Progress: [██████████████████████░] 27/27 Phase 3 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9)
+Progress: [████████████████████████░] 1/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 1/8)
 
 ## Decisions
 
@@ -76,6 +76,9 @@ Progress: [██████████████████████░
 | 45 | upcomingLeave for employee fetched in dashboard/page.tsx and passed as prop | Avoids breaking getDashboardData no-args Decision #24 while supporting per-employee data | 03-09 |
 | 46 | pendingLeaveRequests kept for backward compat; pendingLeaveCount is canonical Phase 3 field | super-admin-dashboard uses pendingLeaveRequests; hr-admin and manager use pendingLeaveCount | 03-09 |
 | 47 | Seed attendance records use dynamic date calculation relative to today | Seed is date-agnostic; always seeds last week's data regardless of run date | 03-09 |
+| 48 | PayrollEntry uses snapshot pattern — all calculation fields stored at run time | Ensures payslip history is immutable even if BPJS/TER rates change; avoids recomputation | 04-01 |
+| 49 | TER_TABLE_C row 8 anomaly preserved verbatim from PP 58/2023 | Row 8 (10,950,000-11,200,000) = 1.75% lower than row 7's 2%; matches official lampiran | 04-01 |
+| 50 | decimal.js imported in constants.ts for all monetary rate/cap constants | Avoids floating-point errors; new Decimal("string") gives exact representation | 04-01 |
 
 ## Blockers / Concerns
 
@@ -84,8 +87,8 @@ Progress: [██████████████████████░
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Phase 3 complete — all 9 plans verified. Ready to begin Phase 4 (Payroll Management).
+Last session: 2026-03-07
+Stopped at: Completed 04-01-PLAN.md — payroll foundation (schema, decimal.js, constants, enums, validations)
 Resume file: None
 
 ## Notes
@@ -106,4 +109,4 @@ Resume file: None
 - **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
 
 ---
-*Last updated: 2026-03-06T09:30:00Z*
+*Last updated: 2026-03-07T12:13:47Z*
