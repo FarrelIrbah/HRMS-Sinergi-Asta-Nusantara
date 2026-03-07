@@ -12,6 +12,7 @@ import {
   getAllDepartments,
   getAllPositions,
 } from "@/lib/services/master-data.service";
+import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmployeeProfileTabs } from "./_components/employee-profile-tabs";
@@ -70,6 +71,43 @@ export default async function EmployeeDetailPage({
     getAllDepartments(),
     getAllPositions(),
   ]);
+
+  // Fetch salary data for HR_ADMIN and SUPER_ADMIN only
+  let salaryData:
+    | {
+        baseSalary: number;
+        allowances: { id: string; name: string; amount: number; isFixed: boolean }[];
+      }
+    | undefined;
+
+  if (role === "HR_ADMIN" || role === "SUPER_ADMIN") {
+    const empSalary = await prisma.employee.findUnique({
+      where: { id },
+      select: {
+        baseSalary: true,
+        allowances: {
+          select: {
+            id: true,
+            name: true,
+            amount: true,
+            isFixed: true,
+          },
+        },
+      },
+    });
+
+    if (empSalary) {
+      salaryData = {
+        baseSalary: Number(empSalary.baseSalary),
+        allowances: empSalary.allowances.map((a) => ({
+          id: a.id,
+          name: a.name,
+          amount: Number(a.amount),
+          isFixed: a.isFixed,
+        })),
+      };
+    }
+  }
 
   // Serialize employee for client components (dates -> strings)
   const serializedEmployee = {
@@ -143,6 +181,7 @@ export default async function EmployeeDetailPage({
         mode={mode}
         departments={departments}
         positions={positions}
+        salaryData={salaryData}
       />
     </div>
   );

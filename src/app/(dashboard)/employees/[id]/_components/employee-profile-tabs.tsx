@@ -7,6 +7,7 @@ import { EmploymentDetailsTab } from "./employment-details-tab";
 import { TaxBpjsTab } from "./tax-bpjs-tab";
 import { DocumentsTab } from "./documents-tab";
 import { EmergencyContactsTab } from "./emergency-contacts-tab";
+import { SalaryTab } from "./salary-tab";
 
 interface Department {
   id: string;
@@ -70,11 +71,17 @@ export interface SerializedEmployee {
   }[];
 }
 
+interface SalaryData {
+  baseSalary: number;
+  allowances: { id: string; name: string; amount: number; isFixed: boolean }[];
+}
+
 interface EmployeeProfileTabsProps {
   employee: SerializedEmployee;
   mode: "edit" | "readonly";
   departments: Department[];
   positions: Position[];
+  salaryData?: SalaryData;
 }
 
 export function EmployeeProfileTabs({
@@ -82,6 +89,7 @@ export function EmployeeProfileTabs({
   mode,
   departments,
   positions,
+  salaryData,
 }: EmployeeProfileTabsProps) {
   const [tab, setTab] = useQueryState("tab", { defaultValue: "personal" });
 
@@ -95,6 +103,9 @@ export function EmployeeProfileTabs({
         <TabsTrigger value="tax-bpjs">Pajak & BPJS</TabsTrigger>
         <TabsTrigger value="documents">Dokumen</TabsTrigger>
         <TabsTrigger value="emergency">Kontak Darurat</TabsTrigger>
+        {salaryData && (
+          <TabsTrigger value="salary">Gaji & Tunjangan</TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="personal">
@@ -129,6 +140,16 @@ export function EmployeeProfileTabs({
           readOnly={readOnly}
         />
       </TabsContent>
+
+      {salaryData && (
+        <TabsContent value="salary">
+          <SalaryTab
+            employeeId={employee.id}
+            baseSalary={salaryData.baseSalary}
+            allowances={salaryData.allowances}
+          />
+        </TabsContent>
+      )}
     </Tabs>
   );
 }
