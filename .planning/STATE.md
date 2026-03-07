@@ -13,17 +13,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ● Complete (9/9 plans) | 14 |
-| 4 | Payroll Management | ○ In Progress (6/8) | 9 |
+| 4 | Payroll Management | ○ In Progress (7/8) | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 6 of 8
-Status: Plan 04-06 complete. Payroll summary Excel export route and HR download button built.
-Last activity: 2026-03-07 - Completed 04-06-PLAN.md (/api/payroll-report GET route + Unduh Rekap Excel button)
+Plan: 7 of 8
+Status: Plan 04-07 complete. THR calculation service and HR Admin /payroll/thr page built.
+Last activity: 2026-03-07 - Completed 04-07-PLAN.md (thr.service.ts + /payroll/thr page + addTHRToPayrollAction)
 
-Progress: [████████████████████████████░] 6/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 6/8)
+Progress: [█████████████████████████████░] 7/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 7/8)
 
 ## Decisions
 
@@ -91,6 +91,9 @@ Progress: [███████████████████████
 | 60 | Summary totals computed server-side by summing serialized entries | No extra DB aggregate query; entries already fetched for the table | 04-04 |
 | 61 | { prisma } named import from @/lib/prisma (not default) | prisma.ts uses export const prisma; plan scaffold used default import which fails in strict TS | 04-05 |
 | 62 | /payslip page for HR roles shows info redirect card to /payroll | HR do not need their own payslip; redirect gives clear affordance without 403 | 04-05 |
+| 63 | THR basis = gaji pokok + tunjangan tetap (isFixed=true) only | Permenaker 6/2016; mirrors BPJS basis; non-fixed allowances excluded | 04-07 |
+| 64 | Employees without agama field skipped gracefully in THR page and action | Returns ineligible with explanatory note rather than crashing; agama is nullable in schema | 04-07 |
+| 65 | AddTHRForm is separate client component; page.tsx stays pure server component | Follows run-payroll-form.tsx separation pattern; keeps server component clean | 04-07 |
 
 ## Blockers / Concerns
 
@@ -99,8 +102,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:56:49Z
-Stopped at: Completed 04-06-PLAN.md — payroll Excel export route + download button
+Last session: 2026-03-07T13:03:52Z
+Stopped at: Completed 04-07-PLAN.md — THR service + /payroll/thr page + addTHRToPayrollAction
 Resume file: None
 
 ## Notes
@@ -123,4 +126,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T12:56:49Z*
+*Last updated: 2026-03-07T13:03:52Z*
