@@ -99,3 +99,10 @@ export const LeaveStatus = {
   CANCELLED: "CANCELLED",
 } as const;
 export type LeaveStatus = (typeof LeaveStatus)[keyof typeof LeaveStatus];
+
+// ─── Payroll Enums ────────────────────────────────────────────────────
+export const PayrollStatus = {
+  DRAFT: "DRAFT",
+  FINALIZED: "FINALIZED",
+} as const;
+export type PayrollStatus = (typeof PayrollStatus)[keyof typeof PayrollStatus];
