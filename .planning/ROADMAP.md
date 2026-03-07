@@ -141,6 +141,17 @@ Plans:
 
 **Dependencies:** Phase 2 (employee profile creation used when converting a hired candidate)
 
+**Plans:** 7 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- Prisma schema (Vacancy, Candidate, Interview models), migration, client-safe enums, Zod validation schemas
+- [ ] 05-02-PLAN.md -- Recruitment service layer (query functions) and server actions (vacancy CRUD, candidate CRUD, stage update, interview scheduling, conversion)
+- [ ] 05-03-PLAN.md -- Vacancy list page with status filter + status toggle, create vacancy form
+- [ ] 05-04-PLAN.md -- Vacancy detail with @dnd-kit Kanban board (6 stage columns), drag-and-drop stage moves, add candidate dialog
+- [ ] 05-05-PLAN.md -- Candidate detail page, CV upload API route, interview scheduling form, offer fields form
+- [ ] 05-06-PLAN.md -- Offer letter PDF (@react-pdf/renderer) and route, candidate-to-employee conversion with pre-fill and CV attachment
+- [ ] 05-07-PLAN.md -- Sidebar nav, dashboard openVacancies widget, seed data, end-to-end verification checkpoint
+
 **Requirements:**
 - REC-01, REC-02, REC-03, REC-04, REC-05, REC-06, REC-07
 
@@ -182,7 +193,7 @@ Plans:
 | 2 | Employee Data Management | Complete (8 plans) | 10 |
 | 3 | Attendance and Leave Management | Complete (9 plans) | 14 |
 | 4 | Payroll Management | Complete (8 plans) | 9 |
-| 5 | Recruitment Management | Not Started | 7 |
+| 5 | Recruitment Management | In Progress (0/7 plans) | 7 |
 
 ---
 *Roadmap created: 2026-02-27*
