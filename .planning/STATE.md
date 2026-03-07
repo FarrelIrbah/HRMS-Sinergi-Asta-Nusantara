@@ -13,17 +13,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | 1 | Foundation | Complete | 14 |
 | 2 | Employee Data Management | ● Complete (8/8 plans) | 10 |
 | 3 | Attendance and Leave Management | ● Complete (9/9 plans) | 14 |
-| 4 | Payroll Management | ○ In Progress (5/8) | 9 |
+| 4 | Payroll Management | ○ In Progress (6/8) | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
 
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 5 of 8
-Status: Plan 04-05 complete. Payslip PDF Document component, API download route, and employee /payslip page built.
-Last activity: 2026-03-07 - Completed 04-05-PLAN.md (payslip-pdf.tsx + /api/payroll/payslip/[entryId] + /payslip page)
+Plan: 6 of 8
+Status: Plan 04-06 complete. Payroll summary Excel export route and HR download button built.
+Last activity: 2026-03-07 - Completed 04-06-PLAN.md (/api/payroll-report GET route + Unduh Rekap Excel button)
 
-Progress: [███████████████████████████░] 5/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 5/8)
+Progress: [████████████████████████████░] 6/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 6/8)
 
 ## Decisions
 
@@ -99,8 +99,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:50:58Z
-Stopped at: Completed 04-05-PLAN.md — payslip PDF component + API route + /payslip employee page
+Last session: 2026-03-07T12:56:49Z
+Stopped at: Completed 04-06-PLAN.md — payroll Excel export route + download button
 Resume file: None
 
 ## Notes
@@ -123,4 +123,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T12:50:58Z*
+*Last updated: 2026-03-07T12:56:49Z*
