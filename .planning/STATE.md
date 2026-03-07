@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 1 of 8
-Status: Plan 04-01 complete. Payroll foundation (schema, constants, enums, validations) ready.
-Last activity: 2026-03-07 - Completed 04-01-PLAN.md (schema migration + regulatory constants)
+Plan: 2 of 8
+Status: Plan 04-02 complete. BPJS and PPh 21 pure calculation services built and verified.
+Last activity: 2026-03-07 - Completed 04-02-PLAN.md (bpjs.service.ts + pph21.service.ts pure calculation modules)
 
-Progress: [████████████████████████░] 1/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 1/8)
+Progress: [████████████████████████░] 2/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 2/8)
 
 ## Decisions
 
@@ -79,6 +79,9 @@ Progress: [███████████████████████
 | 48 | PayrollEntry uses snapshot pattern — all calculation fields stored at run time | Ensures payslip history is immutable even if BPJS/TER rates change; avoids recomputation | 04-01 |
 | 49 | TER_TABLE_C row 8 anomaly preserved verbatim from PP 58/2023 | Row 8 (10,950,000-11,200,000) = 1.75% lower than row 7's 2%; matches official lampiran | 04-01 |
 | 50 | decimal.js imported in constants.ts for all monetary rate/cap constants | Avoids floating-point errors; new Decimal("string") gives exact representation | 04-01 |
+| 51 | annualBpjsEmployee in calculateDecemberPPh21 includes only JHT + JP (not kesEmp) | BPJS Kesehatan is not deductible for PPh 21 per PMK 168/2023 | 04-02 |
+| 52 | decemberPPh21 floored at 0 in service layer; engine handles refund | Keeps pure calculation service clean; business logic (refund vs carry-forward) belongs in engine | 04-02 |
+| 53 | No NPWP surcharge in monthly TER; only in December annualization | PMK 168/2023 §9: 20% surcharge applies only at annual true-up step | 04-02 |
 
 ## Blockers / Concerns
 
@@ -87,8 +90,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07
-Stopped at: Completed 04-01-PLAN.md — payroll foundation (schema, decimal.js, constants, enums, validations)
+Last session: 2026-03-07T12:21:10Z
+Stopped at: Completed 04-02-PLAN.md — BPJS and PPh 21 pure calculation services
 Resume file: None
 
 ## Notes
@@ -108,5 +111,7 @@ Resume file: None
 
 - **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
 
+- **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
+
 ---
-*Last updated: 2026-03-07T12:13:47Z*
+*Last updated: 2026-03-07T12:21:10Z*
