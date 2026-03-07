@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 4 of 5 (Payroll Management) — In progress
-Plan: 3 of 8
-Status: Plan 04-03 complete. Payroll batch engine, server actions, and Gaji & Tunjangan tab built.
-Last activity: 2026-03-07 - Completed 04-03-PLAN.md (payroll.service.ts + payroll.actions.ts + salary-tab.tsx)
+Plan: 4 of 8
+Status: Plan 04-04 complete. Payroll management UI built: list page, run form, period detail, entry table, finalize button.
+Last activity: 2026-03-07 - Completed 04-04-PLAN.md (/payroll page + /payroll/[periodId] page + components)
 
-Progress: [█████████████████████████░] 3/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 3/8)
+Progress: [██████████████████████████░] 4/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 4/8)
 
 ## Decisions
 
@@ -86,6 +86,9 @@ Progress: [███████████████████████
 | 55 | requireHRAdmin() defined locally in payroll.actions.ts | No auth-utils.ts file exists; employee.actions.ts defines it locally — same pattern | 04-03 |
 | 56 | Native checkbox for isFixed in salary-tab | shadcn Checkbox component not installed in this project | 04-03 |
 | 57 | salaryData prop optional on EmployeeProfileTabs; tab hidden unless present | Only HR_ADMIN/SUPER_ADMIN see the Gaji & Tunjangan tab | 04-03 |
+| 58 | Resolver<FormValues> single cast for z.coerce.number() schema in RunPayrollForm | as ReturnType<typeof zodResolver> fails with coerce; single cast matches Decision 36 pattern | 04-04 |
+| 59 | Payslip download uses asChild + anchor when FINALIZED; span when DRAFT | Avoids invalid nested <a> inside <button>; Button disabled prop gates DRAFT state | 04-04 |
+| 60 | Summary totals computed server-side by summing serialized entries | No extra DB aggregate query; entries already fetched for the table | 04-04 |
 
 ## Blockers / Concerns
 
@@ -94,8 +97,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:34:29Z
-Stopped at: Completed 04-03-PLAN.md — payroll batch engine, server actions, Gaji & Tunjangan tab
+Last session: 2026-03-07T12:42:38Z
+Stopped at: Completed 04-04-PLAN.md — payroll management UI (/payroll list + /payroll/[periodId] detail + components)
 Resume file: None
 
 ## Notes
@@ -118,4 +121,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T12:34:29Z*
+*Last updated: 2026-03-07T12:42:38Z*
