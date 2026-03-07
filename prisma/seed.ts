@@ -751,6 +751,52 @@ async function main() {
 
   console.log(`  Leave Requests: ${leaveRequestCount} seeded`);
 
+  // ── 13. Employee Salaries (Phase 4) ───────────────────────────────────
+  console.log("Seeding employee salaries...");
+  // Give all employees without a salary a default base salary
+  const salaryDefaultResult = await prisma.employee.updateMany({
+    where: { baseSalary: 0 },
+    data: { baseSalary: 5000000 },
+  });
+  if (salaryDefaultResult.count > 0) {
+    console.log(`  Default baseSalary set for ${salaryDefaultResult.count} employees`);
+  }
+
+  // Distinct salaries for the first three seeded employees for meaningful payroll test data
+  const salaryOverrides = [
+    { nik: "EMP-2026-0001", baseSalary: 8000000 },
+    { nik: "EMP-2026-0002", baseSalary: 6500000 },
+    { nik: "EMP-2026-0003", baseSalary: 7200000 },
+  ];
+
+  let allowanceCount = 0;
+  for (const override of salaryOverrides) {
+    const emp = await prisma.employee.findFirst({ where: { nik: override.nik } });
+    if (emp) {
+      await prisma.employee.update({
+        where: { id: emp.id },
+        data: { baseSalary: override.baseSalary },
+      });
+      // Add a transport allowance if none exists
+      const existing = await prisma.employeeAllowance.findFirst({
+        where: { employeeId: emp.id },
+      });
+      if (!existing) {
+        await prisma.employeeAllowance.create({
+          data: {
+            employeeId: emp.id,
+            name: "Tunjangan Transport",
+            amount: 500000,
+            isFixed: true,
+          },
+        });
+        allowanceCount++;
+      }
+    }
+  }
+
+  console.log(`  Salary overrides applied: ${salaryOverrides.length} employees, ${allowanceCount} allowances added`);
+
   // ── Summary ───────────────────────────────────────────────────────────
   console.log(
     `\nSeed complete: ${users.length} users, ${Object.keys(departments).length} departments, ${positionCount} positions, ${locationCount} locations, ${leaveCount} leave types, ${employeeCount + additionalCount} employees, ${ecCount} emergency contacts, ${attendanceCount} attendance records, ${balanceCount} leave balances, ${leaveRequestCount} leave requests`

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Briefcase, Clock, DollarSign, Users, ArrowRight, Calendar, UserCheck } from "lucide-react"
+import { Briefcase, Clock, Banknote, Users, ArrowRight, Calendar, UserCheck } from "lucide-react"
 import { StatCard } from "@/components/shared/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { DashboardData } from "@/lib/services/dashboard.service"
@@ -9,6 +9,16 @@ interface HRAdminDashboardProps {
 }
 
 export function HRAdminDashboard({ data }: HRAdminDashboardProps) {
+  const payrollValue = data.payrollStatus
+    ? data.payrollStatus.status === "FINALIZED"
+      ? "Difinalisasi"
+      : "Draft"
+    : "Belum Diproses"
+
+  const payrollDescription = data.payrollStatus
+    ? `${data.payrollStatus._count.entries} karyawan diproses`
+    : "Klik Hitung Gaji untuk memulai"
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -31,10 +41,11 @@ export function HRAdminDashboard({ data }: HRAdminDashboardProps) {
           icon={UserCheck}
         />
         <StatCard
-          title="Status Penggajian"
-          value={data.payrollStatus}
-          description="Periode berjalan"
-          icon={DollarSign}
+          title="Penggajian Bulan Ini"
+          value={payrollValue}
+          description={payrollDescription}
+          icon={Banknote}
+          href="/payroll"
         />
       </div>
 

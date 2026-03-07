@@ -16,6 +16,8 @@ import {
   ClipboardList,
   CheckSquare,
   BarChart2,
+  Banknote,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,6 +79,18 @@ const navItems: NavItem[] = [
     href: "/leave/report",
     icon: BarChart2,
     roles: ["SUPER_ADMIN", "HR_ADMIN"],
+  },
+  {
+    label: "Penggajian",
+    href: "/payroll",
+    icon: Banknote,
+    roles: ["SUPER_ADMIN", "HR_ADMIN"],
+  },
+  {
+    label: "Slip Gaji",
+    href: "/payslip",
+    icon: Receipt,
+    roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
   },
   {
     label: "Pengguna",

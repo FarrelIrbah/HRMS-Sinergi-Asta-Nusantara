@@ -1,4 +1,4 @@
-import { Award, Briefcase, Building2, Clock, DollarSign, Users } from "lucide-react"
+import { Award, Briefcase, Building2, Clock, Banknote, Users } from "lucide-react"
 import { StatCard } from "@/components/shared/stat-card"
 import type { DashboardData } from "@/lib/services/dashboard.service"
 
@@ -7,6 +7,12 @@ interface SuperAdminDashboardProps {
 }
 
 export function SuperAdminDashboard({ data }: SuperAdminDashboardProps) {
+  const payrollValue = data.payrollStatus
+    ? data.payrollStatus.status === "FINALIZED"
+      ? "Difinalisasi"
+      : "Draft"
+    : "Belum Diproses"
+
   return (
     <div className="space-y-4">
       {/* Shared HR metrics */}
@@ -31,9 +37,10 @@ export function SuperAdminDashboard({ data }: SuperAdminDashboardProps) {
         />
         <StatCard
           title="Status Penggajian"
-          value={data.payrollStatus}
+          value={payrollValue}
           description="Periode berjalan"
-          icon={DollarSign}
+          icon={Banknote}
+          href="/payroll"
         />
       </div>
 

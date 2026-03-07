@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/prisma"
 
+export interface PayrollStatusData {
+  status: string
+  _count: {
+    entries: number
+  }
+}
+
 export interface DashboardData {
   totalUsers: number
   totalDepartments: number
@@ -9,7 +16,7 @@ export interface DashboardData {
   pendingLeaveCount: number
   todayAttendanceCount: number
   openVacancies: number
-  payrollStatus: string
+  payrollStatus: PayrollStatusData | null
   todayAttendance: number
   leaveBalance: number
   upcomingLeave: {
@@ -24,7 +31,8 @@ export interface DashboardData {
  * Returns dashboard data for the given role.
  * Phase 1: Returns real counts for organizational data (users, departments, positions).
  * Phase 3: Adds pendingLeaveCount, todayAttendanceCount.
- * Attendance, leave, payroll, and vacancy data are placeholders for other phases.
+ * Phase 4: Adds payrollStatus with real PayrollRun data.
+ * Vacancy data is placeholder for Phase 5.
  */
 export async function getDashboardData(): Promise<DashboardData> {
   const today = new Date()
@@ -33,6 +41,10 @@ export async function getDashboardData(): Promise<DashboardData> {
   const sevenDaysLater = new Date(today)
   sevenDaysLater.setUTCDate(sevenDaysLater.getUTCDate() + 7)
 
+  // Current month payroll run status
+  const currentMonth = new Date().getMonth() + 1
+  const currentYear = new Date().getFullYear()
+
   const [
     totalUsers,
     totalDepartments,
@@ -40,6 +52,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     totalEmployees,
     pendingLeaveCount,
     todayAttendanceCount,
+    currentPayrollRun,
   ] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.department.count({ where: { deletedAt: null } }),
@@ -47,6 +60,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     prisma.employee.count({ where: { isActive: true } }),
     prisma.leaveRequest.count({ where: { status: "PENDING" } }),
     prisma.attendanceRecord.count({ where: { date: today } }),
+    prisma.payrollRun.findUnique({
+      where: { month_year: { month: currentMonth, year: currentYear } },
+      select: { status: true, _count: { select: { entries: true } } },
+    }),
   ])
 
   return {
@@ -58,7 +75,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     pendingLeaveCount,
     todayAttendanceCount,
     openVacancies: 0, // Phase 5: Recruitment
-    payrollStatus: "Belum diproses", // Phase 4: Payroll
+    payrollStatus: currentPayrollRun, // Phase 4: real PayrollRun data (null if not yet run)
     todayAttendance: todayAttendanceCount, // kept for backward compat
     leaveBalance: 0, // Phase 3: resolved per-employee in leave page
     upcomingLeave: null, // Phase 3: resolved per-employee in dashboard page
