@@ -8,6 +8,7 @@ import {
   PTKPStatus,
 } from "../src/generated/prisma/client";
 import { hash } from "bcryptjs";
+import Decimal from "decimal.js";
 
 const prisma = new PrismaClient();
 
@@ -796,6 +797,104 @@ async function main() {
   }
 
   console.log(`  Salary overrides applied: ${salaryOverrides.length} employees, ${allowanceCount} allowances added`);
+
+  // ── 14. Recruitment seed (Phase 5) ───────────────────────────────────
+  console.log("Seeding recruitment data...");
+
+  // Use the first active department found
+  const seedDeptId = Object.values(departments)[0];
+
+  // Create 2 vacancies
+  const vacancy1 =
+    (await prisma.vacancy.findFirst({ where: { title: "Frontend Developer" } })) ??
+    (await prisma.vacancy.create({
+      data: {
+        title: "Frontend Developer",
+        departmentId: seedDeptId,
+        description:
+          "Kami mencari Frontend Developer yang berpengalaman dengan React dan Next.js.",
+        requirements:
+          "Minimal 2 tahun pengalaman React, familiar dengan TypeScript dan Tailwind CSS.",
+        status: "OPEN",
+        openDate: new Date("2026-03-01"),
+      },
+    }));
+
+  const vacancy2 =
+    (await prisma.vacancy.findFirst({ where: { title: "HR Specialist" } })) ??
+    (await prisma.vacancy.create({
+      data: {
+        title: "HR Specialist",
+        departmentId: seedDeptId,
+        description: "Mencari HR Specialist untuk mendukung operasional HRD.",
+        requirements:
+          "Pengalaman minimal 1 tahun di bidang HR, menguasai administrasi kepegawaian.",
+        status: "OPEN",
+        openDate: new Date("2026-03-05"),
+      },
+    }));
+
+  // Create candidates across different stages
+  const candidateSeeds = [
+    {
+      name: "Budi Santoso",
+      email: "budi@example.com",
+      stage: "SELEKSI_BERKAS",
+      vacancyId: vacancy1.id,
+      offerSalary: undefined as number | undefined,
+    },
+    {
+      name: "Sari Dewi",
+      email: "sari@example.com",
+      stage: "INTERVIEW",
+      vacancyId: vacancy1.id,
+      offerSalary: undefined as number | undefined,
+    },
+    {
+      name: "Andi Wijaya",
+      email: "andi@example.com",
+      stage: "PENAWARAN",
+      vacancyId: vacancy1.id,
+      offerSalary: 8000000,
+    },
+    {
+      name: "Rina Putri",
+      email: "rina@example.com",
+      stage: "MELAMAR",
+      vacancyId: vacancy2.id,
+      offerSalary: undefined as number | undefined,
+    },
+    {
+      name: "Dedi Kurniawan",
+      email: "dedi@example.com",
+      stage: "DITERIMA",
+      vacancyId: vacancy2.id,
+      offerSalary: 6000000,
+    },
+  ];
+
+  let candidateCount = 0;
+  for (const cs of candidateSeeds) {
+    const existing = await prisma.candidate.findFirst({
+      where: { email: cs.email },
+    });
+    if (!existing) {
+      await prisma.candidate.create({
+        data: {
+          name: cs.name,
+          email: cs.email,
+          stage: cs.stage as any,
+          vacancyId: cs.vacancyId,
+          offerSalary: cs.offerSalary != null ? new Decimal(cs.offerSalary) : null,
+        },
+      });
+    }
+    candidateCount++;
+  }
+
+  console.log(
+    `  Recruitment: 2 vacancies (Frontend Developer, HR Specialist), ${candidateCount} candidates seeded`
+  );
 
   // ── Summary ───────────────────────────────────────────────────────────
   console.log(
