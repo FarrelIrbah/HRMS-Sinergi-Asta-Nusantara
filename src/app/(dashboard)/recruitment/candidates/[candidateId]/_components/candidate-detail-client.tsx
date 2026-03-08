@@ -167,14 +167,28 @@ export function CandidateDetailClient({ candidate }: Props) {
             </span>
           </div>
         </div>
-        {candidate.stage === CandidateStage.DITERIMA && !candidate.hiredAt && (
-          <button
-            onClick={handleConvert}
-            disabled={isPending}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {isPending ? "Memproses..." : "Konversi ke Karyawan"}
-          </button>
+        {candidate.stage === CandidateStage.DITERIMA && (
+          <div className="flex items-center gap-2">
+            {candidate.offerSalary && (
+              <a
+                href={`/api/recruitment/offer-letter/${candidate.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+              >
+                Download Surat Penawaran
+              </a>
+            )}
+            {!candidate.hiredAt && (
+              <button
+                onClick={handleConvert}
+                disabled={isPending}
+                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {isPending ? "Memproses..." : "Konversi ke Karyawan"}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
