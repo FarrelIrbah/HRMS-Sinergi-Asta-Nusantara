@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 5 of 5 (Recruitment Management) — In progress
-Plan: 2 of 7
-Status: Phase 5 plan 2 complete (2026-03-08). Service layer, server actions, CV upload API done.
-Last activity: 2026-03-08 - Completed 05-02-PLAN.md (recruitment.service.ts, recruitment.actions.ts, api/recruitment/cv)
+Plan: 3 of 7
+Status: Phase 5 plan 3 complete (2026-03-08). Vacancy list page and create form done.
+Last activity: 2026-03-08 - Completed 05-03-PLAN.md (/recruitment page, VacancyTable, /recruitment/new, CreateVacancyForm)
 
-Progress: [████████████████████████████████░░] 2/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
+Progress: [█████████████████████████████████░] 3/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -106,7 +106,7 @@ Progress: [███████████████████████
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 5, Plan 2 complete — recruitment service layer, server actions, CV upload API
+Stopped at: Phase 5, Plan 3 complete — vacancy list page and create vacancy form
 Resume file: None
 
 ## Notes
@@ -129,4 +129,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-08T08:18:02Z*
+*Last updated: 2026-03-08T08:37:00Z*
