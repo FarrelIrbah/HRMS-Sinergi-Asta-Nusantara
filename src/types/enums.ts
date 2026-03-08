@@ -106,3 +106,21 @@ export const PayrollStatus = {
   FINALIZED: "FINALIZED",
 } as const;
 export type PayrollStatus = (typeof PayrollStatus)[keyof typeof PayrollStatus];
+
+// ─── Recruitment Enums ────────────────────────────────────────────────
+export const VacancyStatus = {
+  OPEN: "OPEN",
+  CLOSED: "CLOSED",
+} as const;
+export type VacancyStatus = (typeof VacancyStatus)[keyof typeof VacancyStatus];
+
+export const CandidateStage = {
+  MELAMAR: "MELAMAR",
+  SELEKSI_BERKAS: "SELEKSI_BERKAS",
+  INTERVIEW: "INTERVIEW",
+  PENAWARAN: "PENAWARAN",
+  DITERIMA: "DITERIMA",
+  DITOLAK: "DITOLAK",
+} as const;
+export type CandidateStage =
+  (typeof CandidateStage)[keyof typeof CandidateStage];
