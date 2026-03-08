@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 5 of 5 (Recruitment Management) — In progress
-Plan: 1 of 7
-Status: Phase 5 plan 1 complete (2026-03-08). Prisma schema, migration, enums, Zod validation done.
-Last activity: 2026-03-08 - Completed 05-01-PLAN.md (schema, migration, client-safe enums, validation schemas)
+Plan: 2 of 7
+Status: Phase 5 plan 2 complete (2026-03-08). Service layer, server actions, CV upload API done.
+Last activity: 2026-03-08 - Completed 05-02-PLAN.md (recruitment.service.ts, recruitment.actions.ts, api/recruitment/cv)
 
-Progress: [████████████████████████████████░] 1/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
+Progress: [████████████████████████████████░░] 2/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -96,6 +96,7 @@ Progress: [███████████████████████
 | 65 | AddTHRForm is separate client component; page.tsx stays pure server component | Follows run-payroll-form.tsx separation pattern; keeps server component clean | 04-07 |
 | 66 | Payslip download uses direct anchor + buttonVariants, not Button asChild | asChild + disabled={false} can cause Slot interaction issues; direct anchor is simpler and reliable | 04-08 |
 | 67 | Recruitment validation schemas use Indonesian error messages | Consistent with all prior validation files in the project | 05-01 |
+| 68 | createAuditLog called with module/targetId/newValue in recruitment actions | Actual signature in @/lib/prisma differs from plan scaffold (entity/entityId/newData); adapted to real implementation | 05-02 |
 
 ## Blockers / Concerns
 
@@ -105,7 +106,7 @@ Progress: [███████████████████████
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 5, Plan 1 complete — schema, migration, client-safe enums, Zod validation
+Stopped at: Phase 5, Plan 2 complete — recruitment service layer, server actions, CV upload API
 Resume file: None
 
 ## Notes
