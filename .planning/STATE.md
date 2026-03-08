@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 5 of 5 (Recruitment Management) — In progress
-Plan: 5 of 7 (05 complete; 04 in parallel)
-Status: Phase 5 plan 5 complete (2026-03-08). Candidate detail page, CV upload, interview scheduling, offer fields done.
-Last activity: 2026-03-08 - Completed 05-05-PLAN.md (/recruitment/candidates/[candidateId] page and CandidateDetailClient)
+Plan: 5 of 7 (plans 04 and 05 both complete)
+Status: Phase 5 plans 04 and 05 complete (2026-03-08). Vacancy detail Kanban board and candidate detail page done.
+Last activity: 2026-03-08 - Completed 05-04-PLAN.md (/recruitment/[vacancyId] Kanban board with @dnd-kit)
 
-Progress: [████████████████████████████████████░░░] 4/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8; note: plan 05-04 runs in parallel)
+Progress: [████████████████████████████████████░░░] 5/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -98,6 +98,8 @@ Progress: [███████████████████████
 | 67 | Recruitment validation schemas use Indonesian error messages | Consistent with all prior validation files in the project | 05-01 |
 | 68 | createAuditLog called with module/targetId/newValue in recruitment actions | Actual signature in @/lib/prisma differs from plan scaffold (entity/entityId/newData); adapted to real implementation | 05-02 |
 | 69 | Discriminated union narrowed with result.success check for convertCandidateToEmployeeAction | Action returns { success: true; prefill } or { success: false; error }; plan scaffold accessed result.error/result.prefill directly; narrowed via if (!result.success) | 05-05 |
+| 70 | vacancyId prop kept in KanbanBoardProps but prefixed _vacancyId internally | updateCandidateStageAction resolves vacancy from candidateId; prop kept for API symmetry and future use | 05-04 |
+| 71 | over.id disambiguation in handleDragEnd: candidates array first, then STAGE_ORDER, else no-op | @dnd-kit over.id is either a card CUID or a stage string depending on drop target; order of checks prevents wrong-stage assignment | 05-04 |
 
 ## Blockers / Concerns
 
@@ -107,7 +109,7 @@ Progress: [███████████████████████
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 5, Plan 5 complete — candidate detail page, CV upload, interview scheduling, offer fields
+Stopped at: Phase 5, Plans 04 and 05 complete — Kanban board (/recruitment/[vacancyId]) and candidate detail page both done
 Resume file: None
 
 ## Notes
