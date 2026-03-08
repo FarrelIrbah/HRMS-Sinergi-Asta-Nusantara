@@ -32,7 +32,7 @@ export interface DashboardData {
  * Phase 1: Returns real counts for organizational data (users, departments, positions).
  * Phase 3: Adds pendingLeaveCount, todayAttendanceCount.
  * Phase 4: Adds payrollStatus with real PayrollRun data.
- * Vacancy data is placeholder for Phase 5.
+ * Phase 5: Adds openVacancies count from Vacancy table.
  */
 export async function getDashboardData(): Promise<DashboardData> {
   const today = new Date()
@@ -53,6 +53,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     pendingLeaveCount,
     todayAttendanceCount,
     currentPayrollRun,
+    openVacancyCount,
   ] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.department.count({ where: { deletedAt: null } }),
@@ -64,6 +65,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       where: { month_year: { month: currentMonth, year: currentYear } },
       select: { status: true, _count: { select: { entries: true } } },
     }),
+    prisma.vacancy.count({ where: { status: "OPEN" } }),
   ])
 
   return {
@@ -74,7 +76,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     pendingLeaveRequests: pendingLeaveCount, // kept for backward compat with super-admin-dashboard
     pendingLeaveCount,
     todayAttendanceCount,
-    openVacancies: 0, // Phase 5: Recruitment
+    openVacancies: openVacancyCount,
     payrollStatus: currentPayrollRun, // Phase 4: real PayrollRun data (null if not yet run)
     todayAttendance: todayAttendanceCount, // kept for backward compat
     leaveBalance: 0, // Phase 3: resolved per-employee in leave page

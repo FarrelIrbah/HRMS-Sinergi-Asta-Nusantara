@@ -47,6 +47,13 @@ export function HRAdminDashboard({ data }: HRAdminDashboardProps) {
           icon={Banknote}
           href="/payroll"
         />
+        <StatCard
+          title="Lowongan Terbuka"
+          value={data.openVacancies}
+          description="Lowongan aktif saat ini"
+          icon={Briefcase}
+          href="/recruitment"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
