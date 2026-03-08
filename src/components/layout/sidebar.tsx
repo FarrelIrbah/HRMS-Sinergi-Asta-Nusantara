@@ -19,6 +19,7 @@ import {
   Banknote,
   Receipt,
   Gift,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,6 +92,12 @@ const navItems: NavItem[] = [
     label: "Hitung THR",
     href: "/payroll/thr",
     icon: Gift,
+    roles: ["SUPER_ADMIN", "HR_ADMIN"],
+  },
+  {
+    label: "Rekrutmen",
+    href: "/recruitment",
+    icon: BriefcaseBusiness,
     roles: ["SUPER_ADMIN", "HR_ADMIN"],
   },
   {
