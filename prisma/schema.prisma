@@ -91,6 +91,20 @@ enum PayrollStatus {
   FINALIZED
 }
 
+enum VacancyStatus {
+  OPEN
+  CLOSED
+}
+
+enum CandidateStage {
+  MELAMAR
+  SELEKSI_BERKAS
+  INTERVIEW
+  PENAWARAN
+  DITERIMA
+  DITOLAK
+}
+
 // ─── Models ──────────────────────────────────────────────────────────
 
 model User {
@@ -121,6 +135,7 @@ model Department {
 
   positions  Position[]
   employees  Employee[]
+  vacancies  Vacancy[]
 
   @@map("departments")
 }
@@ -404,4 +419,56 @@ model PayrollEntry {
   @@index([payrollRunId])
   @@index([employeeId])
   @@map("payroll_entries")
+}
+
+// ─── Recruitment Models ───────────────────────────────────────────────
+
+model Vacancy {
+  id           String        @id @default(cuid())
+  title        String
+  department   Department    @relation(fields: [departmentId], references: [id])
+  departmentId String
+  description  String        @db.Text
+  requirements String        @db.Text
+  status       VacancyStatus @default(OPEN)
+  openDate     DateTime
+  closeDate    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  candidates   Candidate[]
+
+  @@map("vacancies")
+}
+
+model Candidate {
+  id          String         @id @default(cuid())
+  vacancy     Vacancy        @relation(fields: [vacancyId], references: [id])
+  vacancyId   String
+  name        String
+  email       String
+  phone       String?
+  stage       CandidateStage @default(MELAMAR)
+  cvPath      String?
+  notes       String?        @db.Text
+  offerSalary Decimal?       @db.Decimal(15, 2)
+  offerNotes  String?        @db.Text
+  hiredAt     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  interviews  Interview[]
+
+  @@map("candidates")
+}
+
+model Interview {
+  id              String    @id @default(cuid())
+  candidate       Candidate @relation(fields: [candidateId], references: [id])
+  candidateId     String
+  scheduledAt     DateTime
+  interviewerName String?
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("interviews")
 }
