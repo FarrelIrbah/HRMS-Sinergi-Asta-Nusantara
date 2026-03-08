@@ -19,11 +19,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Work
 
 Phase: 5 of 5 (Recruitment Management) — In progress
-Plan: 5 of 7 (plans 04 and 05 both complete)
-Status: Phase 5 plans 04 and 05 complete (2026-03-08). Vacancy detail Kanban board and candidate detail page done.
-Last activity: 2026-03-08 - Completed 05-04-PLAN.md (/recruitment/[vacancyId] Kanban board with @dnd-kit)
+Plan: 6 of 7 (plans 01–06 complete)
+Status: Phase 5 plan 06 complete (2026-03-08). Offer letter PDF generation and download wired to candidate detail page.
+Last activity: 2026-03-08 - Completed 05-06-PLAN.md (offer letter PDF and candidate-to-employee conversion)
 
-Progress: [████████████████████████████████████░░░] 5/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
+Progress: [█████████████████████████████████████░░] 6/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -100,6 +100,7 @@ Progress: [███████████████████████
 | 69 | Discriminated union narrowed with result.success check for convertCandidateToEmployeeAction | Action returns { success: true; prefill } or { success: false; error }; plan scaffold accessed result.error/result.prefill directly; narrowed via if (!result.success) | 05-05 |
 | 70 | vacancyId prop kept in KanbanBoardProps but prefixed _vacancyId internally | updateCandidateStageAction resolves vacancy from candidateId; prop kept for API symmetry and future use | 05-04 |
 | 71 | over.id disambiguation in handleDragEnd: candidates array first, then STAGE_ORDER, else no-op | @dnd-kit over.id is either a card CUID or a stage string depending on drop target; order of checks prevents wrong-stage assignment | 05-04 |
+| 72 | offer-letter-pdf.tsx placed in src/lib/pdf/ not src/components/pdf/ | Established project convention — payslip-pdf.tsx and attendance-pdf.tsx both live in src/lib/pdf/; src/components/pdf/ does not exist | 05-06 |
 
 ## Blockers / Concerns
 
@@ -108,8 +109,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-08
-Stopped at: Phase 5, Plans 04 and 05 complete — Kanban board (/recruitment/[vacancyId]) and candidate detail page both done
+Last session: 2026-03-08T08:54:29Z
+Stopped at: Phase 5, Plan 06 complete — offer letter PDF download and candidate detail page wired
 Resume file: None
 
 ## Notes
@@ -132,4 +133,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-08T09:15:00Z*
+*Last updated: 2026-03-08T08:54:29Z*
