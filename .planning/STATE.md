@@ -18,12 +18,12 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Work
 
-Phase: 5 of 5 (Recruitment Management) — Not started
-Plan: 0 of TBD
-Status: Phase 4 complete (human-verified 2026-03-08). Phase 5 pending planning.
-Last activity: 2026-03-08 - Completed 04-08-PLAN.md (seed salaries, sidebar nav, dashboard widget, gap fixes)
+Phase: 5 of 5 (Recruitment Management) — In progress
+Plan: 1 of 7
+Status: Phase 5 plan 1 complete (2026-03-08). Prisma schema, migration, enums, Zod validation done.
+Last activity: 2026-03-08 - Completed 05-01-PLAN.md (schema, migration, client-safe enums, validation schemas)
 
-Progress: [████████████████████████████████] 8/8 Phase 4 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
+Progress: [████████████████████████████████░] 1/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
 ## Decisions
 
@@ -95,6 +95,7 @@ Progress: [███████████████████████
 | 64 | Employees without agama field skipped gracefully in THR page and action | Returns ineligible with explanatory note rather than crashing; agama is nullable in schema | 04-07 |
 | 65 | AddTHRForm is separate client component; page.tsx stays pure server component | Follows run-payroll-form.tsx separation pattern; keeps server component clean | 04-07 |
 | 66 | Payslip download uses direct anchor + buttonVariants, not Button asChild | asChild + disabled={false} can cause Slot interaction issues; direct anchor is simpler and reliable | 04-08 |
+| 67 | Recruitment validation schemas use Indonesian error messages | Consistent with all prior validation files in the project | 05-01 |
 
 ## Blockers / Concerns
 
@@ -104,7 +105,7 @@ Progress: [███████████████████████
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 4 complete — all 8 plans executed, human-verified, gap fixes applied
+Stopped at: Phase 5, Plan 1 complete — schema, migration, client-safe enums, Zod validation
 Resume file: None
 
 ## Notes
@@ -117,7 +118,7 @@ Resume file: None
 - **Service layer pattern:** Query services go in `src/lib/services/`. The audit service establishes this convention.
 - **Layout pattern:** Dashboard layout uses server component for auth check, wraps children in SessionProvider. Client components use useSession().
 - **Shared components:** Reusable UI components in `src/components/shared/` (StatCard, DataTable, ConfirmDialog with loading prop, loading skeletons).
-- **Client-safe enums pattern:** ALWAYS import enums from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth). Now includes Gender, Religion, MaritalStatus, ContractType, PTKPStatus, DocumentType, AttendanceStatus, LeaveStatus.
+- **Client-safe enums pattern:** ALWAYS import enums from `@/types/enums` in client components; only import from `@/generated/prisma/client` in server-only files (services, actions, auth). Now includes Gender, Religion, MaritalStatus, ContractType, PTKPStatus, DocumentType, AttendanceStatus, LeaveStatus, PayrollStatus, VacancyStatus, CandidateStage.
 - **Dashboard pattern:** Role switching is server-side in dashboard/page.tsx; each role has its own _components/[role]-dashboard.tsx receiving DashboardData props.
 - **Attendance schema pattern:** clockActionSchema for GPS coords (optional), manualAttendanceSchema for admin override with reason required.
 - **Leave schema pattern:** submitLeaveSchema uses .refine() for date range validation (endDate >= startDate).
@@ -127,4 +128,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-07T13:03:52Z*
+*Last updated: 2026-03-08T08:18:02Z*
