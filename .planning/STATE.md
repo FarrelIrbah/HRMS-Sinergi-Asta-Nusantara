@@ -15,13 +15,14 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 | 3 | Attendance and Leave Management | ● Complete (9/9 plans) | 14 |
 | 4 | Payroll Management | ● Complete (8/8 plans) | 9 |
 | 5 | Recruitment Management | ○ Pending | 7 |
+| 6 | UI Enhancement (ad-hoc) | ◐ In progress (2 plans complete) | — |
 
 ## Current Work
 
 Phase: 5 of 5 (Recruitment Management) — In progress
 Plan: 6 of 7 (plans 01–06 complete)
 Status: Phase 5 plan 06 complete (2026-03-08). Offer letter PDF generation and download wired to candidate detail page.
-Last activity: 2026-04-14 - Sanity check 04-13: BPJS engine audit PASSED (rates, caps, capping logic all compliant — JP cap uses Mar-2025 value Rp 10.547.400)
+Last activity: 2026-04-14 - Plan 06-02: Manajemen SDM module redesign — Karyawan list (KPI bar, filter chips, avatar column) + Tambah Karyawan form (4-section nav sidebar, sticky action bar) + Rekrutmen list (card grid with pipeline progress bar) + Buat Lowongan form (3 sections + tips sidebar); services extended with getEmployeeStatsSummary, getVacanciesWithPipeline, getRecruitmentStatsSummary
 
 Progress: [█████████████████████████████████████░░] 6/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
@@ -107,6 +108,12 @@ Progress: [███████████████████████
 | 76 | Pegawai harian lepas (TER Harian) out of scope | System only supports PKWT/PKWTT (TER Bulanan); keeps release timeline intact | 04-11 |
 | 77 | Payslip PPh 21 shows Rp 0 with "(Ditanggung Perusahaan)" label when tax-borne | Full amount moved to Kontribusi Perusahaan section for transparency | 04-12 |
 | 78 | BPJS JP cap = Rp 10.547.400 (Mar-2025 value), not Rp 10.042.300 (2024) | BPJS Ketenagakerjaan adjusts JP ceiling annually per inflation; system uses current effective value | 04-13 |
+| 79 | SummaryTile + TONE_MAP pattern dipakai lintas halaman (dashboard, employees, recruitment) | 5-tone palette (emerald/sky/violet/amber/slate) konsisten; KPI bar structure identik mempermudah kognisi user | 06-02 |
+| 80 | VacancyTable di-convert dari table ke card grid dengan pipeline progress bar | Lowongan punya multi-dimensi data (status, pipeline stages, counts, dates) yang sulit dibaca dalam row; card memberi visual hierarchy + at-a-glance pipeline | 06-02 |
+| 81 | getVacanciesWithPipeline include candidates.stage (bukan groupBy server-side) | Count stage di-compute client-side dari array; Prisma groupBy perlu query terpisah per vacancy, overhead > savings untuk N vacancies kecil | 06-02 |
+| 82 | Form panjang (Tambah Karyawan) dapat sticky section nav sidebar + anchor links | Navigasi cepat antar 4 section tanpa scroll manual; sticky tidak memakan ruang di mobile karena baru aktif di lg+ | 06-02 |
+| 83 | Sticky action bar (sticky bottom-4 + backdrop-blur) di bawah form | User tidak perlu scroll ke bawah tiap submit; hint text + CTA terlihat terus; rounded card + shadow-lg memberi affordance "siap action" | 06-02 |
+| 84 | Tips sidebar (emerald-50 Card) di halaman Buat Lowongan | HR baru butuh panduan menulis lowongan berkualitas; posisi lg:sticky agar tetap terlihat saat mengisi form panjang | 06-02 |
 
 ## Blockers / Concerns
 
@@ -116,7 +123,7 @@ Progress: [███████████████████████
 ## Session Continuity
 
 Last session: 2026-04-14T00:00:00Z
-Stopped at: Sanity check 04-13 — BPJS engine audit passed; ready to continue Phase 5 Plan 07 (UI polishing)
+Stopped at: Plan 06-02 complete — Manajemen SDM module redesign (4 pages: Karyawan list + Tambah Karyawan form + Rekrutmen list + Buat Lowongan form) done, tsc clean (1 pre-existing error unrelated), documentation written
 Resume file: None
 
 ## Notes
@@ -137,6 +144,8 @@ Resume file: None
 - **Leave approval pattern:** Role-gated server page fetches and serializes; client table handles URL filter updates; approve/reject dialogs use useTransition with single mode prop controlling variant, label, and notes validation requirement.
 
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
+
+- **UI redesign design system (Phase 06):** Canvas `bg-slate-50` with `-m-4 md:-m-6 p-4 md:p-6` full-bleed trick; emerald as primary with 5-tone KPI palette (emerald/sky/violet/amber/slate); SummaryTile + TONE_MAP sub-component pattern reused across dashboard, employees, recruitment; typography uses `text-2xl font-semibold tracking-tight` headings + `tabular-nums` for all numbers; accessibility via aria-label on pages/sections, aria-live on counters, role="progressbar" for stacked bars.
 
 ---
 *Last updated: 2026-04-14T00:00:00Z*

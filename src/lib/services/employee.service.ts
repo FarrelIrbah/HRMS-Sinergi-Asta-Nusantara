@@ -504,3 +504,49 @@ export async function canManagerAccessEmployee(
 
   return manager.departmentId === employee.departmentId;
 }
+
+// ===== STATS SUMMARY =====
+
+export interface EmployeeStatsSummary {
+  totalActive: number
+  totalInactive: number
+  pkwtCount: number
+  pkwttCount: number
+  joinedThisMonth: number
+}
+
+export async function getEmployeeStatsSummary(opts?: {
+  departmentId?: string
+}): Promise<EmployeeStatsSummary> {
+  const now = new Date()
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  )
+
+  const baseWhere: Prisma.EmployeeWhereInput = opts?.departmentId
+    ? { departmentId: opts.departmentId }
+    : {}
+
+  const [totalActive, totalInactive, pkwtCount, pkwttCount, joinedThisMonth] =
+    await Promise.all([
+      prisma.employee.count({ where: { ...baseWhere, isActive: true } }),
+      prisma.employee.count({ where: { ...baseWhere, isActive: false } }),
+      prisma.employee.count({
+        where: { ...baseWhere, isActive: true, contractType: "PKWT" },
+      }),
+      prisma.employee.count({
+        where: { ...baseWhere, isActive: true, contractType: "PKWTT" },
+      }),
+      prisma.employee.count({
+        where: { ...baseWhere, joinDate: { gte: monthStart } },
+      }),
+    ])
+
+  return {
+    totalActive,
+    totalInactive,
+    pkwtCount,
+    pkwttCount,
+    joinedThisMonth,
+  }
+}

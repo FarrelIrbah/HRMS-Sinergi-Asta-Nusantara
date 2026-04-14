@@ -1,7 +1,23 @@
-import { getVacancies } from "@/lib/services/recruitment.service";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  BriefcaseBusiness,
+  CalendarClock,
+  CheckCircle2,
+  Lock,
+  Plus,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  getVacanciesWithPipeline,
+  getRecruitmentStatsSummary,
+} from "@/lib/services/recruitment.service";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { VacancyTable } from "./_components/vacancy-table";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 interface Props {
   searchParams: Promise<{ status?: string }>;
@@ -21,25 +37,153 @@ export default async function RecruitmentPage({ searchParams }: Props) {
         ? "OPEN"
         : undefined;
 
-  const vacancies = await getVacancies(statusFilter as "OPEN" | "CLOSED" | undefined);
+  const [vacancies, stats] = await Promise.all([
+    getVacanciesWithPipeline(
+      statusFilter as "OPEN" | "CLOSED" | undefined,
+    ),
+    getRecruitmentStatsSummary(),
+  ]);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div
+      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      aria-label="Halaman rekrutmen"
+    >
+      {/* ─── Header ───────────────────────────────── */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Rekrutmen</h1>
-          <p className="text-muted-foreground text-sm">
-            Kelola lowongan pekerjaan dan kandidat
+          <div className="flex items-center gap-2">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm"
+              aria-hidden="true"
+            >
+              <BriefcaseBusiness className="h-5 w-5" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              Rekrutmen
+            </h1>
+          </div>
+          <p className="mt-1 text-sm text-slate-600">
+            Kelola lowongan pekerjaan dan pantau pipeline kandidat di setiap
+            tahap.
           </p>
         </div>
-        <a
-          href="/recruitment/new"
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        <Button
+          asChild
+          size="default"
+          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
         >
-          + Buat Lowongan
-        </a>
-      </div>
+          <Link href="/recruitment/new" aria-label="Buat lowongan baru">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Buat Lowongan
+          </Link>
+        </Button>
+      </header>
+
+      {/* ─── KPI Summary ──────────────────────────── */}
+      <section
+        aria-label="Ringkasan statistik rekrutmen"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+      >
+        <SummaryTile
+          icon={BriefcaseBusiness}
+          label="Lowongan Aktif"
+          value={stats.openVacancies}
+          tone="emerald"
+        />
+        <SummaryTile
+          icon={Lock}
+          label="Ditutup"
+          value={stats.closedVacancies}
+          tone="slate"
+        />
+        <SummaryTile
+          icon={Users}
+          label="Total Kandidat"
+          value={stats.totalCandidates}
+          tone="sky"
+        />
+        <SummaryTile
+          icon={CalendarClock}
+          label="Interview Terjadwal"
+          value={stats.upcomingInterviews}
+          tone="amber"
+        />
+        <SummaryTile
+          icon={CheckCircle2}
+          label="Hired Bulan Ini"
+          value={stats.hiredThisMonth}
+          tone="violet"
+        />
+      </section>
+
+      {/* ─── Vacancy list ─────────────────────────── */}
       <VacancyTable vacancies={vacancies} />
     </div>
+  );
+}
+
+// ─────────────────── Sub-components ───────────────────
+
+type Tone = "emerald" | "sky" | "violet" | "amber" | "slate";
+
+const TONE_MAP: Record<Tone, { bg: string; text: string; ring: string }> = {
+  emerald: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    ring: "ring-emerald-100",
+  },
+  sky: { bg: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-100" },
+  violet: {
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    ring: "ring-violet-100",
+  },
+  amber: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    ring: "ring-amber-100",
+  },
+  slate: {
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    ring: "ring-slate-200",
+  },
+};
+
+function SummaryTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  tone: Tone;
+}) {
+  const t = TONE_MAP[tone];
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="flex items-center gap-3 p-4">
+        <div
+          className={cn(
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ring-1",
+            t.bg,
+            t.text,
+            t.ring,
+          )}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="text-2xl font-bold tabular-nums leading-tight text-slate-900">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

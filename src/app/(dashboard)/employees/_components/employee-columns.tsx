@@ -3,8 +3,9 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { MoreHorizontal } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil } from "lucide-react";
 import Link from "next/link";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,16 @@ interface EmployeeColumnsOptions {
   userRole: Role;
 }
 
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0] ?? "")
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export function getEmployeeColumns({
   userRole,
 }: EmployeeColumnsOptions): ColumnDef<EmployeeRow>[] {
@@ -39,29 +50,78 @@ export function getEmployeeColumns({
   return [
     {
       accessorKey: "namaLengkap",
-      header: "Nama Lengkap",
+      header: "Karyawan",
       cell: ({ row }) => {
-        const name = row.original.namaLengkap;
-        const email = row.original.email;
+        const { namaLengkap, email, nik } = row.original;
         return (
-          <div>
-            <div className="font-medium">{name}</div>
-            <div className="text-sm text-muted-foreground">{email}</div>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 flex-shrink-0">
+              <AvatarFallback className="bg-emerald-100 text-[11px] font-medium text-emerald-700">
+                {initials(namaLengkap)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="truncate font-medium text-slate-900">
+                {namaLengkap}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <span className="truncate">{email}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono tabular-nums">{nik}</span>
+              </div>
+            </div>
           </div>
         );
       },
     },
     {
-      accessorKey: "nik",
-      header: "NIK",
-    },
-    {
       accessorKey: "departmentName",
       header: "Departemen",
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-700">
+          {row.original.departmentName}
+        </span>
+      ),
     },
     {
       accessorKey: "positionName",
       header: "Jabatan",
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-700">
+          {row.original.positionName}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "contractType",
+      header: "Kontrak",
+      cell: ({ row }) => {
+        const type = row.getValue("contractType") as string;
+        return (
+          <Badge
+            variant="outline"
+            className={
+              type === "PKWT"
+                ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-50"
+                : "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-50"
+            }
+          >
+            {type}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "joinDate",
+      header: "Bergabung",
+      cell: ({ row }) => {
+        const dateStr = row.getValue("joinDate") as string;
+        return (
+          <span className="text-sm tabular-nums text-slate-600">
+            {format(new Date(dateStr), "dd MMM yyyy", { locale: idLocale })}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "isActive",
@@ -73,62 +133,50 @@ export function getEmployeeColumns({
             variant="outline"
             className={
               isActive
-                ? "bg-green-100 text-green-800 border-green-200"
-                : "bg-red-100 text-red-800 border-red-200"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-100"
             }
           >
+            <span
+              aria-hidden="true"
+              className={
+                "mr-1 inline-block h-1.5 w-1.5 rounded-full " +
+                (isActive ? "bg-emerald-500" : "bg-slate-400")
+              }
+            />
             {isActive ? "Aktif" : "Nonaktif"}
           </Badge>
         );
       },
     },
     {
-      accessorKey: "contractType",
-      header: "Tipe Kontrak",
-      cell: ({ row }) => {
-        const type = row.getValue("contractType") as string;
-        return (
-          <Badge
-            variant="outline"
-            className={
-              type === "PKWT"
-                ? "bg-blue-100 text-blue-800 border-blue-200"
-                : "bg-purple-100 text-purple-800 border-purple-200"
-            }
-          >
-            {type}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "joinDate",
-      header: "Tanggal Masuk",
-      cell: ({ row }) => {
-        const dateStr = row.getValue("joinDate") as string;
-        return format(new Date(dateStr), "dd MMM yyyy", { locale: idLocale });
-      },
-    },
-    {
       id: "actions",
-      header: "Aksi",
+      header: () => <span className="sr-only">Aksi</span>,
       cell: ({ row }) => {
         const employee = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Buka menu</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-500 hover:text-slate-900"
+              >
+                <span className="sr-only">Buka menu aksi karyawan</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/employees/${employee.id}`}>Lihat Detail</Link>
+                <Link href={`/employees/${employee.id}`}>
+                  <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Lihat Detail
+                </Link>
               </DropdownMenuItem>
               {canEdit && (
                 <DropdownMenuItem asChild>
                   <Link href={`/employees/${employee.id}?tab=personal`}>
+                    <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
                     Edit
                   </Link>
                 </DropdownMenuItem>
