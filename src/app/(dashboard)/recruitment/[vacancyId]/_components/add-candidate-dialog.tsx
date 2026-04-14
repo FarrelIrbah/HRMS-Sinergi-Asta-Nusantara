@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
@@ -32,13 +33,10 @@ import {
 
 interface AddCandidateDialogProps {
   vacancyId: string;
-  onSuccess: () => void;
 }
 
-export function AddCandidateDialog({
-  vacancyId,
-  onSuccess,
-}: AddCandidateDialogProps) {
+export function AddCandidateDialog({ vacancyId }: AddCandidateDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -54,7 +52,7 @@ export function AddCandidateDialog({
         toast.success("Kandidat berhasil ditambahkan");
         form.reset();
         setOpen(false);
-        onSuccess();
+        router.refresh();
       } else {
         toast.error(result.error ?? "Gagal menambahkan kandidat");
       }

@@ -2,7 +2,7 @@ import { getVacancyById } from "@/lib/services/recruitment.service";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { KanbanBoard } from "./_components/kanban-board";
-import { AddCandidateDialogWrapper } from "./_components/add-candidate-wrapper";
+import { AddCandidateDialog } from "./_components/add-candidate-dialog";
 
 interface Props {
   params: Promise<{ vacancyId: string }>;
@@ -19,7 +19,7 @@ export default async function VacancyDetailPage({ params }: Props) {
   if (!vacancy) notFound();
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -35,7 +35,7 @@ export default async function VacancyDetailPage({ params }: Props) {
             {vacancy.status === "OPEN" ? "Terbuka" : "Ditutup"}
           </p>
         </div>
-        <AddCandidateDialogWrapper vacancyId={vacancyId} />
+        <AddCandidateDialog vacancyId={vacancyId} />
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-sm">

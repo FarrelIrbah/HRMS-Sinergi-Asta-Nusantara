@@ -7,10 +7,10 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  UniqueIdentifier,
   useSensor,
   useSensors,
   closestCorners,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -82,15 +82,17 @@ function KanbanColumn({
   stage: string;
   candidates: Candidate[];
 }) {
+  const { setNodeRef } = useDroppable({ id: stage });
+
   return (
-    <div className="flex flex-col gap-2 min-w-[180px] flex-1">
+    <div className="flex flex-col gap-2 w-[210px] shrink-0">
       <div className="flex items-center justify-between px-1">
         <span className="text-sm font-semibold">{STAGE_LABELS[stage]}</span>
         <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
           {candidates.length}
         </span>
       </div>
-      <div className="bg-muted/40 rounded-lg p-2 min-h-[200px] space-y-2">
+      <div ref={setNodeRef} className="bg-muted/40 rounded-lg p-2 min-h-[200px] space-y-2">
         <SortableContext
           items={candidates.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
@@ -176,10 +178,15 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STAGE_ORDER.map((stage) => (
-          <KanbanColumn key={stage} stage={stage} candidates={byStage(stage)} />
-        ))}
+      {/* Outer div: scroll container — w-full gives explicit width so overflow-x-auto works */}
+      <div className="w-full overflow-x-auto pb-4">
+        {/* Inner div: flex layout — w-max gives it an explicit max-content width
+            so the outer overflow-x-auto reliably creates a scrollbar */}
+        <div className="flex gap-4 w-max">
+          {STAGE_ORDER.map((stage) => (
+            <KanbanColumn key={stage} stage={stage} candidates={byStage(stage)} />
+          ))}
+        </div>
       </div>
       <DragOverlay>
         {activeCandidate && (
