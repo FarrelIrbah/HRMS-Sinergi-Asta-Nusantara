@@ -233,6 +233,7 @@ model Employee {
   bpjsKesehatanNo        String?
   bpjsKetenagakerjaanNo  String?
   baseSalary             Decimal        @default(0) @db.Decimal(15, 2)
+  isTaxBorneByCompany    Boolean        @default(false)
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 

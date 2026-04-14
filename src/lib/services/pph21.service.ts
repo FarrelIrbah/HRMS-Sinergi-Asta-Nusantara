@@ -155,70 +155,98 @@ export interface DecemberPPh21Result {
 }
 
 /**
- * Calculate December PPh 21 using the full annualization method (PMK 168/2023).
+ * Calculate final-month PPh 21 using the annualization method (PMK 168/2023).
  *
- * This produces the "true-up" withholding: the difference between the annual
- * progressive tax obligation and the sum already withheld January–November via TER.
- * The result can theoretically be negative (employee overpaid via TER), but
- * decemberPPh21 is floored at 0 — the payroll engine handles the refund separately.
+ * This produces the "true-up" withholding for the last payroll month — either
+ * December for full-year employees, or the resign month for mid-year leavers.
+ *
+ * For mid-year joiners (monthsWorked < 12), an annualize-then-deannualize step
+ * is applied so the progressive brackets reflect the employee's earning rate,
+ * not their partial-year total.
  *
  * Steps per PMK 168/2023:
- *   1. biayaJabatan = min(5% × annualGross, Rp 6,000,000)
- *   2. netIncome    = annualGross - biayaJabatan - annualBpjsEmployee
- *   3. PKP          = max(netIncome - PTKP, 0), rounded DOWN to nearest 1,000
- *   4. annualTax    = progressive tax on PKP (Article 17)
- *   5. If no NPWP   → multiply annual tax by 1.2 (20% surcharge)
- *   6. december     = annualTax - totalPPh21JanNov (floor at 0)
+ *   1. biayaJabatan    = min(5% × actualGross, Rp 500,000 × monthsWorked)
+ *   2. netIncome       = actualGross − biayaJabatan − bpjsEmployee
+ *   3. annualizedNet   = (netIncome / monthsWorked) × 12          ← annualize
+ *   4. PKP             = max(annualizedNet − PTKP, 0), floor to 1,000
+ *   5. annualTax       = progressive tax on PKP (Article 17)
+ *   6. If no NPWP      → annualTax × 1.2
+ *   7. proportionalTax = (annualTax / 12) × monthsWorked           ← de-annualize
+ *   8. finalMonth      = proportionalTax − totalPPh21Prior (floor at 0)
  *
- * @param params.annualGrossIncome  - Sum of all 12-month gross incomes (including THR/bonus)
- * @param params.annualBpjsEmployee - Sum of (jhtEmp + jpEmp) for all 12 months
- *                                    Note: kesEmp is excluded from this deduction per PMK 168/2023
+ * When monthsWorked === 12, steps 3 and 7 are identity operations,
+ * so full-year employees get the same result as before.
+ *
+ * @param params.annualGrossIncome  - Sum of actual gross incomes for all months worked
+ * @param params.annualBpjsEmployee - Sum of (jhtEmp + jpEmp) for all months worked
+ *                                    Note: kesEmp is excluded per PMK 168/2023
  * @param params.ptkpStatus         - Employee's PTKP status
  * @param params.hasNpwp            - false → 20% surcharge on annual tax
- * @param params.totalPPh21JanNov   - Sum of TER-withheld amounts for January through November
+ * @param params.totalPPh21Prior    - Sum of TER-withheld amounts for prior months
+ * @param params.monthsWorked       - Number of months employed in this tax year (1–12)
+ * @param params.biayaJabatanMax    - Override cap (default Rp 500,000 × monthsWorked)
  */
 export function calculateDecemberPPh21(params: {
   annualGrossIncome: Decimal;
   annualBpjsEmployee: Decimal;
   ptkpStatus: PTKPStatus;
   hasNpwp: boolean;
-  totalPPh21JanNov: Decimal;
+  totalPPh21Prior: Decimal;
+  monthsWorked: number;
+  biayaJabatanMax?: Decimal;
 }): DecemberPPh21Result {
   const {
     annualGrossIncome,
     annualBpjsEmployee,
     ptkpStatus,
     hasNpwp,
-    totalPPh21JanNov,
+    totalPPh21Prior,
+    monthsWorked,
+    biayaJabatanMax: customBiayaJabatanMax,
   } = params;
 
-  // Step 1: Biaya jabatan = min(5% × annual gross, Rp 6,000,000)
+  // Step 1: Biaya jabatan = min(5% × actual gross, cap)
+  // Default cap = Rp 500,000 × monthsWorked (= Rp 6,000,000 for 12 months)
+  const effectiveBiayaJabatanMax =
+    customBiayaJabatanMax ?? new Decimal(500_000).mul(monthsWorked);
   const biayaJabatan = Decimal.min(
     annualGrossIncome.mul(BIAYA_JABATAN_RATE),
-    BIAYA_JABATAN_MAX
+    effectiveBiayaJabatanMax
   );
 
-  // Step 2: Net income before PTKP
+  // Step 2: Net income (actual period)
   // Note: Only JHT and JP employee contributions are deductible (not BPJS Kesehatan)
   const netIncome = annualGrossIncome.minus(biayaJabatan).minus(annualBpjsEmployee);
 
-  // Step 3: PKP = max(netIncome - PTKP, 0), rounded DOWN to nearest 1,000
+  // Step 3: Annualize net income for mid-year joiners
+  // For 12 months this is an identity: (net / 12) × 12 = net
+  const annualizedNetIncome = netIncome
+    .dividedBy(monthsWorked)
+    .mul(12)
+    .toDecimalPlaces(0);
+
+  // Step 4: PKP = max(annualizedNet - PTKP, 0), rounded DOWN to nearest 1,000
   const ptkpValue = PTKP_ANNUAL[ptkpStatus];
-  const pkpRaw = Decimal.max(netIncome.minus(ptkpValue), new Decimal(0));
-  // dividedToIntegerBy truncates toward zero (floor for positive values)
+  const pkpRaw = Decimal.max(annualizedNetIncome.minus(ptkpValue), new Decimal(0));
   const pkp = pkpRaw.dividedToIntegerBy(1000).mul(1000);
 
-  // Step 4: Progressive tax on PKP (Article 17)
+  // Step 5: Progressive tax on annualized PKP (Article 17)
   let annualPPh21 = calculateProgressiveTax(pkp);
 
-  // Step 5: NPWP surcharge — multiply by 1.2 if employee has no NPWP
+  // Step 6: NPWP surcharge — multiply by 1.2 if employee has no NPWP
   if (!hasNpwp) {
     annualPPh21 = annualPPh21.mul("1.2").toDecimalPlaces(0);
   }
 
-  // Step 6: December withholding = annual tax − sum already withheld Jan–Nov
-  const decemberRaw = annualPPh21.minus(totalPPh21JanNov);
-  // Floor at 0: negative means TER over-withheld; caller handles employee refund
+  // Step 7: De-annualize — proportional tax for actual months worked
+  // For 12 months this is identity: (tax / 12) × 12 = tax
+  const proportionalPPh21 = annualPPh21
+    .dividedBy(12)
+    .mul(monthsWorked)
+    .toDecimalPlaces(0);
+
+  // Step 8: Final-month withholding = proportional tax − already withheld
+  const decemberRaw = proportionalPPh21.minus(totalPPh21Prior);
   const decemberPPh21 = Decimal.max(decemberRaw, new Decimal(0));
 
   return {
@@ -226,7 +254,7 @@ export function calculateDecemberPPh21(params: {
     biayaJabatan,
     netIncome,
     pkp,
-    annualPPh21,
+    annualPPh21: proportionalPPh21,
     decemberPPh21,
   };
 }

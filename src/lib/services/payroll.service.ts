@@ -9,8 +9,12 @@
  *   - Absence is defined as an AttendanceRecord row where clockIn IS NULL
  *     (admin-created absent records or records without a clock-in).
  *   - BPJS basis = baseSalary + fixed allowances only (not overtime, not non-fixed).
- *   - PPh 21 Jan-Nov uses monthly TER; December uses full annualization true-up.
- *   - Serial processing: one employee at a time (required for December DB fetch).
+ *   - PPh 21 gross = grossPay + JKK + JKM (employer premiums are taxable income per PMK 168/2023).
+ *   - PPh 21 Jan-Nov uses monthly TER; last payroll month (December OR resign) uses annualization.
+ *   - Biaya jabatan cap = Rp 500,000 × months worked (dynamic for mid-year resign).
+ *   - isTaxBorneByCompany: when true, PPh 21 is calculated and stored normally but NOT deducted
+ *     from employee netPay — the company bears the tax cost. grossPayForTax is unaffected.
+ *   - Serial processing: one employee at a time (required for annualization DB fetch).
  */
 
 import Decimal from "decimal.js";
@@ -33,6 +37,9 @@ type EmployeeForPayroll = {
   baseSalary: Prisma.Decimal;
   npwp: string | null;
   ptkpStatus: import("@/generated/prisma/client").PTKPStatus | null;
+  isTaxBorneByCompany: boolean;
+  joinDate: Date;
+  terminationDate: Date | null;
   allowances: {
     amount: Prisma.Decimal;
     isFixed: boolean;
@@ -86,9 +93,21 @@ export async function runPayroll(month: number, year: number) {
     throw new Error("Payroll sudah difinalisasi");
   }
 
-  // ── 2. Fetch all active employees ─────────────────────────────────────────
+  // ── 2. Date range for the given month ────────────────────────────────────
+  const startOfMonth = new Date(year, month - 1, 1);
+  const startOfNextMonth = new Date(year, month, 1);
+
+  // ── 3. Fetch all active employees + employees who resigned this month ─────
   const employees = await prisma.employee.findMany({
-    where: { isActive: true },
+    where: {
+      OR: [
+        { isActive: true },
+        {
+          isActive: false,
+          terminationDate: { gte: startOfMonth, lt: startOfNextMonth },
+        },
+      ],
+    },
     select: {
       id: true,
       nik: true,
@@ -96,6 +115,9 @@ export async function runPayroll(month: number, year: number) {
       baseSalary: true,
       npwp: true,
       ptkpStatus: true,
+      isTaxBorneByCompany: true,
+      joinDate: true,
+      terminationDate: true,
       allowances: {
         select: {
           amount: true,
@@ -104,10 +126,6 @@ export async function runPayroll(month: number, year: number) {
       },
     },
   });
-
-  // ── 3. Date range for the given month ────────────────────────────────────
-  const startOfMonth = new Date(year, month - 1, 1);
-  const startOfNextMonth = new Date(year, month, 1);
 
   // ── 4. Calculate payroll per employee (serial) ───────────────────────────
   const entryDataArray: EntryData[] = [];
@@ -183,33 +201,57 @@ export async function runPayroll(month: number, year: number) {
     // ── 4c. BPJS calculation ─────────────────────────────────────────────
     const bpjs = calculateBPJS(bpjsBasis);
 
-    // ── 4d. PPh 21 calculation ───────────────────────────────────────────
+    // ── 4d. PPh 21 gross includes JKK+JKM employer premiums (PMK 168/2023) ──
+    // JKK and JKM are employer-paid but count as taxable income (penghasilan bruto).
+    // They do NOT affect net pay — only the PPh 21 calculation basis.
+    const grossPayForTax = grossPay.plus(bpjs.jkk).plus(bpjs.jkm);
+
+    // ── 4f. PPh 21 calculation ───────────────────────────────────────────
     const ptkpStatus = (emp.ptkpStatus ?? "TK_0") as PTKPStatus;
     const hasNpwp = !!emp.npwp;
 
+    // Detect if this is the employee's last payroll month (December OR resign month)
+    const isResigningThisMonth =
+      emp.terminationDate != null &&
+      emp.terminationDate >= startOfMonth &&
+      emp.terminationDate < startOfNextMonth;
+
+    const isLastPayrollMonth = month === 12 || isResigningThisMonth;
+
     let pph21: Decimal;
 
-    if (month === 12) {
-      // December: full annualization true-up (PMK 168/2023)
+    if (isLastPayrollMonth) {
+      // Last payroll month: full annualization true-up (PMK 168/2023)
+      // Applies to December AND mid-year resign (masa pajak terakhir)
       const priorEntries = await prisma.payrollEntry.findMany({
         where: {
           employeeId: emp.id,
           payrollRun: {
             year,
-            month: { lt: 12 },
+            month: { lt: month },
           },
         },
         select: {
           grossPay: true,
           bpjsJhtEmp: true,
           bpjsJpEmp: true,
+          bpjsJkk: true,
+          bpjsJkm: true,
           pph21: true,
         },
       });
 
+      // Annual gross for tax = prior entries' gross (+ JKK/JKM) + current month
       const annualGross = priorEntries
-        .reduce((sum, e) => sum.plus(new Decimal(e.grossPay.toString())), new Decimal(0))
-        .plus(grossPay);
+        .reduce(
+          (sum, e) =>
+            sum
+              .plus(new Decimal(e.grossPay.toString()))
+              .plus(new Decimal(e.bpjsJkk.toString()))
+              .plus(new Decimal(e.bpjsJkm.toString())),
+          new Decimal(0)
+        )
+        .plus(grossPayForTax);
 
       // JHT + JP only — BPJS Kesehatan is NOT deductible per PMK 168/2023
       const annualBpjsEmp = priorEntries
@@ -223,28 +265,47 @@ export async function runPayroll(month: number, year: number) {
         .plus(bpjs.jhtEmp)
         .plus(bpjs.jpEmp);
 
-      const totalPPh21JanNov = priorEntries.reduce(
+      const totalPPh21Prior = priorEntries.reduce(
         (sum, e) => sum.plus(new Decimal(e.pph21.toString())),
         new Decimal(0)
       );
+
+      // Biaya jabatan cap: Rp 500,000 × months worked in this tax year
+      // Full year (December) → 12 × 500,000 = Rp 6,000,000 (matches original cap)
+      // Mid-year resign → monthsWorked × 500,000 (prorated)
+      const taxYearStart = new Date(year, 0, 1);
+      const effectiveStart = emp.joinDate > taxYearStart ? emp.joinDate : taxYearStart;
+      const effectiveStartMonth = effectiveStart.getMonth() + 1; // 1-based
+      const monthsWorked = month - effectiveStartMonth + 1;
+      const biayaJabatanMax = new Decimal(500_000).mul(Math.max(monthsWorked, 1));
 
       const decResult = calculateDecemberPPh21({
         annualGrossIncome: annualGross,
         annualBpjsEmployee: annualBpjsEmp,
         ptkpStatus,
         hasNpwp,
-        totalPPh21JanNov,
+        totalPPh21Prior,
+        monthsWorked,
+        biayaJabatanMax,
       });
 
       pph21 = decResult.decemberPPh21;
     } else {
-      // January through November: TER monthly method
-      const monthlyResult = calculateMonthlyPPh21(grossPay, ptkpStatus);
+      // January through November: TER monthly method (applied to tax-inclusive gross)
+      const monthlyResult = calculateMonthlyPPh21(grossPayForTax, ptkpStatus);
       pph21 = monthlyResult.pph21;
     }
 
-    // ── 4e. Totals ───────────────────────────────────────────────────────
-    const totalDeductions = bpjs.totalEmployeeDeduction.plus(pph21);
+    // ── 4g. Totals ───────────────────────────────────────────────────────
+    // When isTaxBorneByCompany is true, the employer pays the PPh 21 on behalf
+    // of the employee. The tax amount is still calculated and stored for reporting,
+    // but it does NOT reduce the employee's take-home pay.
+    // grossPayForTax remains unchanged — PMK 168/2023 basis is the same regardless
+    // of who bears the tax cost.
+    const pph21EmployeeDeduction = emp.isTaxBorneByCompany
+      ? new Decimal(0)
+      : pph21;
+    const totalDeductions = bpjs.totalEmployeeDeduction.plus(pph21EmployeeDeduction);
     const netPay = grossPay.minus(totalDeductions);
 
     entryDataArray.push({
