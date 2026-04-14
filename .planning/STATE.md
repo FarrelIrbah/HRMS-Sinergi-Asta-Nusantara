@@ -21,7 +21,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 Phase: 5 of 5 (Recruitment Management) — In progress
 Plan: 6 of 7 (plans 01–06 complete)
 Status: Phase 5 plan 06 complete (2026-03-08). Offer letter PDF generation and download wired to candidate detail page.
-Last activity: 2026-03-08 - Completed 05-06-PLAN.md (offer letter PDF and candidate-to-employee conversion)
+Last activity: 2026-04-14 - Sanity check 04-13: BPJS engine audit PASSED (rates, caps, capping logic all compliant — JP cap uses Mar-2025 value Rp 10.547.400)
 
 Progress: [█████████████████████████████████████░░] 6/7 Phase 5 plans complete (Phase 1: 9/9, Phase 2: 8/8, Phase 3: 9/9, Phase 4: 8/8)
 
@@ -101,6 +101,12 @@ Progress: [███████████████████████
 | 70 | vacancyId prop kept in KanbanBoardProps but prefixed _vacancyId internally | updateCandidateStageAction resolves vacancy from candidateId; prop kept for API symmetry and future use | 05-04 |
 | 71 | over.id disambiguation in handleDragEnd: candidates array first, then STAGE_ORDER, else no-op | @dnd-kit over.id is either a card CUID or a stage string depending on drop target; order of checks prevents wrong-stage assignment | 05-04 |
 | 72 | offer-letter-pdf.tsx placed in src/lib/pdf/ not src/components/pdf/ | Established project convention — payslip-pdf.tsx and attendance-pdf.tsx both live in src/lib/pdf/; src/components/pdf/ does not exist | 05-06 |
+| 73 | isTaxBorneByCompany on Employee model (not EmployeeAllowance) | Tax-bearing is per-employee, not per-allowance; company either bears full PPh 21 or doesn't | 04-10 |
+| 74 | pph21 in PayrollEntry always stores full calculated amount | Even when company bears tax, the SPT reporting needs the actual tax figure; netPay/totalDeductions reflect employee perspective | 04-10 |
+| 75 | addTHRToPayrollAction recalculates PPh 21 via calculateMonthlyPPh21 | THR shifts TER bracket; simple grossPay+THR addition without tax recalc causes underpayment | 04-11 |
+| 76 | Pegawai harian lepas (TER Harian) out of scope | System only supports PKWT/PKWTT (TER Bulanan); keeps release timeline intact | 04-11 |
+| 77 | Payslip PPh 21 shows Rp 0 with "(Ditanggung Perusahaan)" label when tax-borne | Full amount moved to Kontribusi Perusahaan section for transparency | 04-12 |
+| 78 | BPJS JP cap = Rp 10.547.400 (Mar-2025 value), not Rp 10.042.300 (2024) | BPJS Ketenagakerjaan adjusts JP ceiling annually per inflation; system uses current effective value | 04-13 |
 
 ## Blockers / Concerns
 
@@ -109,8 +115,8 @@ Progress: [███████████████████████
 
 ## Session Continuity
 
-Last session: 2026-03-08T08:54:29Z
-Stopped at: Phase 5, Plan 06 complete — offer letter PDF download and candidate detail page wired
+Last session: 2026-04-14T00:00:00Z
+Stopped at: Sanity check 04-13 — BPJS engine audit passed; ready to continue Phase 5 Plan 07 (UI polishing)
 Resume file: None
 
 ## Notes
@@ -133,4 +139,4 @@ Resume file: None
 - **Pure calculation service pattern:** Payroll services in src/lib/services/ that import only Decimal, constants, and enums (never Prisma) are the canonical pattern for tax/BPJS logic. Batch engine calls these; they never call DB.
 
 ---
-*Last updated: 2026-03-08T08:54:29Z*
+*Last updated: 2026-04-14T00:00:00Z*
