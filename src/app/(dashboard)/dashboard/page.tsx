@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
-import { getDashboardData } from "@/lib/services/dashboard.service"
+import {
+  getDashboardData,
+  getSuperAdminDashboardData,
+} from "@/lib/services/dashboard.service"
 import { prisma } from "@/lib/prisma"
 import { SuperAdminDashboard } from "./_components/super-admin-dashboard"
 import { HRAdminDashboard } from "./_components/hr-admin-dashboard"
@@ -14,11 +17,16 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
-  const data = await getDashboardData()
   const role = session.user.role
   const name = session.user.name ?? "Pengguna"
 
-  // For employees: fetch upcoming approved leave starting within 7 days
+  if (role === "SUPER_ADMIN") {
+    const superAdminData = await getSuperAdminDashboardData()
+    return <SuperAdminDashboard data={superAdminData} name={name} />
+  }
+
+  const data = await getDashboardData()
+
   let upcomingLeave: {
     leaveTypeName: string
     startDate: string
@@ -71,7 +79,6 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Selamat datang, {name}</p>
       </div>
 
-      {role === "SUPER_ADMIN" && <SuperAdminDashboard data={data} />}
       {role === "HR_ADMIN" && <HRAdminDashboard data={data} />}
       {role === "MANAGER" && <ManagerDashboard data={data} />}
       {role === "EMPLOYEE" && <EmployeeDashboard data={data} upcomingLeave={upcomingLeave} />}
