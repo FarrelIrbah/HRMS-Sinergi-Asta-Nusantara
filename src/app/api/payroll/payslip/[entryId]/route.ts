@@ -94,6 +94,7 @@ export async function GET(
     bpjsJkk: Number(entry.bpjsJkk),
     bpjsJkm: Number(entry.bpjsJkm),
     pph21: Number(entry.pph21),
+    isTaxBorneByCompany: entry.employee.isTaxBorneByCompany,
     totalDeductions: Number(entry.totalDeductions),
     netPay: Number(entry.netPay),
   };

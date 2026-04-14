@@ -43,6 +43,7 @@ export interface SerializedEmployee {
   ptkpStatus: string | null;
   bpjsKesehatanNo: string | null;
   bpjsKetenagakerjaanNo: string | null;
+  isTaxBorneByCompany: boolean;
   officeLocationId: string | null;
   terminationDate: string | null;
   terminationReason: string | null;

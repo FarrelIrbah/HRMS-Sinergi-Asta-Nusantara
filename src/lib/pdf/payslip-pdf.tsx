@@ -35,6 +35,7 @@ export interface PayslipData {
   bpjsJkm: number;
   // Tax
   pph21: number;
+  isTaxBorneByCompany: boolean;
   // Totals
   totalDeductions: number;
   netPay: number;
@@ -256,6 +257,7 @@ export function PayslipDocument({ data }: { data: PayslipData }) {
     bpjsJkk,
     bpjsJkm,
     pph21,
+    isTaxBorneByCompany,
     totalDeductions,
     netPay,
   } = data;
@@ -361,8 +363,12 @@ export function PayslipDocument({ data }: { data: PayslipData }) {
             <Text style={styles.tableAmount}>{formatRupiah(bpjsJpEmp)}</Text>
           </View>
           <View style={[styles.tableRow, styles.tableRowAlt]}>
-            <Text style={styles.tableLabel}>PPh 21</Text>
-            <Text style={styles.tableAmount}>{formatRupiah(pph21)}</Text>
+            <Text style={styles.tableLabel}>
+              PPh 21{isTaxBorneByCompany ? " (Ditanggung Perusahaan)" : ""}
+            </Text>
+            <Text style={styles.tableAmount}>
+              {formatRupiah(isTaxBorneByCompany ? 0 : pph21)}
+            </Text>
           </View>
 
           {/* Total Deductions */}
@@ -401,6 +407,12 @@ export function PayslipDocument({ data }: { data: PayslipData }) {
             <Text style={styles.infoBoxLabel}>JKM</Text>
             <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsJkm)}</Text>
           </View>
+          {isTaxBorneByCompany && (
+            <View style={styles.infoBoxRow}>
+              <Text style={styles.infoBoxLabel}>PPh 21 (Ditanggung)</Text>
+              <Text style={styles.infoBoxAmount}>{formatRupiah(pph21)}</Text>
+            </View>
+          )}
         </View>
 
         {/* ── Take-home Pay ──────────────────────────────────────── */}

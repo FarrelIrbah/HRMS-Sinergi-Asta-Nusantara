@@ -364,6 +364,7 @@ export async function updateTaxBpjs(
     ptkpStatus?: string;
     bpjsKesehatanNo?: string;
     bpjsKetenagakerjaanNo?: string;
+    isTaxBorneByCompany?: boolean;
   },
   actorId: string
 ): Promise<ServiceResult<Employee>> {
@@ -382,6 +383,7 @@ export async function updateTaxBpjs(
       ptkpStatus: (data.ptkpStatus as Employee["ptkpStatus"]) || null,
       bpjsKesehatanNo: data.bpjsKesehatanNo || null,
       bpjsKetenagakerjaanNo: data.bpjsKetenagakerjaanNo || null,
+      isTaxBorneByCompany: data.isTaxBorneByCompany ?? false,
     },
   });
 
@@ -395,12 +397,14 @@ export async function updateTaxBpjs(
       ptkpStatus: old.ptkpStatus,
       bpjsKesehatanNo: old.bpjsKesehatanNo,
       bpjsKetenagakerjaanNo: old.bpjsKetenagakerjaanNo,
+      isTaxBorneByCompany: old.isTaxBorneByCompany,
     } as unknown as Record<string, unknown>,
     newValue: {
       npwp: employee.npwp,
       ptkpStatus: employee.ptkpStatus,
       bpjsKesehatanNo: employee.bpjsKesehatanNo,
       bpjsKetenagakerjaanNo: employee.bpjsKetenagakerjaanNo,
+      isTaxBorneByCompany: employee.isTaxBorneByCompany,
     } as unknown as Record<string, unknown>,
   });
 

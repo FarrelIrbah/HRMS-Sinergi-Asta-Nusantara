@@ -94,6 +94,7 @@ export const updateTaxBpjsSchema = z.object({
   ptkpStatus: z.nativeEnum(PTKPStatus).optional(),
   bpjsKesehatanNo: z.string().optional().or(z.literal("")),
   bpjsKetenagakerjaanNo: z.string().optional().or(z.literal("")),
+  isTaxBorneByCompany: z.boolean().optional(),
 });
 
 export type UpdateTaxBpjsInput = z.infer<typeof updateTaxBpjsSchema>;

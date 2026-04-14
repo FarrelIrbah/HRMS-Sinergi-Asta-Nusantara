@@ -60,6 +60,7 @@ export function TaxBpjsTab({ employee, readOnly }: TaxBpjsTabProps) {
       ptkpStatus: (employee.ptkpStatus as PTKPStatus) ?? undefined,
       bpjsKesehatanNo: employee.bpjsKesehatanNo ?? "",
       bpjsKetenagakerjaanNo: employee.bpjsKetenagakerjaanNo ?? "",
+      isTaxBorneByCompany: employee.isTaxBorneByCompany ?? false,
     },
   });
 
@@ -168,6 +169,34 @@ export function TaxBpjsTab({ employee, readOnly }: TaxBpjsTabProps) {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isTaxBorneByCompany"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <div className="flex items-center gap-3">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value ?? false}
+                        onChange={field.onChange}
+                        disabled={readOnly}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0 font-normal">
+                      PPh 21 Ditanggung Perusahaan
+                    </FormLabel>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-7">
+                    Jika diaktifkan, PPh 21 tetap dihitung dan dilaporkan ke SPT, namun
+                    tidak dipotong dari gaji karyawan — perusahaan yang menanggung.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
