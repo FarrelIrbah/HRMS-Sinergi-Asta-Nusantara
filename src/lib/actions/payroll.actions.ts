@@ -12,11 +12,12 @@ import {
   runPayroll,
   finalizePayroll,
 } from "@/lib/services/payroll.service";
+import { calculateMonthlyPPh21 } from "@/lib/services/pph21.service";
 import { calculateEmployeeTHR } from "@/lib/services/thr.service";
 import { prisma } from "@/lib/prisma";
 import Decimal from "decimal.js";
 import type { ServiceResult } from "@/types";
-import type { Religion } from "@/types/enums";
+import type { PTKPStatus, Religion } from "@/types/enums";
 
 // ===== AUTH HELPER =====
 
@@ -135,12 +136,14 @@ export async function updateEmployeeSalaryAction(
 // ===== THR ACTION =====
 
 /**
- * Append THR amounts to existing DRAFT PayrollEntry rows for the given month/year.
+ * Add THR (Tunjangan Hari Raya) amounts to an existing DRAFT PayrollRun.
  *
  * - Finds the DRAFT PayrollRun for the specified month/year.
  * - For each active employee with an entry in that run, calculates THR per
  *   Permenaker 6/2016 using the employee's agama, joinDate, and fixed allowances.
- * - Updates thrAmount, grossPay, and netPay on each eligible PayrollEntry.
+ * - Re-calculates PPh 21 with TER Bulanan on the new grossPayForTax (gaji + THR + JKK + JKM).
+ *   This is critical because THR shifts the employee into a higher TER bracket.
+ * - Updates thrAmount, grossPay, pph21, totalDeductions, and netPay on each eligible PayrollEntry.
  *
  * @throws if no PayrollRun exists for the month/year, or the run is FINALIZED.
  */
@@ -182,7 +185,8 @@ export async function addTHRToPayrollAction(
       };
     }
 
-    // Fetch all active employees with fixed allowances, joinDate, and agama
+    // Fetch all active employees with fixed allowances, joinDate, agama,
+    // and tax-related fields needed for PPh 21 recalculation
     const employees = await prisma.employee.findMany({
       where: { isActive: true },
       select: {
@@ -190,6 +194,9 @@ export async function addTHRToPayrollAction(
         baseSalary: true,
         joinDate: true,
         agama: true,
+        ptkpStatus: true,
+        npwp: true,
+        isTaxBorneByCompany: true,
         allowances: {
           where: { isFixed: true },
           select: { amount: true },
@@ -214,7 +221,7 @@ export async function addTHRToPayrollAction(
         new Decimal(0)
       );
 
-      const result = calculateEmployeeTHR({
+      const thrResult = calculateEmployeeTHR({
         joinDate: emp.joinDate,
         referenceDate,
         baseSalary,
@@ -222,28 +229,58 @@ export async function addTHRToPayrollAction(
         religion: emp.agama as Religion,
       });
 
-      if (!result.isEligible || result.thrAmount.lte(0)) continue;
+      if (!thrResult.isEligible || thrResult.thrAmount.lte(0)) continue;
 
-      // Fetch current entry values to add THR on top of existing amounts
+      // Fetch the full PayrollEntry to recalculate PPh 21 with THR included
       const currentEntry = await prisma.payrollEntry.findUnique({
         where: { id: entry.id },
-        select: { grossPay: true, netPay: true },
+        select: {
+          grossPay: true,
+          bpjsKesEmp: true,
+          bpjsJhtEmp: true,
+          bpjsJpEmp: true,
+          bpjsJkk: true,
+          bpjsJkm: true,
+        },
       });
       if (!currentEntry) continue;
 
-      const newGross = new Decimal(currentEntry.grossPay.toString()).plus(
-        result.thrAmount
-      );
-      const newNet = new Decimal(currentEntry.netPay.toString()).plus(
-        result.thrAmount
-      );
+      // ── Recalculate grossPay with THR ──────────────────────────────────
+      const prevGrossPay = new Decimal(currentEntry.grossPay.toString());
+      const newGrossPay = prevGrossPay.plus(thrResult.thrAmount);
+
+      // ── Recalculate PPh 21 on new grossPayForTax ───────────────────────
+      // Per PMK 168/2023: grossPayForTax = grossPay + JKK + JKM (employer premiums)
+      // BPJS amounts are unchanged — basis is baseSalary + fixed allowances, not THR
+      const jkk = new Decimal(currentEntry.bpjsJkk.toString());
+      const jkm = new Decimal(currentEntry.bpjsJkm.toString());
+      const newGrossPayForTax = newGrossPay.plus(jkk).plus(jkm);
+
+      const ptkpStatus = (emp.ptkpStatus ?? "TK_0") as PTKPStatus;
+      const { pph21: newPph21 } = calculateMonthlyPPh21(newGrossPayForTax, ptkpStatus);
+
+      // ── Recalculate totalDeductions and netPay ─────────────────────────
+      // BPJS employee deductions are unchanged (basis doesn't include THR)
+      const bpjsEmployeeTotal = new Decimal(currentEntry.bpjsKesEmp.toString())
+        .plus(new Decimal(currentEntry.bpjsJhtEmp.toString()))
+        .plus(new Decimal(currentEntry.bpjsJpEmp.toString()));
+
+      // When isTaxBorneByCompany is true, PPh 21 is not deducted from employee
+      const pph21EmployeeDeduction = emp.isTaxBorneByCompany
+        ? new Decimal(0)
+        : newPph21;
+
+      const newTotalDeductions = bpjsEmployeeTotal.plus(pph21EmployeeDeduction);
+      const newNetPay = newGrossPay.minus(newTotalDeductions);
 
       await prisma.payrollEntry.update({
         where: { id: entry.id },
         data: {
-          thrAmount: result.thrAmount.toNumber(),
-          grossPay: newGross.toNumber(),
-          netPay: newNet.toNumber(),
+          thrAmount: thrResult.thrAmount.toNumber(),
+          grossPay: newGrossPay.toNumber(),
+          pph21: newPph21.toNumber(),
+          totalDeductions: newTotalDeductions.toNumber(),
+          netPay: newNetPay.toNumber(),
         },
       });
     }
