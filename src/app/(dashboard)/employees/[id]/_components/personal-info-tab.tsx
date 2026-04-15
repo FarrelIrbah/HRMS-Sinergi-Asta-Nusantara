@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Eye, Loader2, UserRound } from "lucide-react";
 import {
   GENDER_LABELS,
   RELIGION_LABELS,
@@ -104,19 +104,39 @@ export function PersonalInfoTab({ employee, readOnly }: PersonalInfoTabProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Pribadi</CardTitle>
-            <CardDescription>
-              Informasi pribadi karyawan.
-            </CardDescription>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/50 py-4">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                aria-hidden="true"
+              >
+                <UserRound className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-slate-900">
+                  Data Pribadi
+                </CardTitle>
+                <CardDescription className="mt-0.5 text-sm text-slate-500">
+                  Identitas, kontak, dan status personal karyawan.
+                </CardDescription>
+              </div>
+            </div>
+            {readOnly && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                <Eye className="h-3 w-3" aria-hidden="true" />
+                Baca
+              </span>
+            )}
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid gap-4 p-5 sm:grid-cols-2 md:p-6">
             {/* Email display (not editable) */}
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Email</label>
-              <p className="rounded-md border bg-muted/50 px-3 py-2 text-sm">
+              <label className="text-sm font-medium leading-none text-slate-700">
+                Email
+              </label>
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                 {employee.email}
               </p>
             </div>
@@ -328,10 +348,17 @@ export function PersonalInfoTab({ employee, readOnly }: PersonalInfoTabProps) {
         </Card>
 
         {!readOnly && (
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="flex items-center justify-end gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p className="mr-auto text-xs text-slate-500">
+              Perubahan disimpan setelah Anda menekan tombol di samping.
+            </p>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
               {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               )}
               {isSubmitting ? "Menyimpan..." : "Simpan Data Pribadi"}
             </Button>

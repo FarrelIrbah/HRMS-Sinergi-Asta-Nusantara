@@ -2,7 +2,15 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Download, Trash2, FileText, Loader2 } from "lucide-react";
+import {
+  Download,
+  Eye,
+  FileText,
+  Loader2,
+  Trash2,
+  Upload,
+  UploadCloud,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -18,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -172,23 +181,54 @@ export function DocumentsTab({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Dokumen Karyawan
-        </CardTitle>
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/50 py-4">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-100"
+            aria-hidden="true"
+          >
+            <FileText className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold text-slate-900">
+              Dokumen Karyawan
+            </CardTitle>
+            <CardDescription className="mt-0.5 text-sm text-slate-500">
+              KTP, KK, ijazah, kontrak kerja, dan dokumen pendukung lainnya.
+            </CardDescription>
+          </div>
+        </div>
+        {readOnly && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+            <Eye className="h-3 w-3" aria-hidden="true" />
+            Baca
+          </span>
+        )}
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5 p-5 md:p-6">
         {/* Upload Section */}
         {!readOnly && (
-          <div className="rounded-lg border bg-muted/50 p-4 space-y-4">
-            <h4 className="text-sm font-medium">Unggah Dokumen Baru</h4>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="documentType">Tipe Dokumen</Label>
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <UploadCloud
+                className="h-4 w-4 text-emerald-600"
+                aria-hidden="true"
+              />
+              <h4 className="text-sm font-medium text-slate-800">
+                Unggah Dokumen Baru
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="documentType"
+                  className="text-xs font-medium text-slate-600"
+                >
+                  Tipe Dokumen
+                </Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger id="documentType">
+                  <SelectTrigger id="documentType" className="bg-white">
                     <SelectValue placeholder="Pilih tipe" />
                   </SelectTrigger>
                   <SelectContent>
@@ -197,26 +237,36 @@ export function DocumentsTab({
                         <SelectItem key={value} value={value}>
                           {label}
                         </SelectItem>
-                      )
+                      ),
                     )}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="file">File (PDF, JPG, PNG, maks 5MB)</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="file"
+                  className="text-xs font-medium text-slate-600"
+                >
+                  File (PDF, JPG, PNG, maks 5MB)
+                </Label>
                 <Input
                   id="file"
                   type="file"
                   ref={fileInputRef}
                   accept=".pdf,.jpg,.jpeg,.png"
+                  className="bg-white"
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={handleUpload} disabled={uploading}>
+                <Button
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
+                >
                   {uploading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="h-4 w-4" aria-hidden="true" />
                   )}
                   {uploading ? "Mengunggah..." : "Unggah Dokumen"}
                 </Button>
@@ -227,43 +277,72 @@ export function DocumentsTab({
 
         {/* Document List */}
         {documents.length === 0 ? (
-          <div className="rounded-lg border p-8 text-center text-muted-foreground">
-            Belum ada dokumen yang diunggah
+          <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/40 px-4 py-10 text-center">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+              aria-hidden="true"
+            >
+              <FileText className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-slate-700">
+              Belum ada dokumen
+            </p>
+            <p className="max-w-xs text-xs text-slate-500">
+              {readOnly
+                ? "Belum ada dokumen yang diunggah untuk karyawan ini."
+                : "Gunakan form di atas untuk mengunggah dokumen pertama."}
+            </p>
           </div>
         ) : (
-          <div className="rounded-md border">
+          <div className="overflow-hidden rounded-lg border border-slate-200">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Tipe Dokumen</TableHead>
-                  <TableHead>Nama File</TableHead>
-                  <TableHead>Ukuran</TableHead>
-                  <TableHead>Tanggal Upload</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Tipe Dokumen
+                  </TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nama File
+                  </TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Ukuran
+                  </TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Tanggal Upload
+                  </TableHead>
+                  <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Aksi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {documents.map((doc) => (
-                  <TableRow key={doc.id}>
+                  <TableRow key={doc.id} className="hover:bg-slate-50/60">
                     <TableCell>
-                      {DOCUMENT_TYPE_LABELS[
-                        doc.documentType as DocumentType
-                      ] ?? doc.documentType}
+                      <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-100">
+                        {DOCUMENT_TYPE_LABELS[
+                          doc.documentType as DocumentType
+                        ] ?? doc.documentType}
+                      </span>
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
+                    <TableCell className="max-w-[200px] truncate font-medium text-slate-800">
                       {doc.fileName}
                     </TableCell>
-                    <TableCell>{formatFileSize(doc.fileSize)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm tabular-nums text-slate-600">
+                      {formatFileSize(doc.fileSize)}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
                       {format(new Date(doc.createdAt), "dd MMM yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           onClick={() => handleDownload(doc)}
                           disabled={downloadingId === doc.id}
+                          aria-label={`Unduh ${doc.fileName}`}
                         >
                           {downloadingId === doc.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -273,11 +352,13 @@ export function DocumentsTab({
                         </Button>
                         {!readOnly && (
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                             onClick={() => setDeleteTarget(doc)}
+                            aria-label={`Hapus ${doc.fileName}`}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

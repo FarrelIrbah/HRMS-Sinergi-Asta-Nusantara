@@ -1,7 +1,22 @@
 "use client";
 
 import { useQueryState } from "nuqs";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Briefcase,
+  FileText,
+  PhoneCall,
+  Receipt,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { PersonalInfoTab } from "./personal-info-tab";
 import { EmploymentDetailsTab } from "./employment-details-tab";
 import { TaxBpjsTab } from "./tax-bpjs-tab";
@@ -85,6 +100,13 @@ interface EmployeeProfileTabsProps {
   salaryData?: SalaryData;
 }
 
+type TabConfig = {
+  value: string;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+};
+
 export function EmployeeProfileTabs({
   employee,
   mode,
@@ -96,24 +118,75 @@ export function EmployeeProfileTabs({
 
   const readOnly = mode === "readonly";
 
-  return (
-    <Tabs value={tab} onValueChange={setTab}>
-      <TabsList>
-        <TabsTrigger value="personal">Data Pribadi</TabsTrigger>
-        <TabsTrigger value="employment">Detail Pekerjaan</TabsTrigger>
-        <TabsTrigger value="tax-bpjs">Pajak & BPJS</TabsTrigger>
-        <TabsTrigger value="documents">Dokumen</TabsTrigger>
-        <TabsTrigger value="emergency">Kontak Darurat</TabsTrigger>
-        {salaryData && (
-          <TabsTrigger value="salary">Gaji & Tunjangan</TabsTrigger>
-        )}
-      </TabsList>
+  const tabs: TabConfig[] = [
+    { value: "personal", label: "Data Pribadi", icon: UserRound },
+    { value: "employment", label: "Detail Pekerjaan", icon: Briefcase },
+    { value: "tax-bpjs", label: "Pajak & BPJS", icon: Receipt },
+    {
+      value: "documents",
+      label: "Dokumen",
+      icon: FileText,
+      count: employee.documents?.length ?? 0,
+    },
+    {
+      value: "emergency",
+      label: "Kontak Darurat",
+      icon: PhoneCall,
+      count: employee.emergencyContacts?.length ?? 0,
+    },
+    ...(salaryData
+      ? [{ value: "salary", label: "Gaji & Tunjangan", icon: Wallet }]
+      : []),
+  ];
 
-      <TabsContent value="personal">
+  return (
+    <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+      <div className="overflow-x-auto pb-1">
+        <TabsList className="inline-flex h-auto w-auto gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = tab === t.value;
+            return (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className={cn(
+                  "inline-flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors",
+                  "data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none",
+                  "hover:bg-slate-50",
+                )}
+                aria-label={
+                  t.count !== undefined
+                    ? `${t.label} — ${t.count} item`
+                    : t.label
+                }
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                <span>{t.label}</span>
+                {t.count !== undefined && t.count > 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
+                      isActive
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-slate-100 text-slate-600",
+                    )}
+                    aria-hidden="true"
+                  >
+                    {t.count}
+                  </span>
+                )}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </div>
+
+      <TabsContent value="personal" className="mt-0">
         <PersonalInfoTab employee={employee} readOnly={readOnly} />
       </TabsContent>
 
-      <TabsContent value="employment">
+      <TabsContent value="employment" className="mt-0">
         <EmploymentDetailsTab
           employee={employee}
           readOnly={readOnly}
@@ -122,11 +195,11 @@ export function EmployeeProfileTabs({
         />
       </TabsContent>
 
-      <TabsContent value="tax-bpjs">
+      <TabsContent value="tax-bpjs" className="mt-0">
         <TaxBpjsTab employee={employee} readOnly={readOnly} />
       </TabsContent>
 
-      <TabsContent value="documents">
+      <TabsContent value="documents" className="mt-0">
         <DocumentsTab
           employeeId={employee.id}
           documents={employee.documents ?? []}
@@ -134,7 +207,7 @@ export function EmployeeProfileTabs({
         />
       </TabsContent>
 
-      <TabsContent value="emergency">
+      <TabsContent value="emergency" className="mt-0">
         <EmergencyContactsTab
           employeeId={employee.id}
           contacts={employee.emergencyContacts ?? []}
@@ -143,7 +216,7 @@ export function EmployeeProfileTabs({
       </TabsContent>
 
       {salaryData && (
-        <TabsContent value="salary">
+        <TabsContent value="salary" className="mt-0">
           <SalaryTab
             employeeId={employee.id}
             baseSalary={salaryData.baseSalary}
