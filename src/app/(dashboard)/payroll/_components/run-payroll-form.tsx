@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Calculator, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -93,21 +94,22 @@ export function RunPayrollForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-wrap items-end gap-4"
+        className="flex flex-wrap items-end gap-3"
+        aria-label="Form hitung penggajian"
       >
         {/* Bulan */}
         <FormField
           control={form.control}
           name="month"
           render={({ field }) => (
-            <FormItem className="min-w-[160px]">
-              <FormLabel>Bulan</FormLabel>
+            <FormItem className="min-w-[180px] flex-1">
+              <FormLabel className="text-sm text-slate-700">Bulan</FormLabel>
               <Select
                 onValueChange={(val) => field.onChange(parseInt(val, 10))}
                 value={String(field.value)}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-slate-200 bg-white">
                     <SelectValue placeholder="Pilih bulan" />
                   </SelectTrigger>
                 </FormControl>
@@ -129,14 +131,14 @@ export function RunPayrollForm() {
           control={form.control}
           name="year"
           render={({ field }) => (
-            <FormItem className="min-w-[120px]">
-              <FormLabel>Tahun</FormLabel>
+            <FormItem className="min-w-[140px]">
+              <FormLabel className="text-sm text-slate-700">Tahun</FormLabel>
               <Select
                 onValueChange={(val) => field.onChange(parseInt(val, 10))}
                 value={String(field.value)}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-slate-200 bg-white">
                     <SelectValue placeholder="Pilih tahun" />
                   </SelectTrigger>
                 </FormControl>
@@ -153,7 +155,16 @@ export function RunPayrollForm() {
           )}
         />
 
-        <Button type="submit" disabled={loading}>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Calculator className="h-4 w-4" aria-hidden="true" />
+          )}
           {loading ? "Menghitung..." : "Hitung Gaji"}
         </Button>
       </form>

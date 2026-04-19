@@ -108,7 +108,7 @@ export default async function LeaveReportPage({
         </div>
         <p className="mt-1 text-sm text-slate-600">
           Tahun {year}{" "}
-          {departmentId ? "\u2014 departemen terpilih" : "\u2014 semua departemen"}
+          {departmentId ? "— departemen terpilih" : "— semua departemen"}
         </p>
       </header>
 
@@ -201,13 +201,20 @@ export default async function LeaveReportPage({
                             {emp.pending}
                           </Badge>
                         ) : (
-                          <span className="text-sm text-slate-400">
-                            \u2014
-                          </span>
+                          <span className="text-sm text-slate-400">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-slate-700">
-                        {emp.rejected || "\u2014"}
+                      <TableCell className="text-right">
+                        {emp.rejected > 0 ? (
+                          <Badge
+                            variant="outline"
+                            className="border-rose-300 text-xs text-rose-700"
+                          >
+                            {emp.rejected}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-slate-400">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

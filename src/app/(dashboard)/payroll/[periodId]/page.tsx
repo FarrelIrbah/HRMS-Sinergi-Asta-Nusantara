@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import {
+  ArrowLeft,
+  Wallet,
+  Users2,
+  TrendingUp,
+  TrendingDown,
+  Banknote,
+  type LucideIcon,
+} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getPayrollRunDetail } from "@/lib/services/payroll.service";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { PayrollEntryTable } from "./_components/payroll-entry-table";
 import { FinalizeButton } from "./_components/finalize-button";
 import type { SerializedPayrollEntry } from "./_components/payroll-entry-table";
@@ -36,6 +46,16 @@ function formatRupiah(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatRupiahCompact(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `Rp ${(value / 1_000_000_000).toFixed(1)} M`;
+  }
+  if (value >= 1_000_000) {
+    return `Rp ${(value / 1_000_000).toFixed(1)} jt`;
+  }
+  return formatRupiah(value);
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -94,84 +114,105 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
   const totalNet = serializedEntries.reduce((s, e) => s + e.netPay, 0);
 
   const periodLabel = formatPeriod(run.month, run.year);
+  const isFinalized = run.status === "FINALIZED";
 
   return (
-    <div className="space-y-6">
-      {/* Breadcrumb */}
-      <nav className="text-sm text-muted-foreground">
-        <Link href="/payroll" className="hover:text-foreground">
+    <div
+      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      aria-label={`Detail penggajian periode ${periodLabel}`}
+    >
+      {/* ─── Breadcrumb ──────────────────────────── */}
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-sm text-slate-500"
+      >
+        <Link
+          href="/payroll"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           Penggajian
         </Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-foreground">{periodLabel}</span>
+        <span aria-hidden="true" className="text-slate-300">/</span>
+        <span className="font-medium text-slate-700">{periodLabel}</span>
       </nav>
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{periodLabel}</h1>
-          {run.status === "FINALIZED" ? (
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-              Difinalisasi
-            </Badge>
-          ) : (
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-              Draft
-            </Badge>
-          )}
+      {/* ─── Header ────────────────────────────────── */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm"
+              aria-hidden="true"
+            >
+              <Wallet className="h-5 w-5" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              {periodLabel}
+            </h1>
+            {isFinalized ? (
+              <Badge
+                variant="outline"
+                className="border-emerald-300 text-xs text-emerald-700"
+              >
+                Difinalisasi
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-amber-300 text-xs text-amber-700"
+              >
+                Draft
+              </Badge>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-slate-600">
+            {isFinalized
+              ? "Periode ini sudah difinalisasi dan tidak dapat diubah."
+              : "Periode ini masih DRAFT — dapat dihitung ulang sebelum finalisasi."}
+          </p>
         </div>
 
-        {run.status === "DRAFT" && <FinalizeButton runId={run.id} />}
-      </div>
+        {!isFinalized && <FinalizeButton runId={run.id} />}
+      </header>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Gaji Bruto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold">{formatRupiah(totalGross)}</p>
-          </CardContent>
-        </Card>
+      {/* ─── KPI Summary ──────────────────────────── */}
+      <section
+        aria-label="Ringkasan penggajian periode"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
+        <SummaryTile
+          icon={Users2}
+          label="Jumlah Karyawan"
+          value={run._count.entries}
+          tone="emerald"
+        />
+        <SummaryTile
+          icon={TrendingUp}
+          label="Total Bruto"
+          value={formatRupiahCompact(totalGross)}
+          title={formatRupiah(totalGross)}
+          tone="sky"
+        />
+        <SummaryTile
+          icon={TrendingDown}
+          label="Total Potongan"
+          value={formatRupiahCompact(totalDeductions)}
+          title={formatRupiah(totalDeductions)}
+          tone={totalDeductions > 0 ? "amber" : "slate"}
+        />
+        <SummaryTile
+          icon={Banknote}
+          label="Total Bersih"
+          value={formatRupiahCompact(totalNet)}
+          title={formatRupiah(totalNet)}
+          tone="violet"
+        />
+      </section>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Potongan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-red-600">
-              {formatRupiah(totalDeductions)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Gaji Bersih
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-green-700">
-              {formatRupiah(totalNet)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Entry Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Detail Gaji Karyawan ({run._count.entries} karyawan)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* ─── Entry Table ────────────────────────────── */}
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="p-4 sm:p-6">
           <PayrollEntryTable
             entries={serializedEntries}
             runId={run.id}
@@ -181,5 +222,72 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ─────────────────── Sub-component ───────────────────
+
+type Tone = "emerald" | "sky" | "violet" | "amber" | "slate";
+
+const TONE_MAP: Record<Tone, { bg: string; text: string; ring: string }> = {
+  emerald: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    ring: "ring-emerald-100",
+  },
+  sky: { bg: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-100" },
+  violet: {
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    ring: "ring-violet-100",
+  },
+  amber: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    ring: "ring-amber-100",
+  },
+  slate: {
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    ring: "ring-slate-200",
+  },
+};
+
+function SummaryTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  title,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  tone: Tone;
+  title?: string;
+}) {
+  const t = TONE_MAP[tone];
+  return (
+    <Card className="border-slate-200 shadow-sm" title={title}>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div
+          className={cn(
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ring-1",
+            t.bg,
+            t.text,
+            t.ring
+          )}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="truncate text-lg font-bold tabular-nums leading-tight text-slate-900">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
