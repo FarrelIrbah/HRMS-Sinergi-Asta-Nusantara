@@ -4,7 +4,10 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Loader2, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { clockInAction, clockOutAction } from "@/lib/actions/attendance.actions";
+import {
+  clockInAction,
+  clockOutAction,
+} from "@/lib/actions/attendance.actions";
 
 interface ClockInButtonProps {
   isClockedIn: boolean;
@@ -55,7 +58,6 @@ export function ClockInButton({ isClockedIn }: ClockInButtonProps) {
         });
       },
       () => {
-        // GPS denied or unavailable — fall back to IP-only check
         setVerifyingLocation(false);
         startTransition(async () => {
           const result = await action(undefined);
@@ -89,14 +91,19 @@ export function ClockInButton({ isClockedIn }: ClockInButtonProps) {
       variant={isClockedIn ? "outline" : "default"}
       onClick={handleClock}
       disabled={isLoading}
-      className="w-full sm:w-auto min-w-[180px] h-14 text-base font-semibold"
+      className={`w-full gap-2 sm:w-auto min-w-[180px] h-12 text-sm font-semibold ${
+        !isClockedIn
+          ? "bg-emerald-600 hover:bg-emerald-700"
+          : ""
+      }`}
+      aria-label={isClockedIn ? "Absen pulang" : "Absen masuk"}
     >
       {isLoading ? (
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
       ) : isClockedIn ? (
-        <LogOut className="mr-2 h-5 w-5" />
+        <LogOut className="h-4 w-4" aria-hidden="true" />
       ) : (
-        <LogIn className="mr-2 h-5 w-5" />
+        <LogIn className="h-4 w-4" aria-hidden="true" />
       )}
       {label}
     </Button>

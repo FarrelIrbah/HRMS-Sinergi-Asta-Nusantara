@@ -4,10 +4,15 @@ import { useTransition } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Send } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,12 +29,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { submitLeaveAction } from "@/lib/actions/leave.actions";
-import { submitLeaveSchema, type SubmitLeaveInput } from "@/lib/validations/leave";
+import {
+  submitLeaveSchema,
+  type SubmitLeaveInput,
+} from "@/lib/validations/leave";
 
 interface LeaveType {
   id: string;
@@ -49,7 +61,10 @@ interface LeaveRequestFormProps {
   balances: Balance[];
 }
 
-export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps) {
+export function LeaveRequestForm({
+  leaveTypes,
+  balances,
+}: LeaveRequestFormProps) {
   const [isPending, startTransition] = useTransition();
   const balanceMap = new Map(balances.map((b) => [b.leaveTypeId, b]));
 
@@ -62,9 +77,14 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
   });
 
   const selectedLeaveTypeId = form.watch("leaveTypeId");
-  const selectedBalance = selectedLeaveTypeId ? balanceMap.get(selectedLeaveTypeId) : null;
+  const selectedBalance = selectedLeaveTypeId
+    ? balanceMap.get(selectedLeaveTypeId)
+    : null;
   const remaining = selectedBalance
-    ? Math.max(0, selectedBalance.allocatedDays - selectedBalance.usedDays)
+    ? Math.max(
+        0,
+        selectedBalance.allocatedDays - selectedBalance.usedDays
+      )
     : null;
 
   function onSubmit(values: SubmitLeaveInput) {
@@ -80,22 +100,38 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Ajukan Cuti</CardTitle>
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
+            aria-hidden="true"
+          >
+            <Send className="h-3.5 w-3.5" />
+          </div>
+          Ajukan Cuti
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="leaveTypeId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Jenis Cuti</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <FormLabel className="text-sm text-slate-700">
+                    Jenis Cuti
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-slate-200">
                         <SelectValue placeholder="Pilih jenis cuti" />
                       </SelectTrigger>
                     </FormControl>
@@ -108,9 +144,16 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
                     </SelectContent>
                   </Select>
                   {remaining !== null && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-1 text-xs text-slate-500">
                       Saldo tersedia:{" "}
-                      <Badge variant="outline" className="text-xs">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          remaining > 0
+                            ? "border-emerald-300 text-emerald-700"
+                            : "border-red-300 text-red-700"
+                        }`}
+                      >
                         {remaining} hari
                       </Badge>
                     </p>
@@ -126,24 +169,40 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tanggal Mulai</FormLabel>
+                    <FormLabel className="text-sm text-slate-700">
+                      Tanggal Mulai
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant="outline" className="w-full justify-start font-normal text-sm">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start border-slate-200 text-left text-sm font-normal"
+                          >
+                            <CalendarIcon
+                              className="mr-2 h-4 w-4 text-slate-400"
+                              aria-hidden="true"
+                            />
                             {field.value
-                              ? format(field.value, "dd MMM yyyy", { locale: localeId })
+                              ? format(field.value, "dd MMM yyyy", {
+                                  locale: localeId,
+                                })
                               : "Pilih tanggal"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          disabled={(date) =>
+                            date <
+                            new Date(new Date().setHours(0, 0, 0, 0))
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -158,24 +217,40 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tanggal Akhir</FormLabel>
+                    <FormLabel className="text-sm text-slate-700">
+                      Tanggal Akhir
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant="outline" className="w-full justify-start font-normal text-sm">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start border-slate-200 text-left text-sm font-normal"
+                          >
+                            <CalendarIcon
+                              className="mr-2 h-4 w-4 text-slate-400"
+                              aria-hidden="true"
+                            />
                             {field.value
-                              ? format(field.value, "dd MMM yyyy", { locale: localeId })
+                              ? format(field.value, "dd MMM yyyy", {
+                                  locale: localeId,
+                                })
                               : "Pilih tanggal"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          disabled={(date) =>
+                            date <
+                            new Date(new Date().setHours(0, 0, 0, 0))
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -191,11 +266,13 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Alasan</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">
+                    Alasan
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Jelaskan alasan pengajuan cuti..."
-                      className="resize-none"
+                      className="resize-none border-slate-200"
                       rows={3}
                       {...field}
                     />
@@ -205,7 +282,12 @@ export function LeaveRequestForm({ leaveTypes, balances }: LeaveRequestFormProps
               )}
             />
 
-            <Button type="submit" disabled={isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
               {isPending ? "Mengirim..." : "Kirim Pengajuan"}
             </Button>
           </form>

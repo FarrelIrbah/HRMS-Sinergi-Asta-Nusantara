@@ -4,7 +4,13 @@ import { useTransition } from "react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { History, X } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,16 +42,16 @@ interface LeaveHistoryTableProps {
   requests: LeaveRequest[];
 }
 
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "APPROVED":
-      return "default";
+      return "border-emerald-300 bg-emerald-50 text-emerald-700";
     case "REJECTED":
-      return "destructive";
+      return "border-red-300 bg-red-50 text-red-700";
     case "CANCELLED":
-      return "secondary";
+      return "border-slate-300 bg-slate-50 text-slate-600";
     default:
-      return "outline";
+      return "border-amber-300 bg-amber-50 text-amber-700";
   }
 }
 
@@ -64,58 +70,107 @@ function CancelButton({ requestId }: { requestId: string }) {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
-      {isPending ? "Membatalkan..." : "Batalkan"}
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleCancel}
+      disabled={isPending}
+      className="gap-1 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+      aria-label="Batalkan pengajuan"
+    >
+      <X className="h-3 w-3" aria-hidden="true" />
+      {isPending ? "..." : "Batalkan"}
     </Button>
   );
 }
 
 export function LeaveHistoryTable({ requests }: LeaveHistoryTableProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Riwayat Pengajuan Cuti</CardTitle>
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+            aria-hidden="true"
+          >
+            <History className="h-3.5 w-3.5" />
+          </div>
+          Riwayat Pengajuan Cuti
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {requests.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-4">Belum ada pengajuan cuti.</p>
+          <div className="py-8 text-center">
+            <p className="text-sm text-slate-500">
+              Belum ada pengajuan cuti.
+            </p>
+          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Jenis Cuti</TableHead>
-                <TableHead>Periode</TableHead>
-                <TableHead>Hari Kerja</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Catatan</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell className="font-medium">{req.leaveType.name}</TableCell>
-                  <TableCell className="text-sm">
-                    {format(new Date(req.startDate), "dd MMM", { locale: localeId })}
-                    {" \u2013 "}
-                    {format(new Date(req.endDate), "dd MMM yyyy", { locale: localeId })}
-                  </TableCell>
-                  <TableCell>{req.workingDays} hari</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(req.status)}>
-                      {LEAVE_STATUS_LABELS[req.status as keyof typeof LEAVE_STATUS_LABELS] ?? req.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {req.approverNotes ?? "\u2014"}
-                  </TableCell>
-                  <TableCell>
-                    {req.status === "PENDING" && <CancelButton requestId={req.id} />}
-                  </TableCell>
+          <div className="rounded-md border border-slate-200">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Jenis Cuti
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Periode
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Hari Kerja
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Catatan
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    {/* actions */}
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="font-medium text-slate-900">
+                      {req.leaveType.name}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-slate-700">
+                      {format(new Date(req.startDate), "dd MMM", {
+                        locale: localeId,
+                      })}
+                      {" \u2013 "}
+                      {format(new Date(req.endDate), "dd MMM yyyy", {
+                        locale: localeId,
+                      })}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-sm text-slate-700">
+                      {req.workingDays} hari
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${getStatusBadgeClass(req.status)}`}
+                      >
+                        {LEAVE_STATUS_LABELS[
+                          req.status as keyof typeof LEAVE_STATUS_LABELS
+                        ] ?? req.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-sm text-slate-500">
+                      {req.approverNotes ?? "\u2014"}
+                    </TableCell>
+                    <TableCell>
+                      {req.status === "PENDING" && (
+                        <CancelButton requestId={req.id} />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

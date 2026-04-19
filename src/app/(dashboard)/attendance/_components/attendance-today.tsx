@@ -1,8 +1,13 @@
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
-import { Clock, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, CheckCircle2, CalendarDays } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ClockInButton } from "./clock-in-button";
 import type { AttendanceRecord } from "@/generated/prisma/client";
@@ -53,36 +58,49 @@ export function AttendanceToday({
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Clock className="h-4 w-4" />
+      {/* ─── Today's Clock ──────────────────────── */}
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
+              aria-hidden="true"
+            >
+              <Clock className="h-3.5 w-3.5" />
+            </div>
             Hari Ini
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 text-sm">
+          <div className="flex gap-6">
             <div>
-              <p className="text-muted-foreground">Masuk</p>
-              <p className="font-semibold text-lg">{clockInDisplay ?? "—"}</p>
+              <p className="text-xs font-medium text-slate-500">Masuk</p>
+              <p className="text-2xl font-bold tabular-nums text-slate-900">
+                {clockInDisplay ?? "\u2014"}
+              </p>
               {isLate && (
-                <Badge variant="destructive" className="text-xs mt-1">
-                  Terlambat
+                <Badge
+                  variant="destructive"
+                  className="mt-1 text-xs"
+                >
+                  Terlambat {todayRecord?.lateMinutes ?? 0}m
                 </Badge>
               )}
             </div>
             <div>
-              <p className="text-muted-foreground">Pulang</p>
-              <p className="font-semibold text-lg">{clockOutDisplay ?? "—"}</p>
+              <p className="text-xs font-medium text-slate-500">Pulang</p>
+              <p className="text-2xl font-bold tabular-nums text-slate-900">
+                {clockOutDisplay ?? "\u2014"}
+              </p>
               {isEarlyOut && (
-                <Badge variant="secondary" className="text-xs mt-1">
+                <Badge variant="secondary" className="mt-1 text-xs">
                   Pulang Awal
                 </Badge>
               )}
               {overtimeMinutes > 0 && (
                 <Badge
                   variant="outline"
-                  className="text-xs mt-1 border-amber-400 text-amber-600"
+                  className="mt-1 border-amber-300 text-xs text-amber-600"
                 >
                   Lembur {formatMinutes(overtimeMinutes)}
                 </Badge>
@@ -93,8 +111,8 @@ export function AttendanceToday({
           {!isClockedOut && <ClockInButton isClockedIn={isClockedIn} />}
 
           {isClockedOut && (
-            <div className="flex items-center gap-2 text-green-600 text-sm">
-              <CheckCircle2 className="h-4 w-4" />
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-sm font-medium text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               <span>
                 Absen hari ini sudah lengkap ({formatMinutes(totalMinutes)})
               </span>
@@ -103,40 +121,51 @@ export function AttendanceToday({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ringkasan Minggu Ini</CardTitle>
+      {/* ─── Weekly Summary ─────────────────────── */}
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-50 text-sky-600"
+              aria-hidden="true"
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+            </div>
+            Ringkasan Minggu Ini
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1.5">
             {weeklySummary.map((day) => {
               const dayLabel = format(day.date, "EEE", { locale: localeId });
               const dayNum = format(day.date, "d");
               return (
                 <div
                   key={day.dateStr}
-                  className={`flex flex-col items-center p-2 rounded text-xs ${
+                  className={`flex flex-col items-center rounded-lg px-2 py-2.5 text-xs transition-colors ${
                     day.hasRecord
                       ? day.isLate
-                        ? "bg-amber-50 border border-amber-200"
-                        : "bg-green-50 border border-green-200"
-                      : "bg-muted/30 border border-transparent"
+                        ? "border border-amber-200 bg-amber-50"
+                        : "border border-emerald-200 bg-emerald-50"
+                      : "border border-transparent bg-slate-100/60"
                   }`}
                 >
-                  <span className="text-muted-foreground capitalize">
+                  <span className="font-medium capitalize text-slate-500">
                     {dayLabel}
                   </span>
-                  <span className="font-semibold">{dayNum}</span>
+                  <span className="mt-0.5 text-base font-bold text-slate-900">
+                    {dayNum}
+                  </span>
                   <span
-                    className={
+                    className={`mt-0.5 tabular-nums ${
                       day.hasRecord
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
-                    }
+                        ? day.isLate
+                          ? "font-semibold text-amber-700"
+                          : "font-semibold text-emerald-700"
+                        : "text-slate-400"
+                    }`}
                   >
-                    {day.totalMinutes > 0
-                      ? formatMinutes(day.totalMinutes)
-                      : "—"}
+                    {day.totalMinutes > 0 ? formatMinutes(day.totalMinutes) : "\u2014"}
                   </span>
                 </div>
               );

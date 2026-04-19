@@ -1,6 +1,12 @@
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { History } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -40,11 +46,7 @@ interface AttendanceHistoryProps {
   records: AttendanceRecordWithLocation[];
 }
 
-function StatusBadges({
-  record,
-}: {
-  record: AttendanceRecordWithLocation;
-}) {
+function StatusBadges({ record }: { record: AttendanceRecordWithLocation }) {
   const badges = [];
   if (
     !record.isLate &&
@@ -56,7 +58,7 @@ function StatusBadges({
       <Badge
         key="ontime"
         variant="outline"
-        className="border-green-400 text-green-700 text-xs"
+        className="border-emerald-300 text-xs text-emerald-700"
       >
         Tepat Waktu
       </Badge>
@@ -81,7 +83,7 @@ function StatusBadges({
       <Badge
         key="ot"
         variant="outline"
-        className="border-amber-400 text-amber-600 text-xs"
+        className="border-amber-300 text-xs text-amber-600"
       >
         Lembur {formatMinutes(record.overtimeMinutes)}
       </Badge>
@@ -99,54 +101,76 @@ function StatusBadges({
 
 export function AttendanceHistory({ records }: AttendanceHistoryProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Riwayat 7 Hari Terakhir</CardTitle>
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+            aria-hidden="true"
+          >
+            <History className="h-3.5 w-3.5" />
+          </div>
+          Riwayat 7 Hari Terakhir
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-4">
-            Belum ada riwayat absensi.
-          </p>
+          <div className="py-8 text-center">
+            <p className="text-sm text-slate-500">
+              Belum ada riwayat absensi.
+            </p>
+          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Masuk</TableHead>
-                <TableHead>Pulang</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {records.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell className="font-medium">
-                    {format(toZonedTime(record.date, TZ), "dd MMM yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {record.clockIn
-                      ? format(toZonedTime(record.clockIn, TZ), "HH:mm")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {record.clockOut
-                      ? format(toZonedTime(record.clockOut, TZ), "HH:mm")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {record.totalMinutes > 0
-                      ? formatMinutes(record.totalMinutes)
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadges record={record} />
-                  </TableCell>
+          <div className="rounded-md border border-slate-200">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Tanggal
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Masuk
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Pulang
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Total
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600">
+                    Status
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {records.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell className="font-medium text-slate-900">
+                      {format(toZonedTime(record.date, TZ), "dd MMM yyyy")}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-slate-700">
+                      {record.clockIn
+                        ? format(toZonedTime(record.clockIn, TZ), "HH:mm")
+                        : "\u2014"}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-slate-700">
+                      {record.clockOut
+                        ? format(toZonedTime(record.clockOut, TZ), "HH:mm")
+                        : "\u2014"}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-slate-700">
+                      {record.totalMinutes > 0
+                        ? formatMinutes(record.totalMinutes)
+                        : "\u2014"}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadges record={record} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

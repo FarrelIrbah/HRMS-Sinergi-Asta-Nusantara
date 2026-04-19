@@ -20,8 +20,12 @@ export function ExportButtons({ month, year }: ExportButtonsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Download className="mr-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 border-slate-200 bg-white text-sm"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
           Ekspor
         </Button>
       </DropdownMenuTrigger>

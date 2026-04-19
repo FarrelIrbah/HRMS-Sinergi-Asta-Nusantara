@@ -538,10 +538,8 @@ async function main() {
     }
   }
 
-  // ── 10. Attendance Records (Phase 3) ──────────────────────────────────
-  // Seed 5 weekday records (Mon-Fri of last week) for active employees
-  // clockIn: 08:00 WIB = 01:00 UTC; clockOut: 17:00 WIB = 10:00 UTC
-  // One record per week has isLate=true (Wednesday, clockIn at 08:35 WIB = 01:35 UTC)
+  // ── 10. Attendance Records (Phase 3 — enhanced) ────────────────────────
+  // Seed 4 weeks of weekday attendance with realistic variety per employee
 
   const officeLocation = await prisma.officeLocation.findFirst({
     where: { deletedAt: null },
@@ -550,74 +548,137 @@ async function main() {
 
   let attendanceCount = 0;
   if (officeLocation) {
-    // Find all active employees (excluding the inactive one EMP-2026-0008)
     const activeEmployees = await prisma.employee.findMany({
       where: { isActive: true },
       select: { id: true, nik: true },
     });
 
-    // Last week Mon-Fri: calculate dynamically from today
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    // Days since last Monday (if today is Mon=1, go back 7; if Fri=5, go back 11)
-    const daysToLastMonday = dayOfWeek === 0 ? 6 : dayOfWeek + 6;
-    const lastMonday = new Date(today);
-    lastMonday.setUTCDate(today.getUTCDate() - daysToLastMonday);
-    lastMonday.setUTCHours(0, 0, 0, 0);
+    // Helper: generate weekdays for a given week offset (0 = current, -1 = last, etc.)
+    const getWeekdays = (weekOffset: number): Date[] => {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0=Sun..6=Sat
+      // Monday of current week
+      const currentMonday = new Date(today);
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      currentMonday.setUTCDate(today.getUTCDate() - daysFromMonday + weekOffset * 7);
+      currentMonday.setUTCHours(0, 0, 0, 0);
 
-    // Define last week's weekdays
-    const weekdays = [0, 1, 2, 3, 4].map((offset) => {
-      const d = new Date(lastMonday);
-      d.setUTCDate(lastMonday.getUTCDate() + offset);
-      return d;
-    });
+      const days: Date[] = [];
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(currentMonday);
+        d.setUTCDate(currentMonday.getUTCDate() + i);
+        // Don't include future dates
+        if (d <= today) days.push(d);
+      }
+      return days;
+    }
 
-    for (const employee of activeEmployees) {
-      for (let i = 0; i < weekdays.length; i++) {
-        const date = weekdays[i];
-        const isWednesday = i === 2; // Wednesday = index 2 (late record)
+    // Attendance patterns per employee index for variety
+    // Pattern: [clockInHour, clockInMin, clockOutHour, clockOutMin]
+    // Hours in UTC (WIB - 7)
+    type DayPattern = { inH: number; inM: number; outH: number; outM: number };
+    const patterns: DayPattern[][] = [
+      // Pattern 0: Punctual employee, occasional late Wed
+      [
+        { inH: 0, inM: 58, outH: 10, outM: 5 },   // Mon 07:58 - 17:05
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Tue 08:00 - 17:00
+        { inH: 1, inM: 25, outH: 10, outM: 0 },    // Wed 08:25 LATE
+        { inH: 0, inM: 55, outH: 10, outM: 0 },    // Thu 07:55 - 17:00
+        { inH: 1, inM: 0, outH: 11, outM: 30 },    // Fri overtime 18:30
+      ],
+      // Pattern 1: Sometimes late, sometimes early out
+      [
+        { inH: 1, inM: 0, outH: 9, outM: 30 },     // Mon early out 16:30
+        { inH: 1, inM: 40, outH: 10, outM: 0 },    // Tue 08:40 LATE
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Wed on-time
+        { inH: 1, inM: 15, outH: 10, outM: 0 },    // Thu 08:15 LATE
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Fri on-time
+      ],
+      // Pattern 2: Overtime lover
+      [
+        { inH: 0, inM: 50, outH: 11, outM: 0 },    // Mon OT 18:00
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Tue on-time
+        { inH: 1, inM: 0, outH: 11, outM: 30 },    // Wed OT 18:30
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Thu on-time
+        { inH: 0, inM: 45, outH: 12, outM: 0 },    // Fri OT 19:00
+      ],
+      // Pattern 3: Mixed
+      [
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Mon on-time
+        { inH: 1, inM: 0, outH: 10, outM: 0 },     // Tue on-time
+        { inH: 1, inM: 30, outH: 10, outM: 0 },    // Wed 08:30 LATE
+        { inH: 1, inM: 0, outH: 9, outM: 45 },     // Thu early out 16:45
+        { inH: 1, inM: 5, outH: 10, outM: 15 },    // Fri slightly late + slightly OT
+      ],
+    ];
 
-        const existing = await prisma.attendanceRecord.findFirst({
-          where: { employeeId: employee.id, date },
-        });
-        if (existing) {
+    const weeks = [-3, -2, -1, 0]; // 4 weeks
+
+    for (let empIdx = 0; empIdx < activeEmployees.length; empIdx++) {
+      const employee = activeEmployees[empIdx];
+      const patternSet = patterns[empIdx % patterns.length];
+
+      for (const weekOffset of weeks) {
+        const weekdays = getWeekdays(weekOffset);
+        for (let dayIdx = 0; dayIdx < weekdays.length; dayIdx++) {
+          const date = weekdays[dayIdx];
+          const pattern = patternSet[dayIdx % patternSet.length];
+
+          // Add slight random variation per week to avoid identical data
+          const minuteJitter = (weekOffset + empIdx) % 3 === 0 ? 5 : 0;
+
+          const existing = await prisma.attendanceRecord.findFirst({
+            where: { employeeId: employee.id, date },
+          });
+          if (existing) {
+            attendanceCount++;
+            continue;
+          }
+
+          const clockIn = new Date(date);
+          clockIn.setUTCHours(pattern.inH, pattern.inM + minuteJitter, 0, 0);
+
+          const clockOut = new Date(date);
+          clockOut.setUTCHours(pattern.outH, pattern.outM, 0, 0);
+
+          const totalMinutes = Math.round(
+            (clockOut.getTime() - clockIn.getTime()) / 60000
+          );
+
+          // Work hours: 08:00-17:00 WIB = 01:00-10:00 UTC (540 min)
+          // Late if clockIn > 01:00 UTC (08:00 WIB)
+          const clockInMinFromStart = (pattern.inH * 60 + pattern.inM + minuteJitter) - 60; // minutes after 01:00 UTC
+          const isLate = clockInMinFromStart > 0;
+          const lateMinutes = isLate ? clockInMinFromStart : 0;
+
+          // Early out if clockOut < 10:00 UTC (17:00 WIB)
+          const clockOutMinFromEnd = 600 - (pattern.outH * 60 + pattern.outM); // minutes before 10:00 UTC
+          const isEarlyOut = clockOutMinFromEnd > 0;
+          const earlyOutMinutes = isEarlyOut ? clockOutMinFromEnd : 0;
+
+          // Overtime if clockOut > 10:00 UTC (17:00 WIB)
+          const overtimeMinutes =
+            pattern.outH * 60 + pattern.outM > 600
+              ? pattern.outH * 60 + pattern.outM - 600
+              : 0;
+
+          await prisma.attendanceRecord.create({
+            data: {
+              employeeId: employee.id,
+              officeLocationId: officeLocation.id,
+              date,
+              clockIn,
+              clockOut,
+              isLate,
+              lateMinutes,
+              isEarlyOut,
+              earlyOutMinutes,
+              overtimeMinutes,
+              totalMinutes,
+            },
+          });
           attendanceCount++;
-          continue;
         }
-
-        // clockIn: 08:00 WIB = 01:00 UTC (on-time), or 08:35 WIB = 01:35 UTC (late)
-        const clockIn = new Date(date);
-        if (isWednesday) {
-          clockIn.setUTCHours(1, 35, 0, 0); // 08:35 WIB
-        } else {
-          clockIn.setUTCHours(1, 0, 0, 0); // 08:00 WIB
-        }
-
-        // clockOut: 17:00 WIB = 10:00 UTC
-        const clockOut = new Date(date);
-        clockOut.setUTCHours(10, 0, 0, 0);
-
-        const totalMinutes = (clockOut.getTime() - clockIn.getTime()) / 60000;
-        const lateMinutes = isWednesday ? 35 : 0;
-        const earlyOutMinutes = 0;
-        const overtimeMinutes = 0;
-
-        await prisma.attendanceRecord.create({
-          data: {
-            employeeId: employee.id,
-            officeLocationId: officeLocation.id,
-            date,
-            clockIn,
-            clockOut,
-            isLate: isWednesday,
-            lateMinutes,
-            isEarlyOut: false,
-            earlyOutMinutes,
-            overtimeMinutes,
-            totalMinutes,
-          },
-        });
-        attendanceCount++;
       }
     }
   } else {
@@ -627,21 +688,32 @@ async function main() {
   console.log(`  Attendance Records: ${attendanceCount} seeded`);
 
   // ── 11. Leave Balances (Phase 3) ──────────────────────────────────────
-  // Ensure leave balances exist for all active employees for current year
   const currentYear = new Date().getFullYear();
   const allLeaveTypes = await prisma.leaveType.findMany({
     where: { deletedAt: null },
-    select: { id: true, annualQuota: true },
+    select: { id: true, name: true, annualQuota: true },
   });
 
   const activeEmployeesForBalance = await prisma.employee.findMany({
     where: { isActive: true },
-    select: { id: true },
+    select: { id: true, nik: true },
   });
+
+  // Pre-define used days per employee (nik → leaveTypeName → usedDays)
+  const usedDaysMap: Record<string, Record<string, number>> = {
+    "EMP-2026-0001": { "Cuti Tahunan": 3, "Cuti Sakit": 1 },
+    "EMP-2026-0002": { "Cuti Tahunan": 2 },
+    "EMP-2026-0003": { "Cuti Tahunan": 4, "Cuti Sakit": 2 },
+    "EMP-2026-0004": { "Cuti Tahunan": 1 },
+    "EMP-2026-0005": { "Cuti Tahunan": 5, "Cuti Sakit": 1 },
+    "EMP-2026-0006": { "Cuti Tahunan": 0 },
+    "EMP-2026-0007": { "Cuti Sakit": 1 },
+  };
 
   let balanceCount = 0;
   for (const emp of activeEmployeesForBalance) {
     for (const lt of allLeaveTypes) {
+      const usedDays = usedDaysMap[emp.nik]?.[lt.name] ?? 0;
       await prisma.leaveBalance.upsert({
         where: {
           employeeId_leaveTypeId_year: {
@@ -655,9 +727,9 @@ async function main() {
           leaveTypeId: lt.id,
           year: currentYear,
           allocatedDays: lt.annualQuota,
-          usedDays: 0,
+          usedDays,
         },
-        update: {},
+        update: { usedDays },
       });
       balanceCount++;
     }
@@ -665,89 +737,140 @@ async function main() {
 
   console.log(`  Leave Balances: ${balanceCount} upserted`);
 
-  // ── 12. Leave Requests (Phase 3) ──────────────────────────────────────
-  // Add one PENDING leave request for the main employee test user (Rina)
-  // and one additional for Ahmad to show variety
+  // ── 12. Leave Requests (Phase 3 — enhanced) ──────────────────────────
+  // Diverse leave requests across employees with various statuses
 
-  const annualLeaveType = await prisma.leaveType.findFirst({
-    where: { name: "Cuti Tahunan", deletedAt: null },
-    select: { id: true },
-  });
+  // Clear existing leave requests to re-seed cleanly
+  await prisma.leaveRequest.deleteMany({});
 
-  const rinaEmployee = await prisma.employee.findFirst({
-    where: { nik: "EMP-2026-0003" },
-    select: { id: true },
-  });
-
-  const ahmadEmployee = await prisma.employee.findFirst({
-    where: { nik: "EMP-2026-0004" },
-    select: { id: true },
-  });
-
-  let leaveRequestCount = 0;
-
-  if (rinaEmployee && annualLeaveType) {
-    // Rina's PENDING leave request: next week Mon-Tue
-    const nextMonday = new Date();
-    const dWk = nextMonday.getDay();
-    const daysUntilNextMonday = dWk === 0 ? 1 : 8 - dWk;
-    nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
-    nextMonday.setUTCHours(0, 0, 0, 0);
-    const nextTuesday = new Date(nextMonday);
-    nextTuesday.setUTCDate(nextMonday.getUTCDate() + 1);
-
-    const existingRina = await prisma.leaveRequest.findFirst({
-      where: {
-        employeeId: rinaEmployee.id,
-        status: "PENDING",
-        leaveTypeId: annualLeaveType.id,
-      },
-    });
-    if (!existingRina) {
-      await prisma.leaveRequest.create({
-        data: {
-          employeeId: rinaEmployee.id,
-          leaveTypeId: annualLeaveType.id,
-          startDate: nextMonday,
-          endDate: nextTuesday,
-          workingDays: 2,
-          reason: "Keperluan keluarga",
-          status: "PENDING",
-        },
-      });
-      leaveRequestCount++;
-    }
+  const leaveTypeMap: Record<string, string> = {};
+  for (const lt of allLeaveTypes) {
+    leaveTypeMap[lt.name] = lt.id;
   }
 
-  if (ahmadEmployee && annualLeaveType) {
-    // Ahmad's PENDING leave request: next Wednesday
-    const nextWed = new Date();
-    const dWk2 = nextWed.getDay();
-    const daysUntilWed = dWk2 <= 3 ? 3 - dWk2 + 7 : 10 - dWk2;
-    nextWed.setDate(nextWed.getDate() + daysUntilWed);
-    nextWed.setUTCHours(0, 0, 0, 0);
+  const employeesByNik: Record<string, string> = {};
+  for (const emp of activeEmployeesForBalance) {
+    employeesByNik[emp.nik] = emp.id;
+  }
 
-    const existingAhmad = await prisma.leaveRequest.findFirst({
-      where: {
-        employeeId: ahmadEmployee.id,
-        status: "PENDING",
-        leaveTypeId: annualLeaveType.id,
+  // Find the HR admin user for approvedBy
+  const hrAdminUser = await prisma.user.findUnique({
+    where: { email: "dewi.hr@ptsan.co.id" },
+    select: { id: true },
+  });
+
+  const today = new Date();
+  const makeDate = (daysFromToday: number) => {
+    const d = new Date(today);
+    d.setUTCDate(today.getUTCDate() + daysFromToday);
+    d.setUTCHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const leaveSeeds = [
+    // Dewi (EMP-0001) — 3 Cuti Tahunan approved (past), 1 Cuti Sakit approved
+    {
+      nik: "EMP-2026-0001", type: "Cuti Tahunan", start: -30, end: -28,
+      days: 3, status: "APPROVED" as const, reason: "Liburan keluarga ke Bali",
+      notes: "Disetujui", approvedDaysAgo: 35,
+    },
+    {
+      nik: "EMP-2026-0001", type: "Cuti Sakit", start: -14, end: -14,
+      days: 1, status: "APPROVED" as const, reason: "Demam tinggi, istirahat dokter",
+      notes: "Semoga lekas sembuh", approvedDaysAgo: 14,
+    },
+    // Budi (EMP-0002) — 2 Cuti Tahunan approved, 1 rejected
+    {
+      nik: "EMP-2026-0002", type: "Cuti Tahunan", start: -21, end: -20,
+      days: 2, status: "APPROVED" as const, reason: "Acara pernikahan saudara",
+      notes: "Disetujui", approvedDaysAgo: 25,
+    },
+    {
+      nik: "EMP-2026-0002", type: "Cuti Tahunan", start: 5, end: 9,
+      days: 5, status: "REJECTED" as const, reason: "Mudik lebaran lebih awal",
+      notes: "Periode tersebut sedang high season, mohon ajukan tanggal lain",
+      approvedDaysAgo: 2,
+    },
+    // Rina (EMP-0003) — 4 Cuti Tahunan approved (past), 2 Sakit, 1 PENDING, 1 CANCELLED
+    {
+      nik: "EMP-2026-0003", type: "Cuti Tahunan", start: -45, end: -42,
+      days: 4, status: "APPROVED" as const, reason: "Wisuda adik di Yogyakarta",
+      notes: "Disetujui", approvedDaysAgo: 50,
+    },
+    {
+      nik: "EMP-2026-0003", type: "Cuti Sakit", start: -10, end: -9,
+      days: 2, status: "APPROVED" as const, reason: "Sakit flu berat, surat dokter terlampir",
+      notes: "Semoga lekas sembuh", approvedDaysAgo: 10,
+    },
+    {
+      nik: "EMP-2026-0003", type: "Cuti Tahunan", start: 7, end: 8,
+      days: 2, status: "PENDING" as const, reason: "Keperluan keluarga",
+    },
+    {
+      nik: "EMP-2026-0003", type: "Cuti Tahunan", start: 14, end: 14,
+      days: 1, status: "CANCELLED" as const, reason: "Urusan pribadi (dibatalkan)",
+    },
+    // Ahmad (EMP-0004) — 1 approved, 1 PENDING
+    {
+      nik: "EMP-2026-0004", type: "Cuti Tahunan", start: -7, end: -7,
+      days: 1, status: "APPROVED" as const, reason: "Mengurus surat-surat",
+      notes: "Disetujui", approvedDaysAgo: 10,
+    },
+    {
+      nik: "EMP-2026-0004", type: "Cuti Tahunan", start: 10, end: 10,
+      days: 1, status: "PENDING" as const, reason: "Urusan pribadi",
+    },
+    // Siti (EMP-0005) — 5 Cuti Tahunan approved, 1 Sakit
+    {
+      nik: "EMP-2026-0005", type: "Cuti Tahunan", start: -60, end: -56,
+      days: 5, status: "APPROVED" as const, reason: "Liburan akhir tahun",
+      notes: "Disetujui", approvedDaysAgo: 65,
+    },
+    {
+      nik: "EMP-2026-0005", type: "Cuti Sakit", start: -5, end: -5,
+      days: 1, status: "APPROVED" as const, reason: "Migrain, perlu istirahat",
+      notes: "Disetujui", approvedDaysAgo: 5,
+    },
+    // Doni (EMP-0006) — 1 PENDING
+    {
+      nik: "EMP-2026-0006", type: "Cuti Tahunan", start: 3, end: 4,
+      days: 2, status: "PENDING" as const, reason: "Menghadiri acara keluarga di Semarang",
+    },
+    // Maya (EMP-0007) — 1 Sakit approved
+    {
+      nik: "EMP-2026-0007", type: "Cuti Sakit", start: -3, end: -3,
+      days: 1, status: "APPROVED" as const, reason: "Sakit perut, rawat jalan",
+      notes: "Disetujui", approvedDaysAgo: 3,
+    },
+  ];
+
+  let leaveRequestCount = 0;
+  for (const ls of leaveSeeds) {
+    const employeeId = employeesByNik[ls.nik];
+    const leaveTypeId = leaveTypeMap[ls.type];
+    if (!employeeId || !leaveTypeId) continue;
+
+    await prisma.leaveRequest.create({
+      data: {
+        employeeId,
+        leaveTypeId,
+        startDate: makeDate(ls.start),
+        endDate: makeDate(ls.end),
+        workingDays: ls.days,
+        status: ls.status,
+        reason: ls.reason,
+        approverNotes: ls.notes ?? null,
+        approvedById:
+          ls.status === "APPROVED" || ls.status === "REJECTED"
+            ? hrAdminUser?.id ?? null
+            : null,
+        approvedAt:
+          ls.approvedDaysAgo != null
+            ? makeDate(-ls.approvedDaysAgo)
+            : null,
       },
     });
-    if (!existingAhmad) {
-      await prisma.leaveRequest.create({
-        data: {
-          employeeId: ahmadEmployee.id,
-          leaveTypeId: annualLeaveType.id,
-          startDate: nextWed,
-          endDate: nextWed,
-          workingDays: 1,
-          reason: "Urusan pribadi",
-          status: "PENDING",
-        },
-      });
-      leaveRequestCount++;
-    }
+    leaveRequestCount++;
   }
 
   console.log(`  Leave Requests: ${leaveRequestCount} seeded`);

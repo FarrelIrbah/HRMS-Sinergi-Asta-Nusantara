@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 interface LeaveType {
@@ -23,39 +23,64 @@ interface LeaveBalanceCardProps {
   leaveTypes: LeaveType[];
 }
 
-export function LeaveBalanceCard({ balances, leaveTypes }: LeaveBalanceCardProps) {
+export function LeaveBalanceCard({
+  balances,
+  leaveTypes,
+}: LeaveBalanceCardProps) {
   const balanceMap = new Map(balances.map((b) => [b.leaveTypeId, b]));
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-3">Saldo Cuti {new Date().getFullYear()}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    <section aria-label={`Saldo cuti ${new Date().getFullYear()}`}>
+      <h2 className="mb-3 text-base font-semibold text-slate-900">
+        Saldo Cuti {new Date().getFullYear()}
+      </h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {leaveTypes.map((lt) => {
           const balance = balanceMap.get(lt.id);
           const used = balance?.usedDays ?? 0;
           const allocated = balance?.allocatedDays ?? lt.annualQuota;
           const remaining = Math.max(0, allocated - used);
-          const pct = allocated > 0 ? Math.min(100, (used / allocated) * 100) : 0;
+          const pct =
+            allocated > 0
+              ? Math.min(100, (used / allocated) * 100)
+              : 0;
+
+          // Color based on remaining percentage
+          const remainPct = allocated > 0 ? (remaining / allocated) * 100 : 100;
+          const progressColor =
+            remainPct > 50
+              ? "[&>div]:bg-emerald-500"
+              : remainPct > 20
+                ? "[&>div]:bg-amber-500"
+                : "[&>div]:bg-red-500";
 
           return (
-            <Card key={lt.id}>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium text-muted-foreground line-clamp-1">
+            <Card key={lt.id} className="border-slate-200 shadow-sm">
+              <CardContent className="space-y-3 p-4">
+                <p className="line-clamp-1 text-xs font-medium uppercase tracking-wide text-slate-500">
                   {lt.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3 space-y-2">
-                <div className="flex justify-between items-end">
-                  <span className="text-2xl font-bold">{remaining}</span>
-                  <span className="text-xs text-muted-foreground">/ {allocated} hari</span>
+                </p>
+                <div className="flex items-end justify-between">
+                  <span className="text-3xl font-bold tabular-nums text-slate-900">
+                    {remaining}
+                  </span>
+                  <span className="text-xs tabular-nums text-slate-500">
+                    / {allocated} hari
+                  </span>
                 </div>
-                <Progress value={pct} className="h-1.5" />
-                <p className="text-xs text-muted-foreground">{used} hari terpakai</p>
+                <Progress
+                  value={pct}
+                  className={`h-1.5 bg-slate-100 ${progressColor}`}
+                  aria-label={`${used} dari ${allocated} hari terpakai`}
+                />
+                <p className="text-xs text-slate-500">
+                  {used} hari terpakai
+                </p>
               </CardContent>
             </Card>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

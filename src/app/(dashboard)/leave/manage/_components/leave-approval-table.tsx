@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,18 +48,16 @@ interface LeaveApprovalTableProps {
   currentYear: number;
 }
 
-function getStatusVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "APPROVED":
-      return "default";
+      return "border-emerald-300 bg-emerald-50 text-emerald-700";
     case "REJECTED":
-      return "destructive";
+      return "border-red-300 bg-red-50 text-red-700";
     case "CANCELLED":
-      return "secondary";
+      return "border-slate-300 bg-slate-50 text-slate-600";
     default:
-      return "outline";
+      return "border-amber-300 bg-amber-50 text-amber-700";
   }
 }
 
@@ -83,12 +82,17 @@ export function LeaveApprovalTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 items-center">
+      {/* ─── Filters ──────────────────────────────── */}
+      <div className="flex items-center gap-2">
+        <Filter
+          className="hidden h-4 w-4 text-slate-400 sm:block"
+          aria-hidden="true"
+        />
         <Select
           value={currentStatus}
           onValueChange={(v) => updateFilter("status", v)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[150px] border-slate-200 bg-white text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -104,7 +108,7 @@ export function LeaveApprovalTable({
           value={String(currentYear)}
           onValueChange={(v) => updateFilter("year", v)}
         >
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-[90px] border-slate-200 bg-white text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -117,91 +121,113 @@ export function LeaveApprovalTable({
         </Select>
       </div>
 
-      <Card>
+      {/* ─── Table ────────────────────────────────── */}
+      <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-0">
           {requests.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-8">
-              Tidak ada pengajuan cuti untuk filter ini.
-            </p>
+            <div className="py-12 text-center">
+              <p className="text-sm text-slate-500">
+                Tidak ada pengajuan cuti untuk filter ini.
+              </p>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Karyawan</TableHead>
-                  <TableHead>Jenis Cuti</TableHead>
-                  <TableHead>Periode</TableHead>
-                  <TableHead className="text-right">Hari</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Alasan / Catatan</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {requests.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell>
-                      <p className="font-medium text-sm">
-                        {req.employee.namaLengkap}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {req.employee.department.name}
-                      </p>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {req.leaveType.name}
-                    </TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">
-                      {format(new Date(req.startDate), "dd MMM", {
-                        locale: localeId,
-                      })}
-                      {" \u2013 "}
-                      {format(new Date(req.endDate), "dd MMM yyyy", {
-                        locale: localeId,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {req.workingDays}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(req.status)}>
-                        {LEAVE_STATUS_LABELS[
-                          req.status as keyof typeof LEAVE_STATUS_LABELS
-                        ] ?? req.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[180px]">
-                      <p className="truncate">{req.reason}</p>
-                      {req.approverNotes && (
-                        <p className="text-xs italic truncate mt-0.5">
-                          Catatan: {req.approverNotes}
-                        </p>
-                      )}
-                      {req.approvedBy && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">
-                          oleh {req.approvedBy.name}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {req.status === "PENDING" && (
-                        <div className="flex gap-1">
-                          <ApproveRejectDialog
-                            leaveRequestId={req.id}
-                            mode="approve"
-                            employeeName={req.employee.namaLengkap}
-                          />
-                          <ApproveRejectDialog
-                            leaveRequestId={req.id}
-                            mode="reject"
-                            employeeName={req.employee.namaLengkap}
-                          />
-                        </div>
-                      )}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      Karyawan
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      Jenis Cuti
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      Periode
+                    </TableHead>
+                    <TableHead className="text-right text-xs font-semibold text-slate-600">
+                      Hari
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      Alasan / Catatan
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">
+                      {/* actions */}
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {requests.map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell>
+                        <p className="text-sm font-medium text-slate-900">
+                          {req.employee.namaLengkap}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {req.employee.department.name}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-700">
+                        {req.leaveType.name}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-slate-700">
+                        {format(new Date(req.startDate), "dd MMM", {
+                          locale: localeId,
+                        })}
+                        {" \u2013 "}
+                        {format(new Date(req.endDate), "dd MMM yyyy", {
+                          locale: localeId,
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-sm text-slate-700">
+                        {req.workingDays}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getStatusBadgeClass(req.status)}`}
+                        >
+                          {LEAVE_STATUS_LABELS[
+                            req.status as keyof typeof LEAVE_STATUS_LABELS
+                          ] ?? req.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[180px] text-sm text-slate-500">
+                        <p className="truncate">{req.reason}</p>
+                        {req.approverNotes && (
+                          <p className="mt-0.5 truncate text-xs italic">
+                            Catatan: {req.approverNotes}
+                          </p>
+                        )}
+                        {req.approvedBy && (
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            oleh {req.approvedBy.name}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {req.status === "PENDING" && (
+                          <div className="flex gap-1">
+                            <ApproveRejectDialog
+                              leaveRequestId={req.id}
+                              mode="approve"
+                              employeeName={req.employee.namaLengkap}
+                            />
+                            <ApproveRejectDialog
+                              leaveRequestId={req.id}
+                              mode="reject"
+                              employeeName={req.employee.namaLengkap}
+                            />
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -13,7 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { approveLeaveAction, rejectLeaveAction } from "@/lib/actions/leave.actions";
+import {
+  approveLeaveAction,
+  rejectLeaveAction,
+} from "@/lib/actions/leave.actions";
 
 interface ApproveRejectDialogProps {
   leaveRequestId: string;
@@ -62,29 +65,33 @@ export function ApproveRejectDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={isApprove ? "default" : "destructive"} size="sm">
+        <Button
+          variant={isApprove ? "default" : "destructive"}
+          size="sm"
+          className={`gap-1 text-xs ${isApprove ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
+        >
           {isApprove ? (
-            <CheckCircle className="mr-1 h-3 w-3" />
+            <CheckCircle className="h-3 w-3" aria-hidden="true" />
           ) : (
-            <XCircle className="mr-1 h-3 w-3" />
+            <XCircle className="h-3 w-3" aria-hidden="true" />
           )}
           {isApprove ? "Setujui" : "Tolak"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-slate-900">
             {isApprove ? "Setujui" : "Tolak"} Pengajuan Cuti
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-600">
             {isApprove
               ? `Anda akan menyetujui pengajuan cuti dari ${employeeName}.`
               : `Anda akan menolak pengajuan cuti dari ${employeeName}.`}
           </p>
           <div className="space-y-1.5">
-            <Label htmlFor="notes">
+            <Label htmlFor="notes" className="text-sm text-slate-700">
               Catatan {isApprove ? "(opsional)" : "(wajib)"}
             </Label>
             <Textarea
@@ -97,18 +104,28 @@ export function ApproveRejectDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
+              className="border-slate-200"
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="border-slate-200"
+            >
               Batal
             </Button>
             <Button
               variant={isApprove ? "default" : "destructive"}
               onClick={handleSubmit}
               disabled={isPending}
+              className={isApprove ? "bg-emerald-600 hover:bg-emerald-700" : ""}
             >
-              {isPending ? "Memproses..." : isApprove ? "Setujui" : "Tolak"}
+              {isPending
+                ? "Memproses..."
+                : isApprove
+                  ? "Setujui"
+                  : "Tolak"}
             </Button>
           </div>
         </div>
