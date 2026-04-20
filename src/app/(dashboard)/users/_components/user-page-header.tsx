@@ -15,17 +15,12 @@ export function UserPageHeader() {
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Manajemen Pengguna
-        </h1>
-        <p className="text-muted-foreground">
-          Kelola akun pengguna sistem HRMS
-        </p>
-      </div>
-      <Button onClick={() => setCreateOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" />
+    <>
+      <Button
+        onClick={() => setCreateOpen(true)}
+        className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" />
         Tambah Pengguna
       </Button>
       <UserFormDialog
@@ -34,6 +29,6 @@ export function UserPageHeader() {
         onOpenChange={setCreateOpen}
         onSuccess={handleSuccess}
       />
-    </div>
+    </>
   );
 }

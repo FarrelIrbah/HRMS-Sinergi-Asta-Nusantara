@@ -4,6 +4,7 @@ import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { CalendarDays, Loader2, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -115,28 +116,43 @@ export function LeaveTypeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit Jenis Cuti" : "Tambah Jenis Cuti"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Ubah informasi jenis cuti."
-              : "Tambahkan jenis cuti baru ke sistem."}
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 ring-1 ring-amber-100"
+              aria-hidden="true"
+            >
+              <CalendarDays className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-slate-900">
+                {isEditing ? "Edit Jenis Cuti" : "Tambah Jenis Cuti"}
+              </DialogTitle>
+              <DialogDescription className="text-slate-600">
+                {isEditing
+                  ? "Perbarui kuota, status pembayaran, dan pembatasan."
+                  : "Tambahkan jenis cuti baru dengan kuota tahunan."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            aria-label="Form jenis cuti"
+          >
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">Nama</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="cth. Cuti Tahunan, Cuti Sakit"
+                      className="border-slate-200 bg-white"
                       {...field}
                     />
                   </FormControl>
@@ -149,7 +165,9 @@ export function LeaveTypeFormDialog({
               name="annualQuota"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kuota Tahunan</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">
+                    Kuota Tahunan
+                  </FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       <Input
@@ -157,14 +175,13 @@ export function LeaveTypeFormDialog({
                         min={0}
                         max={365}
                         placeholder="12"
+                        className="border-slate-200 bg-white tabular-nums"
                         value={field.value}
                         onChange={(e) =>
                           field.onChange(parseInt(e.target.value, 10) || 0)
                         }
                       />
-                      <span className="text-sm text-muted-foreground">
-                        hari
-                      </span>
+                      <span className="text-sm text-slate-500">hari</span>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -175,16 +192,23 @@ export function LeaveTypeFormDialog({
               control={form.control}
               name="isPaid"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
                   <FormControl>
                     <input
                       type="checkbox"
                       checked={field.value}
                       onChange={field.onChange}
-                      className="h-4 w-4 rounded border-gray-300"
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
                   </FormControl>
-                  <FormLabel className="font-normal">Cuti Berbayar</FormLabel>
+                  <div className="flex-1">
+                    <FormLabel className="text-sm font-medium text-slate-900">
+                      Cuti Berbayar
+                    </FormLabel>
+                    <p className="text-xs text-slate-500">
+                      Karyawan tetap menerima upah selama cuti berlangsung
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />
@@ -193,7 +217,9 @@ export function LeaveTypeFormDialog({
               name="genderRestriction"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pembatasan Gender</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">
+                    Pembatasan Gender
+                  </FormLabel>
                   <Select
                     onValueChange={(value) =>
                       field.onChange(value === "ALL" ? null : value)
@@ -201,7 +227,7 @@ export function LeaveTypeFormDialog({
                     value={field.value ?? "ALL"}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-slate-200 bg-white">
                         <SelectValue placeholder="Pilih pembatasan" />
                       </SelectTrigger>
                     </FormControl>
@@ -215,15 +241,26 @@ export function LeaveTypeFormDialog({
                 </FormItem>
               )}
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
+                className="border-slate-200"
                 onClick={() => onOpenChange(false)}
+                disabled={isPending}
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                )}
                 {isPending ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>

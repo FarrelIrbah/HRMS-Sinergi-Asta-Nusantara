@@ -3,7 +3,15 @@
 import { useEffect, useTransition } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
+import {
+  Plus,
+  X,
+  MapPin,
+  Globe,
+  Navigation,
+  Loader2,
+  Save,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +29,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   officeLocationSchema,
   type OfficeLocationInput,
@@ -48,7 +55,6 @@ interface OfficeLocationFormDialogProps {
   onSuccess: () => void;
 }
 
-// Internal form type with array-of-objects for useFieldArray
 interface FormValues {
   name: string;
   address: string;
@@ -111,7 +117,6 @@ export function OfficeLocationFormDialog({
   }, [open, location, form]);
 
   const onSubmit = (formValues: FormValues) => {
-    // Transform to schema shape
     const data: OfficeLocationInput = {
       name: formValues.name,
       address: formValues.address || undefined,
@@ -123,7 +128,6 @@ export function OfficeLocationFormDialog({
       radiusMeters: formValues.radiusMeters,
     };
 
-    // Validate with Zod
     const result = officeLocationSchema.safeParse(data);
     if (!result.success) {
       toast.error(result.error.issues[0]?.message || "Data tidak valid");
@@ -152,26 +156,44 @@ export function OfficeLocationFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit Lokasi Kantor" : "Tambah Lokasi Kantor"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Ubah informasi lokasi kantor."
-              : "Tambahkan lokasi kantor baru ke sistem."}
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 ring-1 ring-violet-100"
+              aria-hidden="true"
+            >
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-slate-900">
+                {isEditing ? "Edit Lokasi Kantor" : "Tambah Lokasi Kantor"}
+              </DialogTitle>
+              <DialogDescription className="text-slate-600">
+                {isEditing
+                  ? "Perbarui informasi lokasi, rentang IP, dan koordinat GPS."
+                  : "Tambahkan lokasi kantor baru dengan validasi IP dan GPS."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-5"
+            aria-label="Form lokasi kantor"
+          >
             <FormField
               control={form.control}
               name="name"
               rules={{ required: "Nama lokasi wajib diisi" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">Nama</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nama lokasi kantor" {...field} />
+                    <Input
+                      placeholder="Nama lokasi kantor"
+                      className="border-slate-200 bg-white"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,10 +204,12 @@ export function OfficeLocationFormDialog({
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Alamat (opsional)</FormLabel>
+                  <FormLabel className="text-sm text-slate-700">
+                    Alamat (opsional)
+                  </FormLabel>
                   <FormControl>
                     <textarea
-                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="Alamat lengkap lokasi kantor"
                       {...field}
                     />
@@ -195,24 +219,34 @@ export function OfficeLocationFormDialog({
               )}
             />
 
-            <Separator />
-
             {/* IP Range Section */}
-            <div className="space-y-3">
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Rentang IP</h4>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-50 text-sky-600"
+                    aria-hidden="true"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-slate-900">
+                    Rentang IP
+                  </h4>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="border-slate-200 bg-white"
                   onClick={() => append({ value: "" })}
                 >
-                  <Plus className="mr-1 h-3 w-3" />
-                  Tambah IP
+                  <Plus className="mr-1 h-3 w-3" aria-hidden="true" />
+                  Tambah
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Masukkan alamat IP atau rentang CIDR yang diizinkan. Opsional.
+              <p className="text-xs text-slate-500">
+                Alamat IP atau rentang CIDR yang diizinkan untuk clock-in.
+                Opsional.
               </p>
               {fields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
@@ -224,6 +258,7 @@ export function OfficeLocationFormDialog({
                         <FormControl>
                           <Input
                             placeholder="192.168.1.0/24"
+                            className="border-slate-200 bg-white font-mono text-xs"
                             {...inputField}
                           />
                         </FormControl>
@@ -236,21 +271,31 @@ export function OfficeLocationFormDialog({
                       variant="ghost"
                       size="icon"
                       onClick={() => remove(index)}
+                      aria-label={`Hapus IP ke-${index + 1}`}
+                      className="text-rose-500 hover:bg-rose-50 hover:text-rose-700"
                     >
-                      <X className="h-4 w-4 text-red-500" />
+                      <X className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   )}
                 </div>
               ))}
             </div>
 
-            <Separator />
-
             {/* GPS Section */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium">Koordinat GPS</h4>
-              <p className="text-xs text-muted-foreground">
-                Masukkan koordinat GPS dan radius untuk validasi lokasi.
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
+                  aria-hidden="true"
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                </div>
+                <h4 className="text-sm font-semibold text-slate-900">
+                  Koordinat GPS
+                </h4>
+              </div>
+              <p className="text-xs text-slate-500">
+                Lokasi dan radius untuk validasi clock-in berbasis GPS.
                 Opsional.
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -259,12 +304,15 @@ export function OfficeLocationFormDialog({
                   name="latitude"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Latitude</FormLabel>
+                      <FormLabel className="text-sm text-slate-700">
+                        Latitude
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           step="any"
                           placeholder="-6.2088"
+                          className="border-slate-200 bg-white"
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
@@ -284,12 +332,15 @@ export function OfficeLocationFormDialog({
                   name="longitude"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Longitude</FormLabel>
+                      <FormLabel className="text-sm text-slate-700">
+                        Longitude
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           step="any"
                           placeholder="106.8456"
+                          className="border-slate-200 bg-white"
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
@@ -317,12 +368,15 @@ export function OfficeLocationFormDialog({
                 }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Radius (meter)</FormLabel>
+                    <FormLabel className="text-sm text-slate-700">
+                      Radius (meter)
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={50}
                         placeholder="100"
+                        className="border-slate-200 bg-white"
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
@@ -343,11 +397,22 @@ export function OfficeLocationFormDialog({
               <Button
                 type="button"
                 variant="outline"
+                className="border-slate-200"
                 onClick={() => onOpenChange(false)}
+                disabled={isPending}
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                )}
                 {isPending ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>

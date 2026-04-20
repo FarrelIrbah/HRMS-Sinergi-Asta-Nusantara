@@ -2,8 +2,16 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
+import {
+  Users,
+  UserCheck,
+  ShieldAlert,
+  UserCog as UserCogIcon,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { SummaryTile } from "@/components/shared/summary-tile";
 import { getUserColumns, type UserRow } from "./user-columns";
 import { UserFormDialog } from "./user-form-dialog";
 import { toggleUserActiveAction } from "@/lib/actions/user.actions";
@@ -66,17 +74,55 @@ export function UserTable({ data, total }: UserTableProps) {
     router.refresh();
   };
 
+  // KPI aggregates
+  const activeCount = data.filter((u) => u.isActive).length;
+  const inactiveCount = total - activeCount;
+  const adminCount = data.filter(
+    (u) => u.role === "SUPER_ADMIN" || u.role === "HR_ADMIN"
+  ).length;
+
   return (
     <>
-      <div className="mb-4 text-sm text-muted-foreground">
-        Total: {total} pengguna
-      </div>
-      <DataTable
-        columns={columns}
-        data={data}
-        searchKey="name"
-        searchPlaceholder="Cari pengguna..."
-      />
+      <section
+        aria-label="Ringkasan pengguna"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
+        <SummaryTile
+          icon={Users}
+          label="Total Pengguna"
+          value={total}
+          tone="emerald"
+        />
+        <SummaryTile
+          icon={UserCheck}
+          label="Aktif"
+          value={activeCount}
+          tone="sky"
+        />
+        <SummaryTile
+          icon={UserCogIcon}
+          label="Nonaktif"
+          value={inactiveCount}
+          tone={inactiveCount > 0 ? "amber" : "slate"}
+        />
+        <SummaryTile
+          icon={ShieldAlert}
+          label="Admin"
+          value={adminCount}
+          tone="violet"
+        />
+      </section>
+
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="p-4 md:p-6">
+          <DataTable
+            columns={columns}
+            data={data}
+            searchKey="name"
+            searchPlaceholder="Cari pengguna..."
+          />
+        </CardContent>
+      </Card>
 
       <UserFormDialog
         mode="edit"
