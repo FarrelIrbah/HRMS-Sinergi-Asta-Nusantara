@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { AttendanceStatusBadges } from "@/components/attendance/attendance-status-badges";
 import { AttendanceFilters } from "../_components/attendance-filters";
 
 const TZ = "Asia/Jakarta";
@@ -180,9 +181,17 @@ export default async function EmployeeAttendanceDetailPage({
         </Card>
       ) : (
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
+          <CardContent className="p-6">
+            <div className="overflow-hidden rounded-lg border border-slate-200">
+              <Table className="table-fixed">
+                <colgroup>
+                  <col className="w-[20%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[30%]" />
+                  <col className="w-[15%]" />
+                </colgroup>
                 <TableHeader>
                   <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                     <TableHead className="text-xs font-semibold text-slate-600">
@@ -200,7 +209,7 @@ export default async function EmployeeAttendanceDetailPage({
                     <TableHead className="text-xs font-semibold text-slate-600">
                       Status
                     </TableHead>
-                    <TableHead className="text-right text-xs font-semibold text-slate-600">
+                    <TableHead className="text-center text-xs font-semibold text-slate-600">
                       Lembur
                     </TableHead>
                   </TableRow>
@@ -209,13 +218,22 @@ export default async function EmployeeAttendanceDetailPage({
                   {records.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell className="font-medium text-slate-900">
-                        {format(toZonedTime(record.date, TZ), "dd MMM yyyy", {
-                          locale: localeId,
-                        })}
+                        <div className="flex flex-col">
+                          <span>
+                            {format(toZonedTime(record.date, TZ), "dd MMM yyyy", {
+                              locale: localeId,
+                            })}
+                          </span>
+                          <span className="text-[11px] font-normal capitalize text-slate-500">
+                            {format(toZonedTime(record.date, TZ), "EEEE", {
+                              locale: localeId,
+                            })}
+                          </span>
+                        </div>
                         {record.isManualOverride && (
                           <Badge
                             variant="outline"
-                            className="ml-2 border-amber-300 text-xs text-amber-600"
+                            className="mt-1 border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-700"
                           >
                             Manual
                           </Badge>
@@ -243,37 +261,20 @@ export default async function EmployeeAttendanceDetailPage({
                           : "\u2014"}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {!record.isLate &&
-                            !record.isEarlyOut &&
-                            record.overtimeMinutes === 0 &&
-                            record.clockOut && (
-                              <Badge
-                                variant="outline"
-                                className="border-emerald-300 text-xs text-emerald-700"
-                              >
-                                Tepat Waktu
-                              </Badge>
-                            )}
-                          {record.isLate && (
-                            <Badge
-                              variant="destructive"
-                              className="text-xs"
-                            >
-                              Terlambat {record.lateMinutes}m
-                            </Badge>
-                          )}
-                          {record.isEarlyOut && (
-                            <Badge variant="secondary" className="text-xs">
-                              Pulang Awal
-                            </Badge>
-                          )}
-                        </div>
+                        <AttendanceStatusBadges
+                          record={record}
+                          showOvertime={false}
+                          showManual={false}
+                        />
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-sm text-slate-700">
-                        {record.overtimeMinutes > 0
-                          ? minutesToHours(record.overtimeMinutes)
-                          : "\u2014"}
+                      <TableCell className="text-center tabular-nums text-sm text-slate-700">
+                        {record.overtimeMinutes > 0 ? (
+                          <span className="inline-flex items-center rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
+                            {minutesToHours(record.overtimeMinutes)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">{"\u2014"}</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

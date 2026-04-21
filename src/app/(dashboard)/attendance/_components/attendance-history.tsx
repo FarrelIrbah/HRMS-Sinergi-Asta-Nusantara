@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { History } from "lucide-react";
 import {
@@ -7,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AttendanceStatusBadges } from "@/components/attendance/attendance-status-badges";
 
 const TZ = "Asia/Jakarta";
 
@@ -46,83 +47,43 @@ interface AttendanceHistoryProps {
   records: AttendanceRecordWithLocation[];
 }
 
-function StatusBadges({ record }: { record: AttendanceRecordWithLocation }) {
-  const badges = [];
-  if (
-    !record.isLate &&
-    !record.isEarlyOut &&
-    record.overtimeMinutes === 0 &&
-    record.clockOut
-  ) {
-    badges.push(
-      <Badge
-        key="ontime"
-        variant="outline"
-        className="border-emerald-300 text-xs text-emerald-700"
-      >
-        Tepat Waktu
-      </Badge>
-    );
-  }
-  if (record.isLate) {
-    badges.push(
-      <Badge key="late" variant="destructive" className="text-xs">
-        Terlambat {record.lateMinutes}m
-      </Badge>
-    );
-  }
-  if (record.isEarlyOut) {
-    badges.push(
-      <Badge key="early" variant="secondary" className="text-xs">
-        Pulang Awal
-      </Badge>
-    );
-  }
-  if (record.overtimeMinutes > 0) {
-    badges.push(
-      <Badge
-        key="ot"
-        variant="outline"
-        className="border-amber-300 text-xs text-amber-600"
-      >
-        Lembur {formatMinutes(record.overtimeMinutes)}
-      </Badge>
-    );
-  }
-  if (record.isManualOverride) {
-    badges.push(
-      <Badge key="manual" variant="outline" className="text-xs">
-        Override
-      </Badge>
-    );
-  }
-  return <div className="flex flex-wrap gap-1">{badges}</div>;
-}
-
 export function AttendanceHistory({ records }: AttendanceHistoryProps) {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600"
-            aria-hidden="true"
-          >
-            <History className="h-3.5 w-3.5" />
-          </div>
-          Riwayat 7 Hari Terakhir
-        </CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+              aria-hidden="true"
+            >
+              <History className="h-3.5 w-3.5" />
+            </div>
+            Riwayat 7 Hari Terakhir
+          </CardTitle>
+          <span className="text-xs font-medium text-slate-500 tabular-nums">
+            {records.length} catatan
+          </span>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {records.length === 0 ? (
-          <div className="py-8 text-center">
+          <div className="rounded-lg border border-slate-200 py-12 text-center">
             <p className="text-sm text-slate-500">
               Belum ada riwayat absensi.
             </p>
           </div>
         ) : (
-          <div className="rounded-md border border-slate-200">
-            <Table>
+          <div className="overflow-hidden rounded-lg border border-slate-200">
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-[20%]" />
+                <col className="w-[11%]" />
+                <col className="w-[11%]" />
+                <col className="w-[13%]" />
+                <col className="w-[30%]" />
+                <col className="w-[15%]" />
+              </colgroup>
               <TableHeader>
                 <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                   <TableHead className="text-xs font-semibold text-slate-600">
@@ -140,13 +101,28 @@ export function AttendanceHistory({ records }: AttendanceHistoryProps) {
                   <TableHead className="text-xs font-semibold text-slate-600">
                     Status
                   </TableHead>
+                  <TableHead className="text-center text-xs font-semibold text-slate-600">
+                    Lembur
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {records.map((record) => (
-                  <TableRow key={record.id}>
+                  <TableRow
+                    key={record.id}
+                    className="hover:bg-slate-50/50"
+                  >
                     <TableCell className="font-medium text-slate-900">
-                      {format(toZonedTime(record.date, TZ), "dd MMM yyyy")}
+                      <div className="flex flex-col">
+                        <span>
+                          {format(toZonedTime(record.date, TZ), "dd MMM yyyy")}
+                        </span>
+                        <span className="text-[11px] font-normal capitalize text-slate-500">
+                          {format(toZonedTime(record.date, TZ), "EEEE", {
+                            locale: localeId,
+                          })}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="tabular-nums text-slate-700">
                       {record.clockIn
@@ -158,13 +134,25 @@ export function AttendanceHistory({ records }: AttendanceHistoryProps) {
                         ? format(toZonedTime(record.clockOut, TZ), "HH:mm")
                         : "\u2014"}
                     </TableCell>
-                    <TableCell className="tabular-nums text-slate-700">
+                    <TableCell className="tabular-nums font-medium text-slate-900">
                       {record.totalMinutes > 0
                         ? formatMinutes(record.totalMinutes)
                         : "\u2014"}
                     </TableCell>
                     <TableCell>
-                      <StatusBadges record={record} />
+                      <AttendanceStatusBadges
+                        record={record}
+                        showOvertime={false}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums text-slate-700">
+                      {record.overtimeMinutes > 0 ? (
+                        <span className="inline-flex items-center rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
+                          {formatMinutes(record.overtimeMinutes)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">{"\u2014"}</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

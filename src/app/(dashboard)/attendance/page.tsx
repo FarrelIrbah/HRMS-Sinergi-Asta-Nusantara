@@ -167,6 +167,8 @@ export default async function AttendancePage() {
         todayRecord={todayRecord}
         weeklySummary={weeklySummary}
         employeeId={employee.id}
+        workStartTime={employee.officeLocation?.workStartTime ?? null}
+        workEndTime={employee.officeLocation?.workEndTime ?? null}
       />
 
       {/* ─── History Table ────────────────��───────── */}

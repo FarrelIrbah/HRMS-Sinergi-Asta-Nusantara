@@ -65,8 +65,8 @@ export function AttendanceSummaryTable({
 
   return (
     <Card className="border-slate-200 shadow-sm">
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+      <CardContent className="p-6">
+        <div className="overflow-hidden rounded-lg border border-slate-200">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
@@ -91,7 +91,7 @@ export function AttendanceSummaryTable({
                 <TableHead className="text-right text-xs font-semibold text-slate-600">
                   Lembur
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold text-slate-600">
+                <TableHead className="text-center text-xs font-semibold text-slate-600">
                   Aksi
                 </TableHead>
               </TableRow>
@@ -125,11 +125,14 @@ export function AttendanceSummaryTable({
                     </TableCell>
                     <TableCell className="text-right">
                       {lateCount > 0 ? (
-                        <Badge variant="destructive" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 text-xs font-medium text-amber-800"
+                        >
                           {lateCount}x
                         </Badge>
                       ) : (
-                        <span className="text-sm text-slate-400">\u2014</span>
+                        <span className="text-sm text-slate-400">{"\u2014"}</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums text-sm text-slate-700">
@@ -139,7 +142,7 @@ export function AttendanceSummaryTable({
                       {totalOT > 0 ? minutesToHours(totalOT) : "\u2014"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
