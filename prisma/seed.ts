@@ -850,6 +850,15 @@ async function main() {
     const leaveTypeId = leaveTypeMap[ls.type];
     if (!employeeId || !leaveTypeId) continue;
 
+    // Map seed status (uses old "PENDING" alias) to new 2-stage values.
+    // Approved/Rejected rows in the seed represent the legacy single-step flow,
+    // so attribute them to HR (who was the de-facto final approver historically).
+    const seedStatus =
+      ls.status === "PENDING" ? "PENDING_MANAGER" : ls.status;
+
+    const isHistoric =
+      ls.status === "APPROVED" || ls.status === "REJECTED";
+
     await prisma.leaveRequest.create({
       data: {
         employeeId,
@@ -857,15 +866,12 @@ async function main() {
         startDate: makeDate(ls.start),
         endDate: makeDate(ls.end),
         workingDays: ls.days,
-        status: ls.status,
+        status: seedStatus,
         reason: ls.reason,
-        approverNotes: ls.notes ?? null,
-        approvedById:
-          ls.status === "APPROVED" || ls.status === "REJECTED"
-            ? hrAdminUser?.id ?? null
-            : null,
-        approvedAt:
-          ls.approvedDaysAgo != null
+        hrNotes: isHistoric ? (ls.notes ?? null) : null,
+        hrApprovedById: isHistoric ? (hrAdminUser?.id ?? null) : null,
+        hrApprovedAt:
+          isHistoric && ls.approvedDaysAgo != null
             ? makeDate(-ls.approvedDaysAgo)
             : null,
       },

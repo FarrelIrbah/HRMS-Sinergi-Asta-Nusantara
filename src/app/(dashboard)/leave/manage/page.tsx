@@ -5,13 +5,11 @@ import {
   CheckCircle2,
   XCircle,
   Ban,
-  type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLeaveRequests } from "@/lib/services/leave.service";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { SummaryTile } from "@/components/shared/summary-tile";
 import { LeaveApprovalTable } from "./_components/leave-approval-table";
 
 interface PageProps {
@@ -30,7 +28,10 @@ export default async function LeaveManagePage({
   }
 
   const sp = await searchParams;
-  const statusFilter = sp.status ?? "PENDING";
+  // Default filter: managers see PENDING_MANAGER (their queue),
+  // HR/Super-admin see PENDING_HR (their queue).
+  const defaultStatus = role === "MANAGER" ? "PENDING_MANAGER" : "PENDING_HR";
+  const statusFilter = sp.status ?? defaultStatus;
   const yearFilter = Number(sp.year ?? new Date().getFullYear());
 
   let departmentId: string | undefined;
@@ -54,9 +55,9 @@ export default async function LeaveManagePage({
       ? allRequests
       : allRequests.filter((r) => r.status === statusFilter);
 
-  // Compute stats
+  // Compute stats — pending count reflects this approver's actionable queue
   const pendingCount = allRequests.filter(
-    (r) => r.status === "PENDING"
+    (r) => r.status === defaultStatus
   ).length;
   const approvedCount = allRequests.filter(
     (r) => r.status === "APPROVED"
@@ -75,11 +76,9 @@ export default async function LeaveManagePage({
     workingDays: r.workingDays,
     reason: r.reason,
     status: r.status as string,
-    approverNotes: r.approverNotes,
     startDate: r.startDate.toISOString(),
     endDate: r.endDate.toISOString(),
     createdAt: r.createdAt.toISOString(),
-    approvedAt: r.approvedAt?.toISOString() ?? null,
     leaveType: r.leaveType,
     employee: {
       id: r.employee.id,
@@ -87,7 +86,12 @@ export default async function LeaveManagePage({
       namaLengkap: r.employee.namaLengkap,
       department: r.employee.department,
     },
-    approvedBy: r.approvedBy,
+    managerApprovedAt: r.managerApprovedAt?.toISOString() ?? null,
+    managerNotes: r.managerNotes,
+    managerApprovedBy: r.managerApprovedBy,
+    hrApprovedAt: r.hrApprovedAt?.toISOString() ?? null,
+    hrNotes: r.hrNotes,
+    hrApprovedBy: r.hrApprovedBy,
   }));
 
   return (
@@ -136,7 +140,7 @@ export default async function LeaveManagePage({
           icon={XCircle}
           label="Ditolak"
           value={rejectedCount}
-          tone={rejectedCount > 0 ? "amber" : "slate"}
+          tone={rejectedCount > 0 ? "rose" : "slate"}
         />
         <SummaryTile
           icon={Ban}
@@ -151,72 +155,9 @@ export default async function LeaveManagePage({
         requests={serialized}
         currentStatus={statusFilter}
         currentYear={yearFilter}
+        currentRole={role}
       />
     </div>
   );
 }
 
-// ─────────────────── Sub-component ───────────────────
-
-type Tone = "emerald" | "sky" | "violet" | "amber" | "slate";
-
-const TONE_MAP: Record<Tone, { bg: string; text: string; ring: string }> = {
-  emerald: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    ring: "ring-emerald-100",
-  },
-  sky: { bg: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-100" },
-  violet: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
-    ring: "ring-violet-100",
-  },
-  amber: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    ring: "ring-amber-100",
-  },
-  slate: {
-    bg: "bg-slate-100",
-    text: "text-slate-700",
-    ring: "ring-slate-200",
-  },
-};
-
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number;
-  tone: Tone;
-}) {
-  const t = TONE_MAP[tone];
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="flex items-center gap-3 p-4">
-        <div
-          className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ring-1",
-            t.bg,
-            t.text,
-            t.ring
-          )}
-          aria-hidden="true"
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tabular-nums leading-tight text-slate-900">
-            {value}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

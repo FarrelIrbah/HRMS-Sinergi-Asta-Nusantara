@@ -14,6 +14,7 @@ import {
   approveLeaveSchema,
   rejectLeaveSchema,
 } from "@/lib/validations/leave";
+import type { Role } from "@/types/enums";
 
 type ActionResult = { success: boolean; error?: string };
 
@@ -96,6 +97,7 @@ export async function approveLeaveAction(
     await approveLeaveRequest(
       parsed.data.leaveRequestId,
       session.user.id,
+      session.user.role as Role,
       parsed.data.notes
     );
 
@@ -104,7 +106,7 @@ export async function approveLeaveAction(
       action: "UPDATE",
       module: "Permintaan Cuti",
       targetId: parsed.data.leaveRequestId,
-      newValue: { status: "APPROVED", notes: parsed.data.notes },
+      newValue: { approvedBy: session.user.role, notes: parsed.data.notes },
     });
 
     revalidatePath("/leave/manage");
@@ -141,6 +143,7 @@ export async function rejectLeaveAction(
     await rejectLeaveRequest(
       parsed.data.leaveRequestId,
       session.user.id,
+      session.user.role as Role,
       parsed.data.notes
     );
 
@@ -149,7 +152,7 @@ export async function rejectLeaveAction(
       action: "UPDATE",
       module: "Permintaan Cuti",
       targetId: parsed.data.leaveRequestId,
-      newValue: { status: "REJECTED", notes: parsed.data.notes },
+      newValue: { status: "REJECTED", rejectedBy: session.user.role, notes: parsed.data.notes },
     });
 
     revalidatePath("/leave/manage");

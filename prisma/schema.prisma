@@ -80,7 +80,8 @@ enum AttendanceStatus {
 }
 
 enum LeaveStatus {
-  PENDING
+  PENDING_MANAGER
+  PENDING_HR
   APPROVED
   REJECTED
   CANCELLED
@@ -117,10 +118,11 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  auditLogs           AuditLog[]
-  employee            Employee?
-  attendanceOverrides AttendanceRecord[] @relation("AttendanceOverrides")
-  leaveApprovals      LeaveRequest[]     @relation("LeaveApprovals")
+  auditLogs            AuditLog[]
+  employee             Employee?
+  attendanceOverrides  AttendanceRecord[] @relation("AttendanceOverrides")
+  leaveManagerApprovals LeaveRequest[]    @relation("LeaveManagerApprovals")
+  leaveHRApprovals      LeaveRequest[]    @relation("LeaveHRApprovals")
 
   @@map("users")
 }
@@ -316,25 +318,29 @@ model AttendanceRecord {
 }
 
 model LeaveRequest {
-  id             String      @id @default(cuid())
-  employeeId     String
-  leaveTypeId    String
-  startDate      DateTime    @db.Date
-  endDate        DateTime    @db.Date
-  workingDays    Int
-  reason         String
-  attachmentPath String?
-  attachmentName String?
-  status         LeaveStatus @default(PENDING)
-  approvedById   String?
-  approverNotes  String?
-  approvedAt     DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                  String      @id @default(cuid())
+  employeeId          String
+  leaveTypeId         String
+  startDate           DateTime    @db.Date
+  endDate             DateTime    @db.Date
+  workingDays         Int
+  reason              String
+  attachmentPath      String?
+  attachmentName      String?
+  status              LeaveStatus @default(PENDING_MANAGER)
+  managerApprovedById String?
+  managerNotes        String?
+  managerApprovedAt   DateTime?
+  hrApprovedById      String?
+  hrNotes             String?
+  hrApprovedAt        DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
-  employee   Employee  @relation(fields: [employeeId], references: [id])
-  leaveType  LeaveType @relation(fields: [leaveTypeId], references: [id])
-  approvedBy User?     @relation("LeaveApprovals", fields: [approvedById], references: [id])
+  employee          Employee  @relation(fields: [employeeId], references: [id])
+  leaveType         LeaveType @relation(fields: [leaveTypeId], references: [id])
+  managerApprovedBy User?     @relation("LeaveManagerApprovals", fields: [managerApprovedById], references: [id])
+  hrApprovedBy      User?     @relation("LeaveHRApprovals", fields: [hrApprovedById], references: [id])
 
   @@index([employeeId, status])
   @@index([status, createdAt])

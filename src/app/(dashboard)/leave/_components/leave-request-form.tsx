@@ -59,11 +59,13 @@ interface Balance {
 interface LeaveRequestFormProps {
   leaveTypes: LeaveType[];
   balances: Balance[];
+  onLeaveTypeChange?: (leaveTypeId: string) => void;
 }
 
 export function LeaveRequestForm({
   leaveTypes,
   balances,
+  onLeaveTypeChange,
 }: LeaveRequestFormProps) {
   const [isPending, startTransition] = useTransition();
   const balanceMap = new Map(balances.map((b) => [b.leaveTypeId, b]));
@@ -93,6 +95,7 @@ export function LeaveRequestForm({
       if (result.success) {
         toast.success("Pengajuan cuti berhasil dikirim");
         form.reset();
+        onLeaveTypeChange?.("");
       } else {
         toast.error(result.error ?? "Gagal mengajukan cuti");
       }
@@ -127,7 +130,10 @@ export function LeaveRequestForm({
                     Jenis Cuti
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      onLeaveTypeChange?.(value);
+                    }}
                     value={field.value}
                   >
                     <FormControl>

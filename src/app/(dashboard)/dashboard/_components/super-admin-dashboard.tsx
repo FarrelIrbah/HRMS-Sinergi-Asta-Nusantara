@@ -14,7 +14,6 @@ import {
   YAxis,
 } from "recharts"
 import {
-  ArrowRight,
   Banknote,
   Briefcase,
   Building2,
@@ -40,6 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { SummaryTile } from "@/components/shared/summary-tile"
 import {
   ChartContainer,
   ChartTooltip,
@@ -212,15 +212,15 @@ export function SuperAdminDashboard({ data, name }: SuperAdminDashboardProps) {
         aria-label="Statistik utama"
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
-        <StatTile
+        <SummaryTile
           icon={Users2}
           label="Total Karyawan"
           value={data.totals.employees}
           caption={`${data.totals.departments} departemen · ${data.totals.positions} jabatan`}
-          tint="bg-emerald-50 text-emerald-700"
+          tone="emerald"
           href="/employees"
         />
-        <StatTile
+        <SummaryTile
           icon={UserRound}
           label="Hadir Hari Ini"
           value={data.today.present}
@@ -229,23 +229,23 @@ export function SuperAdminDashboard({ data, name }: SuperAdminDashboardProps) {
               ? `${data.today.lateCount} terlambat`
               : "Tidak ada keterlambatan"
           }
-          tint="bg-sky-50 text-sky-700"
+          tone="sky"
           href="/attendance-admin"
         />
-        <StatTile
+        <SummaryTile
           icon={CalendarDays}
           label="Sedang Cuti"
           value={data.today.onLeave}
           caption={`${data.pendingApprovals.totalLeave} menunggu approval`}
-          tint="bg-amber-50 text-amber-700"
+          tone="amber"
           href="/leave/manage"
         />
-        <StatTile
+        <SummaryTile
           icon={UserMinus}
           label="Tidak Hadir"
           value={data.today.absent}
           caption={`Kehadiran ${attendancePct}% dari total`}
-          tint="bg-rose-50 text-rose-700"
+          tone="rose"
           href="/attendance-admin"
         />
       </section>
@@ -296,66 +296,6 @@ function getGreeting(): string {
   if (h < 15) return "Selamat siang"
   if (h < 18) return "Selamat sore"
   return "Selamat malam"
-}
-
-interface StatTileProps {
-  icon: LucideIcon
-  label: string
-  value: number | string
-  caption: string
-  tint: string
-  href?: string
-}
-
-function StatTile({
-  icon: Icon,
-  label,
-  value,
-  caption,
-  tint,
-  href,
-}: StatTileProps) {
-  const body = (
-    <Card className="group h-full border-slate-200/80 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <CardContent className="flex items-start gap-4 p-5">
-        <div
-          className={cn(
-            "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl",
-            tint,
-          )}
-          aria-hidden="true"
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-600">{label}</p>
-          <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-slate-900">
-            {value}
-          </p>
-          <p className="mt-1 truncate text-xs text-slate-500">{caption}</p>
-        </div>
-        {href ? (
-          <ArrowRight
-            className="h-4 w-4 flex-shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500"
-            aria-hidden="true"
-          />
-        ) : null}
-      </CardContent>
-    </Card>
-  )
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-        aria-label={`${label}: ${value}`}
-      >
-        {body}
-      </Link>
-    )
-  }
-  return body
 }
 
 // ─── Attendance trend chart ─────────────────────────────

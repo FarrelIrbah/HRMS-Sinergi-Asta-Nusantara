@@ -31,7 +31,6 @@ interface LeaveRequest {
   workingDays: number;
   status: string;
   reason: string;
-  approverNotes: string | null;
   leaveType: { id: string; name: string };
   employee: {
     id: string;
@@ -39,13 +38,19 @@ interface LeaveRequest {
     namaLengkap: string;
     department: { name: string };
   };
-  approvedBy: { name: string } | null;
+  managerApprovedAt: string | null;
+  managerNotes: string | null;
+  managerApprovedBy: { name: string } | null;
+  hrApprovedAt: string | null;
+  hrNotes: string | null;
+  hrApprovedBy: { name: string } | null;
 }
 
 interface LeaveApprovalTableProps {
   requests: LeaveRequest[];
   currentStatus: string;
   currentYear: number;
+  currentRole: string;
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -56,9 +61,19 @@ function getStatusBadgeClass(status: string): string {
       return "border-red-300 bg-red-50 text-red-700";
     case "CANCELLED":
       return "border-slate-300 bg-slate-50 text-slate-600";
-    default:
+    case "PENDING_HR":
+      return "border-sky-300 bg-sky-50 text-sky-700";
+    default: // PENDING_MANAGER
       return "border-amber-300 bg-amber-50 text-amber-700";
   }
+}
+
+// Whether the current user can act on a given request's current stage.
+function canActOnRequest(role: string, status: string): boolean {
+  if (role === "MANAGER") return status === "PENDING_MANAGER";
+  if (role === "HR_ADMIN" || role === "SUPER_ADMIN")
+    return status === "PENDING_HR";
+  return false;
 }
 
 const YEARS = [
@@ -71,6 +86,7 @@ export function LeaveApprovalTable({
   requests,
   currentStatus,
   currentYear,
+  currentRole,
 }: LeaveApprovalTableProps) {
   const router = useRouter();
 
@@ -96,7 +112,8 @@ export function LeaveApprovalTable({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="PENDING">Menunggu</SelectItem>
+            <SelectItem value="PENDING_MANAGER">Menunggu Manager</SelectItem>
+            <SelectItem value="PENDING_HR">Menunggu HR</SelectItem>
             <SelectItem value="APPROVED">Disetujui</SelectItem>
             <SelectItem value="REJECTED">Ditolak</SelectItem>
             <SelectItem value="CANCELLED">Dibatalkan</SelectItem>
@@ -147,7 +164,7 @@ export function LeaveApprovalTable({
                     <TableHead className="text-right text-xs font-semibold text-slate-600">
                       Hari
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-600">
+                    <TableHead className="text-center text-xs font-semibold text-slate-600">
                       Status
                     </TableHead>
                     <TableHead className="text-xs font-semibold text-slate-600">
@@ -184,7 +201,7 @@ export function LeaveApprovalTable({
                       <TableCell className="text-right tabular-nums text-sm text-slate-700">
                         {req.workingDays}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Badge
                           variant="outline"
                           className={`text-xs ${getStatusBadgeClass(req.status)}`}
@@ -194,21 +211,25 @@ export function LeaveApprovalTable({
                           ] ?? req.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[180px] text-sm text-slate-500">
+                      <TableCell className="max-w-[220px] text-sm text-slate-500">
                         <p className="truncate">{req.reason}</p>
-                        {req.approverNotes && (
+                        {req.managerNotes && (
                           <p className="mt-0.5 truncate text-xs italic">
-                            Catatan: {req.approverNotes}
+                            Manager: {req.managerNotes}
+                            {req.managerApprovedBy &&
+                              ` — ${req.managerApprovedBy.name}`}
                           </p>
                         )}
-                        {req.approvedBy && (
-                          <p className="mt-0.5 text-xs text-slate-400">
-                            oleh {req.approvedBy.name}
+                        {req.hrNotes && (
+                          <p className="mt-0.5 truncate text-xs italic">
+                            HR: {req.hrNotes}
+                            {req.hrApprovedBy &&
+                              ` — ${req.hrApprovedBy.name}`}
                           </p>
                         )}
                       </TableCell>
                       <TableCell>
-                        {req.status === "PENDING" && (
+                        {canActOnRequest(currentRole, req.status) && (
                           <div className="flex gap-1">
                             <ApproveRejectDialog
                               leaveRequestId={req.id}

@@ -93,7 +93,8 @@ export type AttendanceStatus =
   (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
 
 export const LeaveStatus = {
-  PENDING: "PENDING",
+  PENDING_MANAGER: "PENDING_MANAGER",
+  PENDING_HR: "PENDING_HR",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
   CANCELLED: "CANCELLED",

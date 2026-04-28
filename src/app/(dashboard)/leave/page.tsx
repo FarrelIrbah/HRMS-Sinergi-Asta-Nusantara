@@ -4,7 +4,6 @@ import {
   CalendarCheck2,
   CalendarClock,
   CalendarX2,
-  type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -14,9 +13,9 @@ import {
   ensureLeaveBalances,
 } from "@/lib/services/leave.service";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { SummaryTile } from "@/components/shared/summary-tile";
 import { LeaveBalanceCard } from "./_components/leave-balance-card";
-import { LeaveRequestForm } from "./_components/leave-request-form";
+import { LeaveRequestSection } from "./_components/leave-request-section";
 import { LeaveHistoryTable } from "./_components/leave-history-table";
 
 export default async function LeavePage() {
@@ -61,7 +60,13 @@ export default async function LeavePage() {
   const leaveTypes = await prisma.leaveType.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, annualQuota: true },
+    select: {
+      id: true,
+      name: true,
+      annualQuota: true,
+      isPaid: true,
+      genderRestriction: true,
+    },
   });
 
   const [balances, requests] = await Promise.all([
@@ -77,7 +82,7 @@ export default async function LeavePage() {
   const totalUsed = balances.reduce((s, b) => s + b.usedDays, 0);
   const totalRemaining = totalAllocated - totalUsed;
   const pendingCount = requests.filter(
-    (r) => r.status === "PENDING"
+    (r) => r.status === "PENDING_MANAGER" || r.status === "PENDING_HR"
   ).length;
 
   // Serialize dates for client components
@@ -89,10 +94,13 @@ export default async function LeavePage() {
     status: r.status,
     reason: r.reason,
     createdAt: r.createdAt.toISOString(),
-    approvedAt: r.approvedAt?.toISOString() ?? null,
-    approverNotes: r.approverNotes,
     leaveType: r.leaveType,
-    approvedBy: r.approvedBy,
+    managerApprovedAt: r.managerApprovedAt?.toISOString() ?? null,
+    managerNotes: r.managerNotes,
+    managerApprovedBy: r.managerApprovedBy,
+    hrApprovedAt: r.hrApprovedAt?.toISOString() ?? null,
+    hrNotes: r.hrNotes,
+    hrApprovedBy: r.hrApprovedBy,
   }));
 
   const serializedBalances = balances.map((b) => ({
@@ -133,13 +141,15 @@ export default async function LeavePage() {
         <SummaryTile
           icon={CalendarCheck2}
           label="Sisa Cuti"
-          value={`${totalRemaining} hari`}
+          value={totalRemaining}
+          suffix="hari"
           tone="emerald"
         />
         <SummaryTile
           icon={CalendarX2}
           label="Terpakai"
-          value={`${totalUsed} hari`}
+          value={totalUsed}
+          suffix="hari"
           tone="sky"
         />
         <SummaryTile
@@ -151,7 +161,8 @@ export default async function LeavePage() {
         <SummaryTile
           icon={CalendarOff}
           label="Total Alokasi"
-          value={`${totalAllocated} hari`}
+          value={totalAllocated}
+          suffix="hari"
           tone="violet"
         />
       </section>
@@ -159,13 +170,11 @@ export default async function LeavePage() {
       {/* ─── Balance Cards ─────────────────────────── */}
       <LeaveBalanceCard balances={serializedBalances} leaveTypes={leaveTypes} />
 
-      {/* ─── Request Form ──────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <LeaveRequestForm
-          leaveTypes={leaveTypes}
-          balances={serializedBalances}
-        />
-      </div>
+      {/* ─── Request Form + Info Panel ─────────────── */}
+      <LeaveRequestSection
+        leaveTypes={leaveTypes}
+        balances={serializedBalances}
+      />
 
       {/* ─── History Table ─────────────────────────── */}
       <LeaveHistoryTable requests={serializedRequests} />
@@ -173,67 +182,3 @@ export default async function LeavePage() {
   );
 }
 
-// ─────────────────── Sub-component ───────────────────
-
-type Tone = "emerald" | "sky" | "violet" | "amber" | "slate";
-
-const TONE_MAP: Record<Tone, { bg: string; text: string; ring: string }> = {
-  emerald: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    ring: "ring-emerald-100",
-  },
-  sky: { bg: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-100" },
-  violet: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
-    ring: "ring-violet-100",
-  },
-  amber: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    ring: "ring-amber-100",
-  },
-  slate: {
-    bg: "bg-slate-100",
-    text: "text-slate-700",
-    ring: "ring-slate-200",
-  },
-};
-
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number | string;
-  tone: Tone;
-}) {
-  const t = TONE_MAP[tone];
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="flex items-center gap-3 p-4">
-        <div
-          className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ring-1",
-            t.bg,
-            t.text,
-            t.ring
-          )}
-          aria-hidden="true"
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-lg font-bold tabular-nums leading-tight text-slate-900">
-            {value}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

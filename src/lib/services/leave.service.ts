@@ -1,5 +1,7 @@
 import { eachDayOfInterval, isWeekend } from "date-fns";
+import type { LeaveStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@/types/enums";
 
 // ─── Working Day Calculation (pure function) ──────────────────────────
 
@@ -66,6 +68,36 @@ export async function getLeaveBalances(
   });
 }
 
+// ─── Resolve Initial Stage ────────────────────────────────────────────
+// Returns PENDING_HR if the requester's department has no other manager
+// (e.g. requester IS the manager, or no manager assigned). Otherwise PENDING_MANAGER.
+
+async function resolveInitialStage(
+  requesterEmployeeId: string
+): Promise<"PENDING_MANAGER" | "PENDING_HR"> {
+  const requester = await prisma.employee.findUnique({
+    where: { id: requesterEmployeeId },
+    select: {
+      departmentId: true,
+      user: { select: { id: true, role: true } },
+    },
+  });
+  if (!requester) return "PENDING_HR";
+
+  // Skip stage 1 if requester themselves is the manager — no peer manager to approve.
+  if (requester.user?.role === "MANAGER") return "PENDING_HR";
+
+  // Skip stage 1 if department has no active manager.
+  const managerCount = await prisma.user.count({
+    where: {
+      role: "MANAGER",
+      isActive: true,
+      employee: { departmentId: requester.departmentId, isActive: true },
+    },
+  });
+  return managerCount > 0 ? "PENDING_MANAGER" : "PENDING_HR";
+}
+
 // ─── Submit Leave Request ─────────────────────────────────────────────
 
 export async function submitLeaveRequest(input: {
@@ -103,6 +135,8 @@ export async function submitLeaveRequest(input: {
     }
   }
 
+  const initialStatus = await resolveInitialStage(input.employeeId);
+
   return prisma.leaveRequest.create({
     data: {
       employeeId: input.employeeId,
@@ -113,76 +147,155 @@ export async function submitLeaveRequest(input: {
       reason: input.reason,
       attachmentPath: input.attachmentPath,
       attachmentName: input.attachmentName,
-      status: "PENDING",
+      status: initialStatus,
     },
   });
 }
 
-// ─── Approve Leave Request (atomic transaction) ───────────────────────
+// ─── Approve Leave Request (2-stage, atomic) ──────────────────────────
+// MANAGER approves PENDING_MANAGER → advances to PENDING_HR.
+// HR_ADMIN / SUPER_ADMIN approves PENDING_HR → final APPROVED + decrements balance.
+// Self-approval is blocked (manager cannot approve their own request).
 
 export async function approveLeaveRequest(
   leaveRequestId: string,
-  approverId: string,
+  approverUserId: string,
+  approverRole: Role,
   notes?: string
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const request = await tx.leaveRequest.findUnique({
       where: { id: leaveRequestId },
+      include: { employee: { select: { departmentId: true, userId: true } } },
     });
 
     if (!request) throw new Error("Permintaan cuti tidak ditemukan");
-    if (request.status !== "PENDING") {
-      throw new Error("Permintaan sudah diproses sebelumnya");
+
+    // Self-approval guard
+    if (request.employee.userId === approverUserId) {
+      throw new Error("Anda tidak dapat menyetujui pengajuan Anda sendiri");
     }
 
-    await tx.leaveBalance.update({
-      where: {
-        employeeId_leaveTypeId_year: {
-          employeeId: request.employeeId,
-          leaveTypeId: request.leaveTypeId,
-          year: request.startDate.getFullYear(),
-        },
-      },
-      data: { usedDays: { increment: request.workingDays } },
-    });
+    if (request.status === "PENDING_MANAGER") {
+      if (approverRole !== "MANAGER") {
+        throw new Error("Tahap ini hanya dapat disetujui oleh Manager divisi");
+      }
+      // Manager must be in same department
+      const approver = await tx.employee.findUnique({
+        where: { userId: approverUserId },
+        select: { departmentId: true },
+      });
+      if (
+        !approver ||
+        approver.departmentId !== request.employee.departmentId
+      ) {
+        throw new Error("Anda hanya dapat menyetujui cuti dari divisi Anda");
+      }
 
-    await tx.leaveRequest.update({
-      where: { id: leaveRequestId },
-      data: {
-        status: "APPROVED",
-        approvedById: approverId,
-        approverNotes: notes ?? null,
-        approvedAt: new Date(),
-      },
-    });
+      await tx.leaveRequest.update({
+        where: { id: leaveRequestId },
+        data: {
+          status: "PENDING_HR",
+          managerApprovedById: approverUserId,
+          managerNotes: notes ?? null,
+          managerApprovedAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    if (request.status === "PENDING_HR") {
+      if (approverRole !== "HR_ADMIN" && approverRole !== "SUPER_ADMIN") {
+        throw new Error("Tahap ini hanya dapat disetujui oleh Admin HR");
+      }
+
+      await tx.leaveBalance.update({
+        where: {
+          employeeId_leaveTypeId_year: {
+            employeeId: request.employeeId,
+            leaveTypeId: request.leaveTypeId,
+            year: request.startDate.getFullYear(),
+          },
+        },
+        data: { usedDays: { increment: request.workingDays } },
+      });
+
+      await tx.leaveRequest.update({
+        where: { id: leaveRequestId },
+        data: {
+          status: "APPROVED",
+          hrApprovedById: approverUserId,
+          hrNotes: notes ?? null,
+          hrApprovedAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    throw new Error("Permintaan sudah diproses sebelumnya");
   });
 }
 
-// ─── Reject Leave Request ─────────────────────────────────────────────
+// ─── Reject Leave Request (any stage) ─────────────────────────────────
 
 export async function rejectLeaveRequest(
   leaveRequestId: string,
-  approverId: string,
+  approverUserId: string,
+  approverRole: Role,
   notes: string
 ): Promise<void> {
   const request = await prisma.leaveRequest.findUnique({
     where: { id: leaveRequestId },
+    include: { employee: { select: { departmentId: true, userId: true } } },
   });
 
   if (!request) throw new Error("Permintaan cuti tidak ditemukan");
-  if (request.status !== "PENDING") {
-    throw new Error("Permintaan sudah diproses sebelumnya");
+  if (request.employee.userId === approverUserId) {
+    throw new Error("Anda tidak dapat menolak pengajuan Anda sendiri");
   }
 
-  await prisma.leaveRequest.update({
-    where: { id: leaveRequestId },
-    data: {
-      status: "REJECTED",
-      approvedById: approverId,
-      approverNotes: notes,
-      approvedAt: new Date(),
-    },
-  });
+  const stamp = new Date();
+
+  if (request.status === "PENDING_MANAGER") {
+    if (approverRole !== "MANAGER") {
+      throw new Error("Tahap ini hanya dapat ditolak oleh Manager divisi");
+    }
+    const approver = await prisma.employee.findUnique({
+      where: { userId: approverUserId },
+      select: { departmentId: true },
+    });
+    if (!approver || approver.departmentId !== request.employee.departmentId) {
+      throw new Error("Anda hanya dapat menolak cuti dari divisi Anda");
+    }
+    await prisma.leaveRequest.update({
+      where: { id: leaveRequestId },
+      data: {
+        status: "REJECTED",
+        managerApprovedById: approverUserId,
+        managerNotes: notes,
+        managerApprovedAt: stamp,
+      },
+    });
+    return;
+  }
+
+  if (request.status === "PENDING_HR") {
+    if (approverRole !== "HR_ADMIN" && approverRole !== "SUPER_ADMIN") {
+      throw new Error("Tahap ini hanya dapat ditolak oleh Admin HR");
+    }
+    await prisma.leaveRequest.update({
+      where: { id: leaveRequestId },
+      data: {
+        status: "REJECTED",
+        hrApprovedById: approverUserId,
+        hrNotes: notes,
+        hrApprovedAt: stamp,
+      },
+    });
+    return;
+  }
+
+  throw new Error("Permintaan sudah diproses sebelumnya");
 }
 
 // ─── Cancel Leave Request (employee self-cancel) ───────────────────────
@@ -201,7 +314,10 @@ export async function cancelLeaveRequest(
       "Anda tidak memiliki akses untuk membatalkan permintaan ini"
     );
   }
-  if (request.status !== "PENDING") {
+  if (
+    request.status !== "PENDING_MANAGER" &&
+    request.status !== "PENDING_HR"
+  ) {
     throw new Error(
       "Hanya permintaan dengan status Menunggu yang dapat dibatalkan"
     );
@@ -252,21 +368,37 @@ export async function getLeaveRequests(filter: {
         },
       },
       leaveType: { select: { id: true, name: true } },
-      approvedBy: { select: { name: true } },
+      managerApprovedBy: { select: { name: true } },
+      hrApprovedBy: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 }
 
 // ─── Pending Count (for dashboard widget) ────────────────────────────
+// stage: undefined = both pending stages; "manager" = PENDING_MANAGER only;
+// "hr" = PENDING_HR only.
 
 export async function getPendingLeaveCount(
-  departmentId?: string
+  options: {
+    departmentId?: string;
+    stage?: "manager" | "hr";
+  } = {}
 ): Promise<number> {
+  const pendingBoth: LeaveStatus[] = ["PENDING_MANAGER", "PENDING_HR"];
+  const statusFilter =
+    options.stage === "manager"
+      ? { status: "PENDING_MANAGER" as LeaveStatus }
+      : options.stage === "hr"
+        ? { status: "PENDING_HR" as LeaveStatus }
+        : { status: { in: pendingBoth } };
+
   return prisma.leaveRequest.count({
     where: {
-      status: "PENDING",
-      ...(departmentId ? { employee: { departmentId } } : {}),
+      ...statusFilter,
+      ...(options.departmentId
+        ? { employee: { departmentId: options.departmentId } }
+        : {}),
     },
   });
 }

@@ -32,10 +32,13 @@ interface LeaveRequest {
   status: string;
   reason: string;
   createdAt: string;
-  approvedAt: string | null;
-  approverNotes: string | null;
   leaveType: { id: string; name: string };
-  approvedBy: { name: string } | null;
+  managerApprovedAt: string | null;
+  managerNotes: string | null;
+  managerApprovedBy: { name: string } | null;
+  hrApprovedAt: string | null;
+  hrNotes: string | null;
+  hrApprovedBy: { name: string } | null;
 }
 
 interface LeaveHistoryTableProps {
@@ -50,9 +53,22 @@ function getStatusBadgeClass(status: string): string {
       return "border-red-300 bg-red-50 text-red-700";
     case "CANCELLED":
       return "border-slate-300 bg-slate-50 text-slate-600";
-    default:
+    case "PENDING_HR":
+      return "border-sky-300 bg-sky-50 text-sky-700";
+    default: // PENDING_MANAGER
       return "border-amber-300 bg-amber-50 text-amber-700";
   }
+}
+
+// Renders the latest non-empty note + author across both approval stages.
+function getLatestNote(req: LeaveRequest): { text: string; author?: string } | null {
+  if (req.hrNotes) {
+    return { text: req.hrNotes, author: req.hrApprovedBy?.name };
+  }
+  if (req.managerNotes) {
+    return { text: req.managerNotes, author: req.managerApprovedBy?.name };
+  }
+  return null;
 }
 
 function CancelButton({ requestId }: { requestId: string }) {
@@ -158,11 +174,25 @@ export function LeaveHistoryTable({ requests }: LeaveHistoryTableProps) {
                         ] ?? req.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-sm text-slate-500">
-                      {req.approverNotes ?? "\u2014"}
+                    <TableCell className="max-w-[220px] text-sm text-slate-500">
+                      {(() => {
+                        const note = getLatestNote(req);
+                        if (!note) return "\u2014";
+                        return (
+                          <div>
+                            <p className="truncate">{note.text}</p>
+                            {note.author && (
+                              <p className="mt-0.5 text-xs text-slate-400">
+                                oleh {note.author}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
-                      {req.status === "PENDING" && (
+                      {(req.status === "PENDING_MANAGER" ||
+                        req.status === "PENDING_HR") && (
                         <CancelButton requestId={req.id} />
                       )}
                     </TableCell>

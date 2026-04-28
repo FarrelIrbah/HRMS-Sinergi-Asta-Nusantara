@@ -1,0 +1,740 @@
+@startuml HRMS_PT_SAN_ECB_ClassDiagram
+title HRMS PT. Sinergi Asta Nusantara\nClass Diagram — Entity-Control-Boundary (ECB)
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 8
+skinparam classFontSize 9
+
+skinparam class<<boundary>> {
+  BackgroundColor #DBEAFE
+  BorderColor #1D4ED8
+  HeaderBackgroundColor #1D4ED8
+  HeaderFontColor #FFFFFF
+}
+skinparam class<<control>> {
+  BackgroundColor #DCFCE7
+  BorderColor #15803D
+  HeaderBackgroundColor #15803D
+  HeaderFontColor #FFFFFF
+}
+skinparam class<<entity>> {
+  BackgroundColor #FEF9C3
+  BorderColor #A16207
+  HeaderBackgroundColor #D97706
+  HeaderFontColor #FFFFFF
+}
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #94A3B8
+  FontStyle bold
+  FontSize 10
+}
+skinparam arrow {
+  Color #475569
+  FontColor #374151
+  FontSize 8
+}
+
+' ════════════════════════════════════════════════════════════════════
+'  ROW 1 — AUTENTIKASI & DASHBOARD | MANAJEMEN KARYAWAN | ABSENSI
+' ════════════════════════════════════════════════════════════════════
+
+package "Autentikasi & Dashboard" {
+  ' ── Boundary ──
+  class LoginPage <<boundary>> {
+    + submitLogin(email, password) : void
+    + displayError(message) : void
+    + redirectAfterLogin() : void
+  }
+  class DashboardPage <<boundary>> {
+    + renderRoleBasedDashboard() : JSX
+  }
+  class UserManagementPage <<boundary>> {
+    + renderUserTable() : JSX
+    + openCreateDialog() : void
+    + openEditDialog(id) : void
+    + submitUserForm(data) : void
+    + toggleUserStatus(id) : void
+  }
+
+  ' ── Control ──
+  class AuthService <<control>> {
+    + signIn(email, password) : Session
+    + signOut() : void
+    + getSession() : Session
+    + validateRole(requiredRole) : boolean
+    + hashPassword(plain) : string
+    + comparePassword(plain, hash) : boolean
+  }
+  class UserService <<control>> {
+    + getUsers(filters) : User[]
+    + getUserById(id) : User
+    + createUser(data) : User
+    + updateUser(id, data) : User
+    + toggleUserActive(id) : User
+  }
+  class DashboardService <<control>> {
+    + getDashboardData() : DashboardData
+    + getSuperAdminDashboardData() : SuperAdminDashboardData
+    + getHrAdminDashboardData() : HrAdminDashboardData
+    + getManagerDashboardData(userId) : ManagerDashboardData
+    + getEmployeeDashboardData(userId) : EmployeeDashboardData
+  }
+
+  ' ── Entity ──
+  class User <<entity>> {
+    + id : String
+    + name : String
+    + email : String
+    + hashedPassword : String
+    + role : Role
+    + isActive : Boolean
+    + createdAt : DateTime
+    + updatedAt : DateTime
+  }
+
+  LoginPage ..> AuthService           : uses
+  DashboardPage ..> DashboardService  : uses
+  UserManagementPage ..> UserService  : uses
+  AuthService ..> User                : authenticates
+  UserService ..> User                : CRUD
+}
+
+' ────────────────────────────────────────────────────────────────────
+
+package "Manajemen Karyawan" {
+  ' ── Boundary ──
+  class EmployeeListPage <<boundary>> {
+    + renderEmployeeTable() : JSX
+    + applyFilters(filters) : void
+    + navigateToCreate() : void
+  }
+  class EmployeeDetailPage <<boundary>> {
+    + renderProfileTabs() : JSX
+    + editPersonalInfo(data) : void
+    + editEmploymentDetails(data) : void
+    + editTaxBpjs(data) : void
+    + uploadDocument(file, type) : void
+    + addEmergencyContact(data) : void
+    + openDeactivateDialog() : void
+  }
+  class CreateEmployeeForm <<boundary>> {
+    + renderFormFields() : JSX
+    + validateData(data) : boolean
+    + submitEmployee(data) : void
+  }
+
+  ' ── Control ──
+  class EmployeeService <<control>> {
+    + getEmployees(params) : Employee[]
+    + getEmployeesForManager(userId, params) : Employee[]
+    + getEmployeeById(id) : Employee
+    + getEmployeeByUserId(userId) : Employee
+    + createEmployee(data) : Employee
+    + updatePersonalInfo(id, data) : void
+    + updateEmploymentDetails(id, data) : void
+    + updateTaxBpjs(id, data) : void
+    + deactivateEmployee(id, reason) : void
+    + canManagerAccessEmployee(managerId, empId) : boolean
+    + getEmployeeStatsSummary() : EmployeeStatsSummary
+  }
+  class EmployeeDocService <<control>> {
+    + getDocumentsByEmployeeId(employeeId) : EmployeeDocument[]
+    + getDocumentById(docId) : EmployeeDocument
+    + createDocumentRecord(data) : EmployeeDocument
+    + deleteDocument(docId, actorId) : void
+  }
+
+  ' ── Entity ──
+  class Employee <<entity>> {
+    + id : String
+    + nik : String
+    + userId : String
+    + namaLengkap : String
+    + nikKtp : String
+    + jenisKelamin : Gender
+    + tanggalLahir : DateTime
+    + statusPernikahan : MaritalStatus
+    + agama : Religion
+    + alamat : String
+    + nomorHp : String
+    + email : String
+    + departmentId : String
+    + positionId : String
+    + officeLocationId : String
+    + contractType : ContractType
+    + joinDate : DateTime
+    + baseSalary : Decimal
+    + isActive : Boolean
+    + npwp : String
+    + ptkpStatus : PTKPStatus
+    + isTaxBorneByCompany : Boolean
+    + bpjsKesehatanNo : String
+    + bpjsKetenagakerjaanNo : String
+  }
+  class EmergencyContact <<entity>> {
+    + id : String
+    + employeeId : String
+    + name : String
+    + relationship : String
+    + phone : String
+    + address : String
+  }
+  class EmployeeDocument <<entity>> {
+    + id : String
+    + employeeId : String
+    + documentType : DocumentType
+    + fileName : String
+    + filePath : String
+    + fileSize : Int
+    + mimeType : String
+  }
+  class EmployeeAllowance <<entity>> {
+    + id : String
+    + employeeId : String
+    + name : String
+    + amount : Decimal
+    + isFixed : Boolean
+  }
+
+  EmployeeListPage ..> EmployeeService        : uses
+  EmployeeDetailPage ..> EmployeeService      : uses
+  EmployeeDetailPage ..> EmployeeDocService   : uses
+  CreateEmployeeForm ..> EmployeeService      : uses
+  EmployeeService ..> Employee                : CRUD
+  EmployeeDocService ..> EmployeeDocument     : manages
+  Employee "1" *-down- "*" EmergencyContact  : has
+  Employee "1" *-down- "*" EmployeeDocument  : has
+  Employee "1" *-down- "*" EmployeeAllowance : has
+}
+
+' ────────────────────────────────────────────────────────────────────
+
+package "Absensi" {
+  ' ── Boundary ──
+  class AttendancePage <<boundary>> {
+    + renderTodayCard() : JSX
+    + renderAttendanceHistory() : JSX
+    + submitClockIn(ip, coords) : void
+    + submitClockOut(ip) : void
+  }
+  class AttendanceAdminPage <<boundary>> {
+    + renderEmployeeList() : JSX
+    + navigateToEmployeeAttendance(empId) : void
+  }
+  class AttendanceEmployeePage <<boundary>> {
+    + renderAttendanceSummaryTable() : JSX
+    + renderMonthlySummary() : JSX
+    + openManualRecordDialog() : void
+    + submitManualRecord(data) : void
+    + exportMonthlyReport() : void
+  }
+
+  ' ── Control ──
+  class AttendanceService <<control>> {
+    + calculateAttendanceFlags(clockIn, clockOut, office) : Flags
+    + getTodayRecord(employeeId) : AttendanceRecord
+    + getEmployeeAttendance(employeeId, filters) : AttendanceRecord[]
+    + getWeeklySummary(employeeId) : WeeklySummary
+    + getMonthlyAttendanceRecap(params) : Recap
+    + clockInAction(ip, coords) : AttendanceRecord
+    + clockOutAction(ip) : AttendanceRecord
+    + manualOverrideAction(data) : AttendanceRecord
+  }
+  class LocationService <<control>> {
+    + verifyLocation(clientIp, coords, office) : LocationResult
+  }
+
+  ' ── Entity ──
+  class AttendanceRecord <<entity>> {
+    + id : String
+    + employeeId : String
+    + officeLocationId : String
+    + date : Date
+    + clockIn : DateTime
+    + clockOut : DateTime
+    + clockInIp : String
+    + clockOutIp : String
+    + clockInLat : Float
+    + clockInLon : Float
+    + isLate : Boolean
+    + lateMinutes : Int
+    + isEarlyOut : Boolean
+    + earlyOutMinutes : Int
+    + overtimeMinutes : Int
+    + totalMinutes : Int
+    + isManualOverride : Boolean
+    + overrideById : String
+    + overrideReason : String
+  }
+
+  AttendancePage ..> AttendanceService         : uses
+  AttendanceAdminPage ..> AttendanceService    : uses
+  AttendanceEmployeePage ..> AttendanceService : uses
+  AttendanceService ..> LocationService        : delegates
+  AttendanceService ..> AttendanceRecord       : CRUD
+}
+
+' ════════════════════════════════════════════════════════════════════
+'  ROW 2 — CUTI | PENGGAJIAN | REKRUTMEN
+' ════════════════════════════════════════════════════════════════════
+
+package "Cuti" {
+  ' ── Boundary ──
+  class LeaveRequestPage <<boundary>> {
+    + renderLeaveBalanceCards() : JSX
+    + renderLeaveRequestForm() : JSX
+    + renderLeaveHistory() : JSX
+    + submitLeaveRequest(data) : void
+    + cancelLeaveRequest(id) : void
+  }
+  class LeaveManagePage <<boundary>> {
+    + renderPendingRequests() : JSX
+    + approveLeave(id, notes) : void
+    + rejectLeave(id, notes) : void
+    + filterRequests(filters) : void
+  }
+  class LeaveReportPage <<boundary>> {
+    + renderKPICards() : JSX
+    + renderTrendChart() : JSX
+    + renderLeaveDetailTable() : JSX
+    + exportReport() : void
+  }
+
+  ' ── Control ──
+  class LeaveService <<control>> {
+    + countWorkingDays(startDate, endDate) : int
+    + ensureLeaveBalances(employeeId, year) : void
+    + getLeaveBalances(employeeId, year) : LeaveBalance[]
+    + submitLeaveRequest(input) : LeaveRequest
+    + approveLeaveRequest(id, approverId, notes) : void
+    + rejectLeaveRequest(id, approverId, notes) : void
+    + cancelLeaveRequest(id, employeeId) : void
+    + getLeaveRequests(filter) : LeaveRequest[]
+    + getPendingLeaveCount(approverId) : int
+  }
+
+  ' ── Entity ──
+  class LeaveRequest <<entity>> {
+    + id : String
+    + employeeId : String
+    + leaveTypeId : String
+    + startDate : Date
+    + endDate : Date
+    + workingDays : Int
+    + reason : String
+    + attachmentPath : String
+    + attachmentName : String
+    + status : LeaveStatus
+    + approvedById : String
+    + approverNotes : String
+    + approvedAt : DateTime
+  }
+  class LeaveBalance <<entity>> {
+    + id : String
+    + employeeId : String
+    + leaveTypeId : String
+    + year : Int
+    + allocatedDays : Int
+    + usedDays : Int
+  }
+
+  LeaveRequestPage ..> LeaveService : uses
+  LeaveManagePage ..> LeaveService  : uses
+  LeaveReportPage ..> LeaveService  : uses
+  LeaveService ..> LeaveRequest     : CRUD
+  LeaveService ..> LeaveBalance     : CRUD
+}
+
+' ────────────────────────────────────────────────────────────────────
+
+package "Penggajian" {
+  ' ── Boundary ──
+  class PayrollPage <<boundary>> {
+    + renderPayrollRunList() : JSX
+    + runPayroll(month, year) : void
+    + finalizePayroll(runId) : void
+    + navigateToDetail(runId) : void
+  }
+  class PayrollDetailPage <<boundary>> {
+    + renderPayrollEntryTable() : JSX
+    + updateEmployeeSalary(data) : void
+    + addTHREntry(data) : void
+    + downloadReport() : void
+  }
+  class PayslipPage <<boundary>> {
+    + renderPayslipList() : JSX
+    + downloadPayslip(entryId) : void
+  }
+  class THRPage <<boundary>> {
+    + renderTHRTable() : JSX
+    + addTHR(data) : void
+    + downloadTHRReport() : void
+  }
+
+  ' ── Control ──
+  class PayrollService <<control>> {
+    + runPayroll(month, year) : PayrollRun
+    + finalizePayroll(payrollRunId) : void
+    + getPayrollRuns() : PayrollRun[]
+    + getPayrollRunDetail(payrollRunId) : PayrollRun
+    + runPayrollAction() : void
+    + finalizePayrollAction() : void
+    + updateEmployeeSalaryAction(input) : void
+    + addTHRToPayrollAction(input) : void
+  }
+  class PPh21Service <<control>> {
+    + getTERCategory(ptkpStatus) : "A"|"B"|"C"
+    + calculateMonthlyPPh21(grossMonthly, ptkpStatus) : PPh21MonthlyResult
+    + calculateDecemberPPh21(params) : DecemberPPh21Result
+  }
+  class BPJSService <<control>> {
+    + calculateBPJS(grossSalary) : BPJSResult
+  }
+  class THRService <<control>> {
+    + calculateEmployeeTHR(input) : THRResult
+  }
+
+  ' ── Entity ──
+  class PayrollRun <<entity>> {
+    + id : String
+    + month : Int
+    + year : Int
+    + status : PayrollStatus
+    + createdBy : String
+    + createdAt : DateTime
+    + updatedAt : DateTime
+  }
+  class PayrollEntry <<entity>> {
+    + id : String
+    + payrollRunId : String
+    + employeeId : String
+    + employeeNik : String
+    + employeeName : String
+    + baseSalary : Decimal
+    + totalAllowances : Decimal
+    + overtimePay : Decimal
+    + absenceDeduction : Decimal
+    + thrAmount : Decimal
+    + grossPay : Decimal
+    + bpjsKesEmp : Decimal
+    + bpjsKesEmpr : Decimal
+    + bpjsJhtEmp : Decimal
+    + bpjsJhtEmpr : Decimal
+    + bpjsJpEmp : Decimal
+    + bpjsJpEmpr : Decimal
+    + bpjsJkk : Decimal
+    + bpjsJkm : Decimal
+    + pph21 : Decimal
+    + totalDeductions : Decimal
+    + netPay : Decimal
+  }
+
+  PayrollPage ..> PayrollService        : uses
+  PayrollDetailPage ..> PayrollService  : uses
+  PayslipPage ..> PayrollService        : uses
+  THRPage ..> PayrollService            : uses
+  PayrollService ..> PPh21Service       : delegates
+  PayrollService ..> BPJSService        : delegates
+  PayrollService ..> THRService         : delegates
+  PayrollService ..> PayrollRun         : CRUD
+  PayrollService ..> PayrollEntry       : CRUD
+  PayrollRun "1" *-down- "*" PayrollEntry : contains
+}
+
+' ────────────────────────────────────────────────────────────────────
+
+package "Rekrutmen" {
+  ' ── Boundary ──
+  class VacancyListPage <<boundary>> {
+    + renderVacancyTable() : JSX
+    + filterByStatus(status) : void
+    + navigateToCreate() : void
+    + navigateToDetail(id) : void
+  }
+  class CreateVacancyPage <<boundary>> {
+    + renderCreateVacancyForm() : JSX
+    + submitVacancy(data) : void
+    + cancel() : void
+  }
+  class VacancyDetailPage <<boundary>> {
+    + renderKanbanBoard() : JSX
+    + openAddCandidateDialog() : void
+    + submitNewCandidate(data) : void
+    + moveCandidateColumn(id, stage) : void
+    + toggleVacancyStatus(id) : void
+  }
+  class CandidateDetailPage <<boundary>> {
+    + renderCandidateProfile() : JSX
+    + renderInterviewHistory() : JSX
+    + scheduleInterview(data) : void
+    + submitOffer(candidateId, data) : void
+    + downloadCandidateCV() : void
+    + downloadOfferLetter() : void
+    + convertToEmployee(candidateId) : void
+  }
+
+  ' ── Control ──
+  class RecruitmentService <<control>> {
+    + getVacancies(status?) : Vacancy[]
+    + getVacanciesWithPipeline(status?) : VacancyWithPipeline[]
+    + getVacancyById(id) : VacancyDetail
+    + getOpenVacancyCount() : int
+    + getCandidateById(id) : CandidateDetail
+    + getRecruitmentStatsSummary() : RecruitmentStatsSummary
+    + createVacancyAction(data) : void
+    + updateVacancyAction(id, data) : void
+    + toggleVacancyStatusAction(id) : void
+    + createCandidateAction(vacancyId, data) : void
+    + updateCandidateStageAction(id, stage) : void
+    + updateOfferAction(candidateId, data) : void
+    + createInterviewAction(candidateId, data) : void
+    + convertCandidateToEmployeeAction(candidateId) : PrefillData
+  }
+
+  ' ── Entity ──
+  class Vacancy <<entity>> {
+    + id : String
+    + title : String
+    + departmentId : String
+    + description : String
+    + requirements : String
+    + status : VacancyStatus
+    + openDate : DateTime
+    + closeDate : DateTime
+    + createdAt : DateTime
+  }
+  class Candidate <<entity>> {
+    + id : String
+    + vacancyId : String
+    + name : String
+    + email : String
+    + phone : String
+    + stage : CandidateStage
+    + cvPath : String
+    + notes : String
+    + offerSalary : Decimal
+    + offerNotes : String
+    + hiredAt : DateTime
+  }
+  class Interview <<entity>> {
+    + id : String
+    + candidateId : String
+    + scheduledAt : DateTime
+    + interviewerName : String
+    + notes : String
+    + createdAt : DateTime
+  }
+
+  VacancyListPage ..> RecruitmentService     : uses
+  CreateVacancyPage ..> RecruitmentService   : uses
+  VacancyDetailPage ..> RecruitmentService   : uses
+  CandidateDetailPage ..> RecruitmentService : uses
+  RecruitmentService ..> Vacancy             : CRUD
+  RecruitmentService ..> Candidate           : CRUD
+  RecruitmentService ..> Interview           : manages
+  Vacancy "1" *-down- "*" Candidate          : receives
+  Candidate "1" *-down- "*" Interview        : has
+}
+
+' ════════════════════════════════════════════════════════════════════
+'  ROW 3 — MASTER DATA | AUDIT LOG
+' ════════════════════════════════════════════════════════════════════
+
+package "Master Data" {
+  ' ── Boundary ──
+  class MasterDataPage <<boundary>> {
+    + renderDepartmentTab() : JSX
+    + renderPositionTab() : JSX
+    + renderLeaveTypeTab() : JSX
+    + renderOfficeLocationTab() : JSX
+    + openFormDialog(type, data?) : void
+    + submitForm(type, data) : void
+    + softDeleteEntry(type, id) : void
+  }
+
+  ' ── Control ──
+  class MasterDataService <<control>> {
+    + getDepartments(params) : Department[]
+    + getAllDepartments() : Department[]
+    + createDepartment(data, actorId) : Department
+    + updateDepartment(id, data, actorId) : void
+    + deleteDepartment(id, actorId) : void
+    + getPositions(params) : Position[]
+    + getAllPositions(deptId?) : Position[]
+    + createPosition(data, actorId) : Position
+    + updatePosition(id, data, actorId) : void
+    + deletePosition(id, actorId) : void
+    + getOfficeLocations(params) : OfficeLocation[]
+    + getAllOfficeLocations() : OfficeLocation[]
+    + createOfficeLocation(data, actorId) : OfficeLocation
+    + updateOfficeLocation(id, data, actorId) : void
+    + deleteOfficeLocation(id, actorId) : void
+    + getLeaveTypes(params) : LeaveType[]
+    + getAllLeaveTypes() : LeaveType[]
+    + createLeaveType(data, actorId) : LeaveType
+    + updateLeaveType(id, data, actorId) : void
+    + deleteLeaveType(id, actorId) : void
+  }
+
+  ' ── Entity ──
+  class Department <<entity>> {
+    + id : String
+    + name : String
+    + description : String
+    + deletedAt : DateTime
+    + createdAt : DateTime
+    + updatedAt : DateTime
+  }
+  class Position <<entity>> {
+    + id : String
+    + name : String
+    + departmentId : String
+    + deletedAt : DateTime
+    + createdAt : DateTime
+  }
+  class LeaveType <<entity>> {
+    + id : String
+    + name : String
+    + annualQuota : Int
+    + isPaid : Boolean
+    + genderRestriction : String
+    + deletedAt : DateTime
+    + createdAt : DateTime
+  }
+  class OfficeLocation <<entity>> {
+    + id : String
+    + name : String
+    + address : String
+    + allowedIPs : String[]
+    + latitude : Float
+    + longitude : Float
+    + radiusMeters : Int
+    + workStartTime : String
+    + workEndTime : String
+    + deletedAt : DateTime
+  }
+
+  MasterDataPage ..> MasterDataService  : uses
+  MasterDataService ..> Department      : CRUD
+  MasterDataService ..> Position        : CRUD
+  MasterDataService ..> LeaveType       : CRUD
+  MasterDataService ..> OfficeLocation  : CRUD
+  Department "1" *-right- "*" Position  : contains
+}
+
+' ────────────────────────────────────────────────────────────────────
+
+package "Audit Log" {
+  ' ── Boundary ──
+  class AuditLogPage <<boundary>> {
+    + renderAuditTable() : JSX
+    + applyFilters(filters) : void
+    + navigateToDetail(id) : void
+  }
+  class AuditLogDetailPage <<boundary>> {
+    + renderAuditDetail() : JSX
+    + renderDiffView(log) : JSX
+  }
+
+  ' ── Control ──
+  class AuditService <<control>> {
+    + getAuditLogs(filters) : AuditLog[]
+    + getAuditLogById(id) : AuditLog
+    + getAuditLogUsers() : User[]
+    + getAuditLogModules() : string[]
+  }
+  class PrismaUtils <<control>> {
+    + createAuditLog(userId, action, module, targetId, old, new) : void
+  }
+
+  ' ── Entity ──
+  class AuditLog <<entity>> {
+    + id : String
+    + userId : String
+    + action : AuditAction
+    + module : String
+    + targetId : String
+    + oldValue : Json
+    + newValue : Json
+    + createdAt : DateTime
+  }
+
+  AuditLogPage ..> AuditService        : uses
+  AuditLogDetailPage ..> AuditService  : uses
+  AuditService ..> AuditLog            : reads
+  PrismaUtils ..> AuditLog             : creates
+}
+
+' ════════════════════════════════════════════════════════════════════
+'  RELASI LINTAS MODUL
+' ════════════════════════════════════════════════════════════════════
+
+' User ↔ Employee (satu User memiliki satu Employee)
+User "1" -down- "0..1" Employee           : linked to >
+' User ↔ AuditLog (setiap aksi User dicatat di AuditLog)
+User "1" -right- "*" AuditLog             : generates >
+
+' Master Data → Employee
+Department "1" -right- "*" Employee       : groups >
+Position "1" -right- "*" Employee         : holds >
+OfficeLocation "1" -right- "*" Employee   : base of >
+
+' Master Data → Vacancy & LeaveType
+Department "1" -right- "*" Vacancy        : opens >
+LeaveType "1" -down- "*" LeaveRequest     : categorizes >
+LeaveType "1" -down- "*" LeaveBalance     : tracks >
+
+' Employee → Transaksi
+Employee "1" -right- "*" AttendanceRecord   : records >
+OfficeLocation "1" -right- "*" AttendanceRecord : located at >
+Employee "1" -down- "*" LeaveRequest        : submits >
+Employee "1" -down- "*" LeaveBalance        : has >
+Employee "1" -right- "*" PayrollEntry       : included in >
+
+' Semua service memanggil PrismaUtils.createAuditLog saat write operations
+EmployeeService ..> PrismaUtils    : logs changes
+MasterDataService ..> PrismaUtils  : logs changes
+LeaveService ..> PrismaUtils       : logs changes
+PayrollService ..> PrismaUtils     : logs changes
+RecruitmentService ..> PrismaUtils : logs changes
+UserService ..> PrismaUtils        : logs changes
+
+' ════════════════════════════════════════════════════════════════════
+'  LAYOUT ALIGNMENT (Hidden — tidak terlihat di diagram)
+' ════════════════════════════════════════════════════════════════════
+
+' Baris 1 (kiri → kanan)
+LoginPage -right[hidden]- EmployeeListPage
+EmployeeListPage -right[hidden]- AttendancePage
+
+' Baris 2 (kiri → kanan)
+LeaveRequestPage -right[hidden]- PayrollPage
+PayrollPage -right[hidden]- VacancyListPage
+
+' Baris 3 (kiri → kanan)
+MasterDataPage -right[hidden]- AuditLogPage
+
+' Vertikal baris 1 → 2 → 3
+LoginPage -down[hidden]- LeaveRequestPage
+LeaveRequestPage -down[hidden]- MasterDataPage
+
+' ════════════════════════════════════════════════════════════════════
+'  LEGEND
+' ════════════════════════════════════════════════════════════════════
+
+legend right
+  <b>Legenda Stereotipe ECB</b>
+  |= Stereotipe |= Warna Header |= Lapisan |= Contoh File |
+  |<back:#1D4ED8><color:#FFFFFF>  <<boundary>>  </color></back>| Biru | Antarmuka Pengguna (UI/Page) | page.tsx, form.tsx |
+  |<back:#15803D><color:#FFFFFF>  <<control>>   </color></back>| Hijau | Logika Bisnis (Service/Action) | *.service.ts, *.actions.ts |
+  |<back:#D97706><color:#FFFFFF>  <<entity>>    </color></back>| Kuning | Model Data (Tabel Database) | schema.prisma |
+  |——  solid| | Asosiasi / Komposisi antar entitas (relasi DB) | |
+  |..> dashed| | Ketergantungan (uses / delegates) | |
+endlegend
+
+@enduml

@@ -7,7 +7,6 @@ import {
   UserCheck,
   UserMinus,
   Users2,
-  type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import {
@@ -21,8 +20,7 @@ import {
   getAllPositions,
 } from "@/lib/services/master-data.service";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { SummaryTile } from "@/components/shared/summary-tile";
 import { EmployeeTable } from "./_components/employee-table";
 import { EmployeeFilters } from "./_components/employee-filters";
 import type { Role } from "@/types/enums";
@@ -76,27 +74,36 @@ export default async function EmployeesPage({
         ? false
         : undefined;
 
-  const [employeeResult, stats, departments, positions] = await Promise.all([
-    role === "MANAGER"
-      ? getEmployeesForManager(session.user.id, {
-          page,
-          search: search || undefined,
-          positionId,
-          isActive,
-          contractType,
-        })
-      : getEmployees({
-          page,
-          search: search || undefined,
-          departmentId,
-          positionId,
-          isActive,
-          contractType,
-        }),
-    getEmployeeStatsSummary(),
-    getAllDepartments(),
-    getAllPositions(),
-  ]);
+  const [employeeResult, stats, departments, positions, managerEmployee] =
+    await Promise.all([
+      role === "MANAGER"
+        ? getEmployeesForManager(session.user.id, {
+            page,
+            search: search || undefined,
+            positionId,
+            isActive,
+            contractType,
+          })
+        : getEmployees({
+            page,
+            search: search || undefined,
+            departmentId,
+            positionId,
+            isActive,
+            contractType,
+          }),
+      getEmployeeStatsSummary(),
+      getAllDepartments(),
+      getAllPositions(),
+      role === "MANAGER"
+        ? getEmployeeByUserId(session.user.id)
+        : Promise.resolve(null),
+    ]);
+
+  const scopedPositions =
+    role === "MANAGER" && managerEmployee?.departmentId
+      ? positions.filter((p) => p.departmentId === managerEmployee.departmentId)
+      : positions;
 
   const canCreate = role === "HR_ADMIN" || role === "SUPER_ADMIN";
 
@@ -191,7 +198,7 @@ export default async function EmployeesPage({
       {/* ─── Filters ──────────────────────────────── */}
       <EmployeeFilters
         departments={departments}
-        positions={positions}
+        positions={scopedPositions}
         isManager={role === "MANAGER"}
       />
 
@@ -208,67 +215,3 @@ export default async function EmployeesPage({
   );
 }
 
-// ─────────────────── Sub-components ───────────────────
-
-type Tone = "emerald" | "sky" | "violet" | "amber" | "slate";
-
-const TONE_MAP: Record<Tone, { bg: string; text: string; ring: string }> = {
-  emerald: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    ring: "ring-emerald-100",
-  },
-  sky: { bg: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-100" },
-  violet: {
-    bg: "bg-violet-50",
-    text: "text-violet-700",
-    ring: "ring-violet-100",
-  },
-  amber: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    ring: "ring-amber-100",
-  },
-  slate: {
-    bg: "bg-slate-100",
-    text: "text-slate-700",
-    ring: "ring-slate-200",
-  },
-};
-
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number;
-  tone: Tone;
-}) {
-  const t = TONE_MAP[tone];
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="flex items-center gap-3 p-4">
-        <div
-          className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ring-1",
-            t.bg,
-            t.text,
-            t.ring,
-          )}
-          aria-hidden="true"
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tabular-nums leading-tight text-slate-900">
-            {value}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

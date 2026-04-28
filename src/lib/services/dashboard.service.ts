@@ -297,7 +297,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     prisma.department.count({ where: { deletedAt: null } }),
     prisma.position.count({ where: { deletedAt: null } }),
     prisma.employee.count({ where: { isActive: true } }),
-    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+    prisma.leaveRequest.count({
+      where: { status: { in: ["PENDING_MANAGER", "PENDING_HR"] } },
+    }),
     prisma.attendanceRecord.count({ where: { date: today } }),
     prisma.payrollRun.findUnique({
       where: { month_year: { month: currentMonth, year: currentYear } },
@@ -383,9 +385,11 @@ export async function getSuperAdminDashboardData(): Promise<SuperAdminDashboardD
         endDate: { gte: today },
       },
     }),
-    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+    prisma.leaveRequest.count({
+      where: { status: { in: ["PENDING_MANAGER", "PENDING_HR"] } },
+    }),
     prisma.leaveRequest.findMany({
-      where: { status: "PENDING" },
+      where: { status: { in: ["PENDING_MANAGER", "PENDING_HR"] } },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: {
@@ -700,9 +704,10 @@ export async function getHrAdminDashboardData(): Promise<HrAdminDashboardData> {
         endDate: { gte: today },
       },
     }),
-    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+    // HR queue: only PENDING_HR (already passed manager stage, now needs HR action)
+    prisma.leaveRequest.count({ where: { status: "PENDING_HR" } }),
     prisma.leaveRequest.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING_HR" },
       orderBy: { createdAt: "desc" },
       take: 6,
       include: {
@@ -958,11 +963,12 @@ export async function getManagerDashboardData(
         endDate: { gte: today },
       },
     }),
+    // Manager queue: only PENDING_MANAGER from their team (stage 1 awaiting manager)
     prisma.leaveRequest.count({
-      where: { status: "PENDING", employee: teamWhere },
+      where: { status: "PENDING_MANAGER", employee: teamWhere },
     }),
     prisma.leaveRequest.findMany({
-      where: { status: "PENDING", employee: teamWhere },
+      where: { status: "PENDING_MANAGER", employee: teamWhere },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: {
@@ -1196,8 +1202,12 @@ export async function getEmployeeDashboardData(
       orderBy: { startDate: "asc" },
       include: { leaveType: { select: { name: true } } },
     }),
+    // Employee's own pending count: still in either approval stage
     prisma.leaveRequest.count({
-      where: { employeeId: emp.id, status: "PENDING" },
+      where: {
+        employeeId: emp.id,
+        status: { in: ["PENDING_MANAGER", "PENDING_HR"] },
+      },
     }),
     prisma.payrollEntry.findFirst({
       where: { employeeId: emp.id },

@@ -108,7 +108,8 @@ export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
 };
 
 export const LEAVE_STATUS_LABELS: Record<LeaveStatus, string> = {
-  PENDING: "Menunggu",
+  PENDING_MANAGER: "Menunggu Manager",
+  PENDING_HR: "Menunggu HR",
   APPROVED: "Disetujui",
   REJECTED: "Ditolak",
   CANCELLED: "Dibatalkan",
