@@ -5,24 +5,26 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PayslipDocument, type PayslipData } from "@/lib/pdf/payslip-pdf";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const MONTHS_ID = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
+const MONTHS_EN_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
-// ─── Route Handler ────────────────────────────────────────────────────────────
+function buildPayrollCutoff(month: number, year: number): string {
+  const lastDay = new Date(year, month, 0).getDate();
+  const monthLabel = MONTHS_EN_SHORT[month - 1];
+  return `01 - ${lastDay} ${monthLabel} ${year}`;
+}
 
 export async function GET(
   _request: Request,
@@ -35,71 +37,71 @@ export async function GET(
 
   const entry = await prisma.payrollEntry.findUnique({
     where: { id: entryId },
-    include: {
-      payrollRun: true,
-      employee: {
-        include: {
-          position: true,
-          department: true,
-          allowances: true,
-        },
-      },
-    },
+    include: { payrollRun: true },
   });
 
   if (!entry) return new Response("Not Found", { status: 404 });
 
-  // Auth: HR_ADMIN/SUPER_ADMIN can access any entry; EMPLOYEE/MANAGER can only access own
   const isHR =
     session.user.role === "HR_ADMIN" || session.user.role === "SUPER_ADMIN";
   if (!isHR) {
     const employee = await prisma.employee.findUnique({
       where: { userId: session.user.id },
+      select: { id: true },
     });
     if (!employee || employee.id !== entry.employeeId) {
       return new Response("Forbidden", { status: 403 });
     }
   }
 
-  // Only FINALIZED payroll runs can have payslips downloaded
   if (entry.payrollRun.status !== "FINALIZED") {
     return new Response("Payroll belum difinalisasi", { status: 400 });
   }
 
-  const periodLabel = `${MONTHS_ID[entry.payrollRun.month - 1]} ${entry.payrollRun.year}`;
-
   const data: PayslipData = {
-    companyName: "PT Sinergi Asta Nusantara",
-    periodLabel,
+    companyName: "PT. Sinergi Asta Nusantara",
+    payrollCutoff: buildPayrollCutoff(entry.payrollRun.month, entry.payrollRun.year),
     employeeNik: entry.employeeNik,
     employeeName: entry.employeeName,
-    position: entry.employee.position?.name ?? "-",
-    department: entry.employee.department?.name ?? "-",
-    baseSalary: Number(entry.baseSalary),
-    allowanceItems: entry.employee.allowances.map(
-      (a: { name: string; amount: { toString: () => string } }) => ({
-        name: a.name,
-        amount: Number(a.amount),
-      })
-    ),
-    overtimePay: Number(entry.overtimePay),
-    thrAmount: Number(entry.thrAmount),
-    grossPay: Number(entry.grossPay),
-    bpjsKesEmp: Number(entry.bpjsKesEmp),
-    bpjsJhtEmp: Number(entry.bpjsJhtEmp),
-    bpjsJpEmp: Number(entry.bpjsJpEmp),
-    bpjsKesEmpr: Number(entry.bpjsKesEmpr),
-    bpjsJhtEmpr: Number(entry.bpjsJhtEmpr),
-    bpjsJpEmpr: Number(entry.bpjsJpEmpr),
-    bpjsJkk: Number(entry.bpjsJkk),
-    bpjsJkm: Number(entry.bpjsJkm),
+    jobPosition: entry.jobPosition,
+    organization: entry.organization,
+    gradeLevel: entry.gradeLevel,
+    ptkpStatus: entry.ptkpStatus,
+    npwp: entry.npwp,
+    basicSalary: Number(entry.basicSalary),
+    tunjanganKomunikasi: Number(entry.tunjanganKomunikasi),
+    tunjanganKehadiran: Number(entry.tunjanganKehadiran),
+    tunjanganJabatan: Number(entry.tunjanganJabatan),
+    tunjanganLainnya: Number(entry.tunjanganLainnya),
+    taxAllowance: Number(entry.taxAllowance),
+    thr: Number(entry.thr),
+    totalEarnings: Number(entry.totalEarnings),
+    bpjsKesehatanEmployee: Number(entry.bpjsKesehatanEmployee),
+    jhtEmployee: Number(entry.jhtEmployee),
+    jaminanPensiunEmployee: Number(entry.jaminanPensiunEmployee),
     pph21: Number(entry.pph21),
-    isTaxBorneByCompany: entry.employee.isTaxBorneByCompany,
+    potonganKeterlambatan: Number(entry.potonganKeterlambatan),
+    potonganKoperasi: Number(entry.potonganKoperasi),
+    potonganLainnya: Number(entry.potonganLainnya),
     totalDeductions: Number(entry.totalDeductions),
-    netPay: Number(entry.netPay),
+    takeHomePay: Number(entry.takeHomePay),
+    jkk: Number(entry.jkk),
+    jkm: Number(entry.jkm),
+    jhtCompany: Number(entry.jhtCompany),
+    jaminanPensiunCompany: Number(entry.jaminanPensiunCompany),
+    bpjsKesehatanCompany: Number(entry.bpjsKesehatanCompany),
+    totalBenefits: Number(entry.totalBenefits),
+    actualWorkingDay: entry.actualWorkingDay,
+    scheduleWorkingDay: entry.scheduleWorkingDay,
+    dayoff: entry.dayoff,
+    nationalHoliday: entry.nationalHoliday,
+    companyHoliday: entry.companyHoliday,
+    specialHoliday: entry.specialHoliday,
+    attendanceCodes: entry.attendanceCodes,
   };
 
-  const safeFileName = `slip-gaji-${entry.employeeNik}-${periodLabel.replace(" ", "-")}.pdf`;
+  const safePeriod = `${entry.payrollRun.year}-${String(entry.payrollRun.month).padStart(2, "0")}`;
+  const safeFileName = `Payslip-${safePeriod}-${entry.employeeNik}.pdf`;
 
   try {
     const element = React.createElement(

@@ -85,32 +85,21 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
     employeeId: e.employeeId,
     employeeNik: e.employeeNik,
     employeeName: e.employeeName,
-    baseSalary: Number(e.baseSalary),
-    totalAllowances: Number(e.totalAllowances),
-    overtimePay: Number(e.overtimePay),
-    absenceDeduction: Number(e.absenceDeduction),
-    thrAmount: Number(e.thrAmount),
-    grossPay: Number(e.grossPay),
-    bpjsKesEmp: Number(e.bpjsKesEmp),
-    bpjsKesEmpr: Number(e.bpjsKesEmpr),
-    bpjsJhtEmp: Number(e.bpjsJhtEmp),
-    bpjsJhtEmpr: Number(e.bpjsJhtEmpr),
-    bpjsJpEmp: Number(e.bpjsJpEmp),
-    bpjsJpEmpr: Number(e.bpjsJpEmpr),
-    bpjsJkk: Number(e.bpjsJkk),
-    bpjsJkm: Number(e.bpjsJkm),
-    pph21: Number(e.pph21),
+    jobPosition: e.jobPosition,
+    organization: e.organization,
+    totalEarnings: Number(e.totalEarnings),
     totalDeductions: Number(e.totalDeductions),
-    netPay: Number(e.netPay),
+    totalBenefits: Number(e.totalBenefits),
+    takeHomePay: Number(e.takeHomePay),
   }));
 
   // Summary totals computed server-side
-  const totalGross = serializedEntries.reduce((s, e) => s + e.grossPay, 0);
+  const totalGross = serializedEntries.reduce((s, e) => s + e.totalEarnings, 0);
   const totalDeductions = serializedEntries.reduce(
     (s, e) => s + e.totalDeductions,
     0
   );
-  const totalNet = serializedEntries.reduce((s, e) => s + e.netPay, 0);
+  const totalNet = serializedEntries.reduce((s, e) => s + e.takeHomePay, 0);
 
   const periodLabel = formatPeriod(run.month, run.year);
   const isFinalized = run.status === "FINALIZED";
@@ -168,7 +157,7 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
           <p className="mt-1 text-sm text-slate-600">
             {isFinalized
               ? "Periode ini sudah difinalisasi dan tidak dapat diubah."
-              : "Periode ini masih DRAFT — dapat dihitung ulang sebelum finalisasi."}
+              : "Periode ini masih DRAFT — dapat di-impor ulang sebelum finalisasi."}
           </p>
         </div>
 
@@ -188,21 +177,21 @@ export default async function PayrollPeriodPage({ params }: PageProps) {
         />
         <SummaryTile
           icon={TrendingUp}
-          label="Total Bruto"
+          label="Total Earnings"
           value={formatRupiahCompact(totalGross)}
           title={formatRupiah(totalGross)}
           tone="sky"
         />
         <SummaryTile
           icon={TrendingDown}
-          label="Total Potongan"
+          label="Total Deductions"
           value={formatRupiahCompact(totalDeductions)}
           title={formatRupiah(totalDeductions)}
           tone={totalDeductions > 0 ? "amber" : "slate"}
         />
         <SummaryTile
           icon={Banknote}
-          label="Total Bersih"
+          label="Total Take Home Pay"
           value={formatRupiahCompact(totalNet)}
           title={formatRupiah(totalNet)}
           tone="violet"

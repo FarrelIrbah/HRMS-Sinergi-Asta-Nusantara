@@ -7,7 +7,6 @@ import {
   PhoneCall,
   Receipt,
   UserRound,
-  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -22,7 +21,6 @@ import { EmploymentDetailsTab } from "./employment-details-tab";
 import { TaxBpjsTab } from "./tax-bpjs-tab";
 import { DocumentsTab } from "./documents-tab";
 import { EmergencyContactsTab } from "./emergency-contacts-tab";
-import { SalaryTab } from "./salary-tab";
 
 interface Department {
   id: string;
@@ -87,17 +85,11 @@ export interface SerializedEmployee {
   }[];
 }
 
-interface SalaryData {
-  baseSalary: number;
-  allowances: { id: string; name: string; amount: number; isFixed: boolean }[];
-}
-
 interface EmployeeProfileTabsProps {
   employee: SerializedEmployee;
   mode: "edit" | "readonly";
   departments: Department[];
   positions: Position[];
-  salaryData?: SalaryData;
 }
 
 type TabConfig = {
@@ -112,7 +104,6 @@ export function EmployeeProfileTabs({
   mode,
   departments,
   positions,
-  salaryData,
 }: EmployeeProfileTabsProps) {
   const [tab, setTab] = useQueryState("tab", { defaultValue: "personal" });
 
@@ -134,9 +125,6 @@ export function EmployeeProfileTabs({
       icon: PhoneCall,
       count: employee.emergencyContacts?.length ?? 0,
     },
-    ...(salaryData
-      ? [{ value: "salary", label: "Gaji & Tunjangan", icon: Wallet }]
-      : []),
   ];
 
   return (
@@ -214,16 +202,6 @@ export function EmployeeProfileTabs({
           readOnly={readOnly}
         />
       </TabsContent>
-
-      {salaryData && (
-        <TabsContent value="salary" className="mt-0">
-          <SalaryTab
-            employeeId={employee.id}
-            baseSalary={salaryData.baseSalary}
-            allowances={salaryData.allowances}
-          />
-        </TabsContent>
-      )}
     </Tabs>
   );
 }

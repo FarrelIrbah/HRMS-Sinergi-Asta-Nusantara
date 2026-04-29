@@ -18,7 +18,6 @@ import {
   BarChart2,
   Banknote,
   Receipt,
-  Gift,
   BriefcaseBusiness,
   Building2,
 } from "lucide-react";
@@ -117,12 +116,6 @@ const navGroups: NavGroup[] = [
         label: "Penggajian",
         href: "/payroll",
         icon: Banknote,
-        roles: ["SUPER_ADMIN", "HR_ADMIN"],
-      },
-      {
-        label: "Hitung THR",
-        href: "/payroll/thr",
-        icon: Gift,
         roles: ["SUPER_ADMIN", "HR_ADMIN"],
       },
       {

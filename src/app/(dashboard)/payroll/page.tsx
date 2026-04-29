@@ -7,7 +7,7 @@ import {
   FileClock,
   Clock,
   ArrowRight,
-  Calculator,
+  FileSpreadsheet,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getPayrollRuns } from "@/lib/services/payroll.service";
@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SummaryTile } from "@/components/shared/summary-tile";
-import { RunPayrollForm } from "./_components/run-payroll-form";
+import { ImportPayrollForm } from "./_components/import-payroll-form";
 
 
 
@@ -95,7 +95,7 @@ export default async function PayrollPage() {
           </h1>
         </div>
         <p className="mt-1 text-sm text-slate-600">
-          Kelola perhitungan dan finalisasi penggajian bulanan karyawan
+          Impor hasil perhitungan penggajian dari Excel/CSV, review, lalu finalisasi untuk distribusi slip gaji
         </p>
       </header>
 
@@ -130,7 +130,7 @@ export default async function PayrollPage() {
         />
       </section>
 
-      {/* ─── Run Payroll Form ─────────────────────── */}
+      {/* ─── Import Payroll Form ──────────────────── */}
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
@@ -138,17 +138,16 @@ export default async function PayrollPage() {
               className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
               aria-hidden="true"
             >
-              <Calculator className="h-3.5 w-3.5" />
+              <FileSpreadsheet className="h-3.5 w-3.5" />
             </div>
-            Hitung Penggajian Bulan Baru
+            Impor Penggajian Bulan Baru
           </CardTitle>
           <p className="text-sm text-slate-500">
-            Pilih bulan dan tahun lalu klik Hitung Gaji. Proses ini dapat
-            diulang selama status masih DRAFT.
+            Unduh template, isi di Excel, lalu unggah kembali. Selama status DRAFT, file dapat di-impor ulang untuk menimpa data sebelumnya.
           </p>
         </CardHeader>
         <CardContent>
-          <RunPayrollForm />
+          <ImportPayrollForm />
         </CardContent>
       </Card>
 

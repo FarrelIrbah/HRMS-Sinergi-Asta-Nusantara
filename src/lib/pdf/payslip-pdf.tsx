@@ -9,427 +9,477 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PayslipData {
-  // Header
-  companyName: string;       // "PT Sinergi Asta Nusantara"
-  periodLabel: string;       // "Januari 2026"
-  // Employee info
+  companyName: string;
+  payrollCutoff: string; // e.g. "01 - 30 Apr 2026"
   employeeNik: string;
   employeeName: string;
-  position: string;
-  department: string;
+  jobPosition: string;
+  organization: string;
+  gradeLevel: string;
+  ptkpStatus: string;
+  npwp: string | null;
+
   // Earnings
-  baseSalary: number;
-  allowanceItems: { name: string; amount: number }[];
-  overtimePay: number;
-  thrAmount: number;
-  grossPay: number;
-  // BPJS deductions (employee portion)
-  bpjsKesEmp: number;
-  bpjsJhtEmp: number;
-  bpjsJpEmp: number;
-  // BPJS employer contribution (info only)
-  bpjsKesEmpr: number;
-  bpjsJhtEmpr: number;
-  bpjsJpEmpr: number;
-  bpjsJkk: number;
-  bpjsJkm: number;
-  // Tax
+  basicSalary: number;
+  tunjanganKomunikasi: number;
+  tunjanganKehadiran: number;
+  tunjanganJabatan: number;
+  tunjanganLainnya: number;
+  taxAllowance: number;
+  thr: number;
+  totalEarnings: number;
+
+  // Deductions
+  bpjsKesehatanEmployee: number;
+  jhtEmployee: number;
+  jaminanPensiunEmployee: number;
   pph21: number;
-  isTaxBorneByCompany: boolean;
-  // Totals
+  potonganKeterlambatan: number;
+  potonganKoperasi: number;
+  potonganLainnya: number;
   totalDeductions: number;
-  netPay: number;
+
+  takeHomePay: number;
+
+  // Benefits
+  jkk: number;
+  jkm: number;
+  jhtCompany: number;
+  jaminanPensiunCompany: number;
+  bpjsKesehatanCompany: number;
+  totalBenefits: number;
+
+  // Attendance
+  actualWorkingDay: number;
+  scheduleWorkingDay: number;
+  dayoff: number;
+  nationalHoliday: number;
+  companyHoliday: number;
+  specialHoliday: number;
+  attendanceCodes: string;
 }
 
-// ─── Formatting Helpers ───────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatRupiah(value: number): string {
-  // Indonesian format: Rp 1.234.567
-  const formatted = Math.round(value)
+function formatNumber(value: number): string {
+  return Math.round(value)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `Rp ${formatted}`;
+}
+
+function formatRupiah(value: number): string {
+  return `Rp${formatNumber(value)}`;
+}
+
+function formatDay(value: number): string {
+  return `${value}d`;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
+
+const COLORS = {
+  text: "#1f2937",
+  muted: "#6b7280",
+  subtle: "#9ca3af",
+  divider: "#e5e7eb",
+  thinDivider: "#f3f4f6",
+  red: "#dc2626",
+};
 
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 28,
-    color: "#1e293b",
+    paddingTop: 32,
+    paddingBottom: 32,
+    paddingHorizontal: 36,
+    color: COLORS.text,
   },
 
-  // Header
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: "#1e293b",
-    paddingBottom: 10,
+  // Top bar
+  confidentialRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 10,
+  },
+  confidentialText: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+    color: COLORS.red,
+  },
+
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 18,
   },
   companyName: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 13,
-    marginBottom: 2,
+    fontSize: 14,
   },
-  slipTitle: {
+  payslipTitle: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-    marginBottom: 2,
-  },
-  periodLabel: {
-    fontSize: 9,
-    color: "#475569",
-  },
-
-  // Employee info section
-  infoSection: {
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 8,
-  },
-  infoSectionTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 8,
-    color: "#64748b",
-    marginBottom: 6,
-    textTransform: "uppercase",
+    fontSize: 14,
     letterSpacing: 1,
   },
+
+  // Info grid
   infoGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    marginBottom: 18,
+  },
+  infoCol: {
+    flex: 1,
+    paddingRight: 12,
   },
   infoRow: {
     flexDirection: "row",
-    width: "50%",
     marginBottom: 3,
+    alignItems: "flex-start",
   },
   infoLabel: {
-    width: "45%",
-    color: "#64748b",
+    width: 80,
+    color: COLORS.muted,
   },
   infoSep: {
-    width: "5%",
-    color: "#64748b",
+    width: 8,
+    color: COLORS.muted,
   },
   infoValue: {
-    width: "50%",
-    fontFamily: "Helvetica-Bold",
-  },
-
-  // Tables (earnings and deductions)
-  tableSection: {
-    marginBottom: 10,
-  },
-  tableSectionTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 8,
-    color: "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  tableRow: {
-    flexDirection: "row",
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-  },
-  tableRowAlt: {
-    backgroundColor: "#f8fafc",
-  },
-  tableRowTotal: {
-    flexDirection: "row",
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    backgroundColor: "#1e293b",
-  },
-  tableRowTotalText: {
-    fontFamily: "Helvetica-Bold",
-    color: "white",
-  },
-  tableLabel: {
     flex: 1,
   },
-  tableAmount: {
-    width: 110,
-    textAlign: "right",
-  },
-  tableAmountTotal: {
-    width: 110,
-    textAlign: "right",
-    fontFamily: "Helvetica-Bold",
-    color: "white",
-  },
 
-  // Employer contributions (info box)
-  infoBox: {
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderStyle: "dashed",
-    padding: 8,
-    backgroundColor: "#f8fafc",
-  },
-  infoBoxTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 8,
-    color: "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  infoBoxRow: {
+  // Two column section
+  twoCol: {
     flexDirection: "row",
-    paddingVertical: 2,
-    paddingHorizontal: 4,
+    gap: 16,
   },
-  infoBoxLabel: {
+  col: {
     flex: 1,
-    color: "#475569",
-  },
-  infoBoxAmount: {
-    width: 110,
-    textAlign: "right",
-    color: "#475569",
   },
 
-  // Take-home pay box
-  netPayBox: {
-    borderWidth: 2,
-    borderColor: "#1e293b",
-    padding: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  netPayLabel: {
+  sectionTitle: {
     fontFamily: "Helvetica-Bold",
     fontSize: 10,
-  },
-  netPayAmount: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 12,
+    paddingBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.divider,
+    marginBottom: 6,
   },
 
-  // Footer
-  footer: {
+  lineItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  lineLabel: {
+    color: COLORS.text,
+  },
+  lineAmount: {
+    color: COLORS.text,
+    textAlign: "right",
+  },
+
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 6,
+    marginTop: 4,
     borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingTop: 8,
+    borderTopColor: COLORS.divider,
+  },
+  totalLabel: {
+    fontFamily: "Helvetica-Bold",
+  },
+  totalAmount: {
+    fontFamily: "Helvetica-Bold",
+    textAlign: "right",
+  },
+
+  // Take home pay
+  thpRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
+    marginTop: 12,
+    marginBottom: 22,
+    paddingTop: 12,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.divider,
+  },
+  thpLabel: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 13,
+    marginRight: 18,
+  },
+  thpAmount: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 14,
+  },
+
+  // Footer notes
+  footerNote: {
+    fontSize: 7,
+    color: COLORS.muted,
+    marginTop: 4,
+  },
+  footerSection: {
+    marginTop: 24,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.thinDivider,
   },
   footerText: {
-    fontSize: 7,
-    color: "#94a3b8",
-    textAlign: "center",
+    fontSize: 6.5,
+    color: COLORS.subtle,
+    marginBottom: 4,
+    lineHeight: 1.4,
   },
 });
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoSep}>:</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
+function MoneyLine({
+  label,
+  amount,
+  hideZero = false,
+}: {
+  label: string;
+  amount: number;
+  hideZero?: boolean;
+}) {
+  if (hideZero && amount === 0) return null;
+  return (
+    <View style={styles.lineItem}>
+      <Text style={styles.lineLabel}>{label}</Text>
+      <Text style={styles.lineAmount}>{formatNumber(amount)}</Text>
+    </View>
+  );
+}
+
+function DayLine({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={styles.lineItem}>
+      <Text style={styles.lineLabel}>{label}</Text>
+      <Text style={styles.lineAmount}>{formatDay(value)}</Text>
+    </View>
+  );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function PayslipDocument({ data }: { data: PayslipData }) {
-  const {
-    companyName,
-    periodLabel,
-    employeeNik,
-    employeeName,
-    position,
-    department,
-    baseSalary,
-    allowanceItems,
-    overtimePay,
-    thrAmount,
-    grossPay,
-    bpjsKesEmp,
-    bpjsJhtEmp,
-    bpjsJpEmp,
-    bpjsKesEmpr,
-    bpjsJhtEmpr,
-    bpjsJpEmpr,
-    bpjsJkk,
-    bpjsJkm,
-    pph21,
-    isTaxBorneByCompany,
-    totalDeductions,
-    netPay,
-  } = data;
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-
-        {/* ── Header ─────────────────────────────────────────────── */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.companyName}>{companyName}</Text>
-          <Text style={styles.slipTitle}>SLIP GAJI</Text>
-          <Text style={styles.periodLabel}>Periode: {periodLabel}</Text>
+        {/* ── Confidential banner ─────────────────────────────────── */}
+        <View style={styles.confidentialRow}>
+          <Text style={styles.confidentialText}>*CONFIDENTIAL</Text>
         </View>
 
-        {/* ── Employee Info ──────────────────────────────────────── */}
-        <View style={styles.infoSection}>
-          <Text style={styles.infoSectionTitle}>Informasi Karyawan</Text>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>NIK</Text>
-              <Text style={styles.infoSep}>:</Text>
-              <Text style={styles.infoValue}>{employeeNik}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Jabatan</Text>
-              <Text style={styles.infoSep}>:</Text>
-              <Text style={styles.infoValue}>{position}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Nama</Text>
-              <Text style={styles.infoSep}>:</Text>
-              <Text style={styles.infoValue}>{employeeName}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Departemen</Text>
-              <Text style={styles.infoSep}>:</Text>
-              <Text style={styles.infoValue}>{department}</Text>
-            </View>
+        {/* ── Title row ───────────────────────────────────────────── */}
+        <View style={styles.titleRow}>
+          <Text style={styles.companyName}>{data.companyName}</Text>
+          <Text style={styles.payslipTitle}>PAYSLIP</Text>
+        </View>
+
+        {/* ── Info grid ───────────────────────────────────────────── */}
+        <View style={styles.infoGrid}>
+          <View style={styles.infoCol}>
+            <InfoLine label="Payroll cut off" value={data.payrollCutoff} />
+            <InfoLine
+              label="ID / Name"
+              value={`${data.employeeNik} / ${data.employeeName}`}
+            />
+            <InfoLine label="Job position" value={data.jobPosition || "-"} />
+            <InfoLine label="Organization" value={data.organization || "-"} />
+          </View>
+          <View style={styles.infoCol}>
+            <InfoLine label="Grade / Level" value={data.gradeLevel || "-"} />
+            <InfoLine label="PTKP" value={data.ptkpStatus || "-"} />
+            <InfoLine label="NPWP" value={data.npwp || "-"} />
           </View>
         </View>
 
-        {/* ── Earnings Table ─────────────────────────────────────── */}
-        <View style={styles.tableSection}>
-          <Text style={styles.tableSectionTitle}>Penghasilan</Text>
-
-          {/* Gaji Pokok */}
-          <View style={styles.tableRow}>
-            <Text style={styles.tableLabel}>Gaji Pokok</Text>
-            <Text style={styles.tableAmount}>{formatRupiah(baseSalary)}</Text>
+        {/* ── Earnings & Deductions ───────────────────────────────── */}
+        <View style={styles.twoCol}>
+          {/* Earnings */}
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Earnings</Text>
+            <MoneyLine label="Basic Salary" amount={data.basicSalary} />
+            <MoneyLine
+              label="Tunjangan Komunikasi"
+              amount={data.tunjanganKomunikasi}
+              hideZero
+            />
+            <MoneyLine
+              label="Tunjangan Kehadiran"
+              amount={data.tunjanganKehadiran}
+              hideZero
+            />
+            <MoneyLine
+              label="Tunjangan Jabatan"
+              amount={data.tunjanganJabatan}
+              hideZero
+            />
+            <MoneyLine
+              label="Tunjangan Lainnya"
+              amount={data.tunjanganLainnya}
+              hideZero
+            />
+            <MoneyLine
+              label="Tax Allowance"
+              amount={data.taxAllowance}
+              hideZero
+            />
+            <MoneyLine label="THR" amount={data.thr} hideZero />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total earnings</Text>
+              <Text style={styles.totalAmount}>
+                {formatNumber(data.totalEarnings)}
+              </Text>
+            </View>
           </View>
 
-          {/* Allowance items */}
-          {allowanceItems.map((item, idx) => (
-            <View
-              key={idx}
-              style={[styles.tableRow, idx % 2 === 0 ? styles.tableRowAlt : {}]}
-            >
-              <Text style={styles.tableLabel}>{item.name}</Text>
-              <Text style={styles.tableAmount}>{formatRupiah(item.amount)}</Text>
+          {/* Deductions */}
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Deductions</Text>
+            <MoneyLine
+              label="BPJS Kesehatan Employee"
+              amount={data.bpjsKesehatanEmployee}
+              hideZero
+            />
+            <MoneyLine
+              label="JHT Employee"
+              amount={data.jhtEmployee}
+              hideZero
+            />
+            <MoneyLine
+              label="Jaminan Pensiun Employee"
+              amount={data.jaminanPensiunEmployee}
+              hideZero
+            />
+            <MoneyLine
+              label="Potongan Keterlambatan"
+              amount={data.potonganKeterlambatan}
+              hideZero
+            />
+            <MoneyLine
+              label="Potongan Koperasi"
+              amount={data.potonganKoperasi}
+              hideZero
+            />
+            <MoneyLine
+              label="Potongan Lainnya"
+              amount={data.potonganLainnya}
+              hideZero
+            />
+            <MoneyLine label="PPH 21" amount={data.pph21} hideZero />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total deductions</Text>
+              <Text style={styles.totalAmount}>
+                {formatNumber(data.totalDeductions)}
+              </Text>
             </View>
-          ))}
-
-          {/* Lembur (only if > 0) */}
-          {overtimePay > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Lembur</Text>
-              <Text style={styles.tableAmount}>{formatRupiah(overtimePay)}</Text>
-            </View>
-          )}
-
-          {/* THR (only if > 0) */}
-          {thrAmount > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>THR</Text>
-              <Text style={styles.tableAmount}>{formatRupiah(thrAmount)}</Text>
-            </View>
-          )}
-
-          {/* Total Bruto */}
-          <View style={styles.tableRowTotal}>
-            <Text style={[styles.tableLabel, styles.tableRowTotalText]}>
-              Total Penghasilan Bruto
-            </Text>
-            <Text style={styles.tableAmountTotal}>{formatRupiah(grossPay)}</Text>
           </View>
         </View>
 
-        {/* ── Deductions Table ───────────────────────────────────── */}
-        <View style={styles.tableSection}>
-          <Text style={styles.tableSectionTitle}>Potongan Karyawan</Text>
+        {/* ── Take Home Pay ───────────────────────────────────────── */}
+        <View style={styles.thpRow}>
+          <Text style={styles.thpLabel}>Take Home Pay</Text>
+          <Text style={styles.thpAmount}>{formatRupiah(data.takeHomePay)}</Text>
+        </View>
 
-          <View style={styles.tableRow}>
-            <Text style={styles.tableLabel}>BPJS Kesehatan (Karyawan)</Text>
-            <Text style={styles.tableAmount}>{formatRupiah(bpjsKesEmp)}</Text>
-          </View>
-          <View style={[styles.tableRow, styles.tableRowAlt]}>
-            <Text style={styles.tableLabel}>JHT Karyawan</Text>
-            <Text style={styles.tableAmount}>{formatRupiah(bpjsJhtEmp)}</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableLabel}>JP Karyawan</Text>
-            <Text style={styles.tableAmount}>{formatRupiah(bpjsJpEmp)}</Text>
-          </View>
-          <View style={[styles.tableRow, styles.tableRowAlt]}>
-            <Text style={styles.tableLabel}>
-              PPh 21{isTaxBorneByCompany ? " (Ditanggung Perusahaan)" : ""}
-            </Text>
-            <Text style={styles.tableAmount}>
-              {formatRupiah(isTaxBorneByCompany ? 0 : pph21)}
-            </Text>
+        {/* ── Benefits & Attendance ───────────────────────────────── */}
+        <View style={styles.twoCol}>
+          {/* Benefits */}
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Benefits*</Text>
+            <MoneyLine label="JKK" amount={data.jkk} hideZero />
+            <MoneyLine label="JKM" amount={data.jkm} hideZero />
+            <MoneyLine
+              label="JHT Company"
+              amount={data.jhtCompany}
+              hideZero
+            />
+            <MoneyLine
+              label="Jaminan Pensiun Company"
+              amount={data.jaminanPensiunCompany}
+              hideZero
+            />
+            <MoneyLine
+              label="BPJS Kesehatan Company"
+              amount={data.bpjsKesehatanCompany}
+              hideZero
+            />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total benefits</Text>
+              <Text style={styles.totalAmount}>
+                {formatNumber(data.totalBenefits)}
+              </Text>
+            </View>
           </View>
 
-          {/* Total Deductions */}
-          <View style={styles.tableRowTotal}>
-            <Text style={[styles.tableLabel, styles.tableRowTotalText]}>
-              Total Potongan
-            </Text>
-            <Text style={styles.tableAmountTotal}>
-              {formatRupiah(totalDeductions)}
-            </Text>
+          {/* Attendance Summary */}
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Attendance Summary</Text>
+            <DayLine
+              label="Actual Working Day"
+              value={data.actualWorkingDay}
+            />
+            <DayLine
+              label="Schedule Working Day"
+              value={data.scheduleWorkingDay}
+            />
+            <DayLine label="Dayoff" value={data.dayoff} />
+            <DayLine label="National Holiday" value={data.nationalHoliday} />
+            <DayLine label="Company Holiday" value={data.companyHoliday} />
+            <DayLine label="Special Holiday" value={data.specialHoliday} />
+            {data.attendanceCodes ? (
+              <View style={styles.lineItem}>
+                <Text style={styles.lineLabel}>Attendance/Time Off Code</Text>
+                <Text style={styles.lineAmount}>{data.attendanceCodes}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        {/* ── Employer Contributions Info ────────────────────────── */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoBoxTitle}>
-            Kontribusi Perusahaan — Informasi
+        {/* ── Footer ──────────────────────────────────────────────── */}
+        <View style={styles.footerSection}>
+          <Text style={styles.footerNote}>
+            *These are the benefits you&apos;ll get from the company, but not
+            included in your take-home pay (THP).
           </Text>
-          <View style={styles.infoBoxRow}>
-            <Text style={styles.infoBoxLabel}>BPJS Kesehatan (Perusahaan)</Text>
-            <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsKesEmpr)}</Text>
-          </View>
-          <View style={styles.infoBoxRow}>
-            <Text style={styles.infoBoxLabel}>JHT Perusahaan</Text>
-            <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsJhtEmpr)}</Text>
-          </View>
-          <View style={styles.infoBoxRow}>
-            <Text style={styles.infoBoxLabel}>JP Perusahaan</Text>
-            <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsJpEmpr)}</Text>
-          </View>
-          <View style={styles.infoBoxRow}>
-            <Text style={styles.infoBoxLabel}>JKK</Text>
-            <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsJkk)}</Text>
-          </View>
-          <View style={styles.infoBoxRow}>
-            <Text style={styles.infoBoxLabel}>JKM</Text>
-            <Text style={styles.infoBoxAmount}>{formatRupiah(bpjsJkm)}</Text>
-          </View>
-          {isTaxBorneByCompany && (
-            <View style={styles.infoBoxRow}>
-              <Text style={styles.infoBoxLabel}>PPh 21 (Ditanggung)</Text>
-              <Text style={styles.infoBoxAmount}>{formatRupiah(pph21)}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* ── Take-home Pay ──────────────────────────────────────── */}
-        <View style={styles.netPayBox}>
-          <Text style={styles.netPayLabel}>
-            GAJI BERSIH (TAKE HOME PAY)
+          <Text style={[styles.footerText, { marginTop: 6 }]}>
+            THIS IS COMPUTER GENERATED PRINTOUT AND NO SIGNATURE IS REQUIRED
           </Text>
-          <Text style={styles.netPayAmount}>{formatRupiah(netPay)}</Text>
-        </View>
-
-        {/* ── Footer ─────────────────────────────────────────────── */}
-        <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Dokumen ini digenerate secara otomatis oleh sistem. Tidak memerlukan tanda tangan.
+            PLEASE NOTE THAT THE CONTENTS OF THIS STATEMENT SHOULD BE TREATED
+            WITH ABSOLUTE CONFIDENTIALITY EXCEPT TO THE EXTENT YOU ARE REQUIRED
+            TO MAKE DISCLOSURE FOR ANY TAX, LEGAL, OR REGULATORY PURPOSES. ANY
+            BREACH OF THIS CONFIDENTIALITY OBLIGATION WILL BE DEALT WITH
+            SERIOUSLY, WHICH MAY INVOLVE DISCIPLINARY ACTION BEING TAKEN.
+          </Text>
+          <Text style={styles.footerText}>
+            HARAP DIPERHATIKAN, ISI PERNYATAAN INI ADALAH RAHASIA KECUALI ANDA
+            DIMINTA UNTUK MENGUNGKAPKANNYA UNTUK KEPERLUAN PAJAK, HUKUM, ATAU
+            KEPENTINGAN PEMERINTAH. SETIAP PELANGGARAN ATAS KEWAJIBAN MENJAGA
+            KERAHASIAAN INI AKAN DIKENAKAN SANKSI, YANG MUNGKIN BERUPA TINDAKAN
+            KEDISIPLINAN.
           </Text>
         </View>
-
       </Page>
     </Document>
   );

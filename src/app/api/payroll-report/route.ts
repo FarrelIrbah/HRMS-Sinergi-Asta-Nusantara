@@ -16,11 +16,7 @@ export async function GET(request: NextRequest) {
 
   const run = await prisma.payrollRun.findUnique({
     where: { id: runId },
-    include: {
-      entries: {
-        orderBy: { employeeName: "asc" },
-      },
-    },
+    include: { entries: { orderBy: { employeeName: "asc" } } },
   });
   if (!run) return new Response("Not Found", { status: 404 });
 
@@ -44,71 +40,122 @@ export async function GET(request: NextRequest) {
     "No",
     "NIK",
     "Nama Karyawan",
-    "Gaji Pokok",
-    "Tunjangan",
-    "Lembur",
+    "Job Position",
+    "Organization",
+    "Grade / Level",
+    "PTKP",
+    "NPWP",
+    "Basic Salary",
+    "Tunjangan Komunikasi",
+    "Tunjangan Kehadiran",
+    "Tunjangan Jabatan",
+    "Tunjangan Lainnya",
+    "Tax Allowance",
     "THR",
-    "Gaji Bruto",
-    "BPJS Kes (Kryw)",
-    "JHT (Kryw)",
-    "JP (Kryw)",
-    "PPh 21",
-    "Total Potongan",
-    "Gaji Bersih",
-    "BPJS Kes (Prshn)",
-    "JHT (Prshn)",
-    "JP (Prshn)",
+    "Total Earnings",
+    "BPJS Kesehatan Employee",
+    "JHT Employee",
+    "Jaminan Pensiun Employee",
+    "PPH 21",
+    "Potongan Keterlambatan",
+    "Potongan Koperasi",
+    "Potongan Lainnya",
+    "Total Deductions",
+    "Take Home Pay",
     "JKK",
     "JKM",
+    "JHT Company",
+    "Jaminan Pensiun Company",
+    "BPJS Kesehatan Company",
+    "Total Benefits",
+    "Actual Working Day",
+    "Schedule Working Day",
+    "Dayoff",
+    "National Holiday",
+    "Company Holiday",
+    "Special Holiday",
+    "Attendance Codes",
+  ];
+
+  const numericColumns: (keyof typeof run.entries[number])[] = [
+    "basicSalary",
+    "tunjanganKomunikasi",
+    "tunjanganKehadiran",
+    "tunjanganJabatan",
+    "tunjanganLainnya",
+    "taxAllowance",
+    "thr",
+    "totalEarnings",
+    "bpjsKesehatanEmployee",
+    "jhtEmployee",
+    "jaminanPensiunEmployee",
+    "pph21",
+    "potonganKeterlambatan",
+    "potonganKoperasi",
+    "potonganLainnya",
+    "totalDeductions",
+    "takeHomePay",
+    "jkk",
+    "jkm",
+    "jhtCompany",
+    "jaminanPensiunCompany",
+    "bpjsKesehatanCompany",
+    "totalBenefits",
   ];
 
   const rows = run.entries.map((e, i) => [
     i + 1,
     e.employeeNik,
     e.employeeName,
-    Number(e.baseSalary),
-    Number(e.totalAllowances),
-    Number(e.overtimePay),
-    Number(e.thrAmount),
-    Number(e.grossPay),
-    Number(e.bpjsKesEmp),
-    Number(e.bpjsJhtEmp),
-    Number(e.bpjsJpEmp),
+    e.jobPosition,
+    e.organization,
+    e.gradeLevel,
+    e.ptkpStatus,
+    e.npwp ?? "",
+    Number(e.basicSalary),
+    Number(e.tunjanganKomunikasi),
+    Number(e.tunjanganKehadiran),
+    Number(e.tunjanganJabatan),
+    Number(e.tunjanganLainnya),
+    Number(e.taxAllowance),
+    Number(e.thr),
+    Number(e.totalEarnings),
+    Number(e.bpjsKesehatanEmployee),
+    Number(e.jhtEmployee),
+    Number(e.jaminanPensiunEmployee),
     Number(e.pph21),
+    Number(e.potonganKeterlambatan),
+    Number(e.potonganKoperasi),
+    Number(e.potonganLainnya),
     Number(e.totalDeductions),
-    Number(e.netPay),
-    Number(e.bpjsKesEmpr),
-    Number(e.bpjsJhtEmpr),
-    Number(e.bpjsJpEmpr),
-    Number(e.bpjsJkk),
-    Number(e.bpjsJkm),
+    Number(e.takeHomePay),
+    Number(e.jkk),
+    Number(e.jkm),
+    Number(e.jhtCompany),
+    Number(e.jaminanPensiunCompany),
+    Number(e.bpjsKesehatanCompany),
+    Number(e.totalBenefits),
+    e.actualWorkingDay,
+    e.scheduleWorkingDay,
+    e.dayoff,
+    e.nationalHoliday,
+    e.companyHoliday,
+    e.specialHoliday,
+    e.attendanceCodes,
   ]);
 
-  const totalsRow = [
-    "",
-    "",
-    "TOTAL",
-    run.entries.reduce((s, e) => s + Number(e.baseSalary), 0),
-    run.entries.reduce((s, e) => s + Number(e.totalAllowances), 0),
-    run.entries.reduce((s, e) => s + Number(e.overtimePay), 0),
-    run.entries.reduce((s, e) => s + Number(e.thrAmount), 0),
-    run.entries.reduce((s, e) => s + Number(e.grossPay), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsKesEmp), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJhtEmp), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJpEmp), 0),
-    run.entries.reduce((s, e) => s + Number(e.pph21), 0),
-    run.entries.reduce((s, e) => s + Number(e.totalDeductions), 0),
-    run.entries.reduce((s, e) => s + Number(e.netPay), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsKesEmpr), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJhtEmpr), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJpEmpr), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJkk), 0),
-    run.entries.reduce((s, e) => s + Number(e.bpjsJkm), 0),
-  ];
+  const totalsRow: (string | number)[] = ["", "", "TOTAL", "", "", "", "", ""];
+  for (const col of numericColumns) {
+    totalsRow.push(
+      run.entries.reduce((s, e) => s + Number(e[col] as unknown as number), 0)
+    );
+  }
+  // Pad attendance columns
+  for (let i = 0; i < 7; i++) totalsRow.push("");
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    [`Laporan Penggajian — ${periodLabel}`],
+    [`Rekap Penggajian — ${periodLabel}`],
     [`Status: ${run.status === "FINALIZED" ? "Difinalisasi" : "Draft"}`],
     [],
     headers,
@@ -120,13 +167,13 @@ export async function GET(request: NextRequest) {
     { wch: 4 },
     { wch: 14 },
     { wch: 28 },
-    ...Array(16).fill({ wch: 16 }),
+    ...Array(headers.length - 3).fill({ wch: 18 }),
   ];
 
-  XLSX.utils.book_append_sheet(wb, ws, `Penggajian ${periodLabel}`);
+  XLSX.utils.book_append_sheet(wb, ws, `Penggajian ${periodLabel}`.slice(0, 31));
 
   const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
-  const fileName = `laporan-penggajian-${periodLabel.replace(" ", "-")}.xlsx`;
+  const fileName = `rekap-penggajian-${periodLabel.replace(" ", "-")}.xlsx`;
 
   return new Response(new Uint8Array(buf), {
     status: 200,

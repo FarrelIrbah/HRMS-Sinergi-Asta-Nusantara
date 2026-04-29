@@ -394,30 +394,60 @@ model PayrollRun {
 }
 
 model PayrollEntry {
-  id               String   @id @default(cuid())
-  payrollRunId     String
-  employeeId       String
-  employeeNik      String
-  employeeName     String
-  baseSalary       Decimal  @db.Decimal(15, 2)
-  totalAllowances  Decimal  @db.Decimal(15, 2)
-  overtimePay      Decimal  @db.Decimal(15, 2)
-  absenceDeduction Decimal  @db.Decimal(15, 2)
-  thrAmount        Decimal  @db.Decimal(15, 2)  @default(0)
-  grossPay         Decimal  @db.Decimal(15, 2)
-  bpjsKesEmp       Decimal  @db.Decimal(15, 2)
-  bpjsKesEmpr      Decimal  @db.Decimal(15, 2)
-  bpjsJhtEmp       Decimal  @db.Decimal(15, 2)
-  bpjsJhtEmpr      Decimal  @db.Decimal(15, 2)
-  bpjsJpEmp        Decimal  @db.Decimal(15, 2)
-  bpjsJpEmpr       Decimal  @db.Decimal(15, 2)
-  bpjsJkk          Decimal  @db.Decimal(15, 2)
-  bpjsJkm          Decimal  @db.Decimal(15, 2)
-  pph21            Decimal  @db.Decimal(15, 2)
-  totalDeductions  Decimal  @db.Decimal(15, 2)
-  netPay           Decimal  @db.Decimal(15, 2)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id           String @id @default(cuid())
+  payrollRunId String
+  employeeId   String
+
+  // Employee snapshot (saat import)
+  employeeNik  String
+  employeeName String
+  jobPosition  String  @default("")
+  organization String  @default("")
+  gradeLevel   String  @default("")
+  ptkpStatus   String  @default("")
+  npwp         String?
+
+  // Earnings
+  basicSalary         Decimal @db.Decimal(15, 2) @default(0)
+  tunjanganKomunikasi Decimal @db.Decimal(15, 2) @default(0)
+  tunjanganKehadiran  Decimal @db.Decimal(15, 2) @default(0)
+  tunjanganJabatan    Decimal @db.Decimal(15, 2) @default(0)
+  tunjanganLainnya    Decimal @db.Decimal(15, 2) @default(0)
+  taxAllowance        Decimal @db.Decimal(15, 2) @default(0)
+  thr                 Decimal @db.Decimal(15, 2) @default(0)
+  totalEarnings       Decimal @db.Decimal(15, 2)
+
+  // Deductions
+  bpjsKesehatanEmployee  Decimal @db.Decimal(15, 2) @default(0)
+  jhtEmployee            Decimal @db.Decimal(15, 2) @default(0)
+  jaminanPensiunEmployee Decimal @db.Decimal(15, 2) @default(0)
+  pph21                  Decimal @db.Decimal(15, 2) @default(0)
+  potonganKeterlambatan  Decimal @db.Decimal(15, 2) @default(0)
+  potonganKoperasi       Decimal @db.Decimal(15, 2) @default(0)
+  potonganLainnya        Decimal @db.Decimal(15, 2) @default(0)
+  totalDeductions        Decimal @db.Decimal(15, 2)
+
+  takeHomePay Decimal @db.Decimal(15, 2)
+
+  // Benefits (informational — porsi perusahaan, tidak masuk THP)
+  jkk                   Decimal @db.Decimal(15, 2) @default(0)
+  jkm                   Decimal @db.Decimal(15, 2) @default(0)
+  jhtCompany            Decimal @db.Decimal(15, 2) @default(0)
+  jaminanPensiunCompany Decimal @db.Decimal(15, 2) @default(0)
+  bpjsKesehatanCompany  Decimal @db.Decimal(15, 2) @default(0)
+  totalBenefits         Decimal @db.Decimal(15, 2)
+
+  // Attendance summary
+  actualWorkingDay   Int    @default(0)
+  scheduleWorkingDay Int    @default(0)
+  dayoff             Int    @default(0)
+  nationalHoliday    Int    @default(0)
+  companyHoliday     Int    @default(0)
+  specialHoliday     Int    @default(0)
+  attendanceCodes    String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
   employee   Employee   @relation(fields: [employeeId], references: [id])

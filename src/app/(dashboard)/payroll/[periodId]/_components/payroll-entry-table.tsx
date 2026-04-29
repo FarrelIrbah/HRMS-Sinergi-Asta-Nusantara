@@ -13,23 +13,12 @@ export interface SerializedPayrollEntry {
   employeeId: string;
   employeeNik: string;
   employeeName: string;
-  baseSalary: number;
-  totalAllowances: number;
-  overtimePay: number;
-  absenceDeduction: number;
-  thrAmount: number;
-  grossPay: number;
-  bpjsKesEmp: number;
-  bpjsKesEmpr: number;
-  bpjsJhtEmp: number;
-  bpjsJhtEmpr: number;
-  bpjsJpEmp: number;
-  bpjsJpEmpr: number;
-  bpjsJkk: number;
-  bpjsJkm: number;
-  pph21: number;
+  jobPosition: string;
+  organization: string;
+  totalEarnings: number;
   totalDeductions: number;
-  netPay: number;
+  totalBenefits: number;
+  takeHomePay: number;
 }
 
 interface PayrollEntryTableProps {
@@ -38,8 +27,6 @@ interface PayrollEntryTableProps {
   runStatus: string;
   isHRAdmin: boolean;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatRupiah(value: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -50,11 +37,7 @@ function formatRupiah(value: number): string {
   }).format(value);
 }
 
-// ─── Columns ──────────────────────────────────────────────────────────────────
-
-function buildColumns(
-  runStatus: string
-): ColumnDef<SerializedPayrollEntry>[] {
+function buildColumns(runStatus: string): ColumnDef<SerializedPayrollEntry>[] {
   return [
     {
       accessorKey: "employeeNik",
@@ -75,65 +58,26 @@ function buildColumns(
         </span>
       ),
       cell: ({ row }) => (
-        <span className="font-medium text-slate-900">
-          {row.original.employeeName}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-medium text-slate-900">
+            {row.original.employeeName}
+          </span>
+          <span className="text-[11px] text-slate-500">
+            {row.original.jobPosition} · {row.original.organization}
+          </span>
+        </div>
       ),
     },
     {
-      accessorKey: "baseSalary",
+      accessorKey: "totalEarnings",
       header: () => (
         <span className="text-xs font-semibold text-slate-600">
-          Gaji Pokok
+          Total Earnings
         </span>
       ),
       cell: ({ row }) => (
         <span className="tabular-nums text-slate-700">
-          {formatRupiah(row.original.baseSalary)}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "totalAllowances",
-      header: () => (
-        <span className="text-xs font-semibold text-slate-600">Tunjangan</span>
-      ),
-      cell: ({ row }) => (
-        <span className="tabular-nums text-slate-700">
-          {formatRupiah(row.original.totalAllowances)}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "overtimePay",
-      header: () => (
-        <span className="text-xs font-semibold text-slate-600">Lembur</span>
-      ),
-      cell: ({ row }) => (
-        <span className="tabular-nums text-slate-700">
-          {formatRupiah(row.original.overtimePay)}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "thrAmount",
-      header: () => (
-        <span className="text-xs font-semibold text-slate-600">THR</span>
-      ),
-      cell: ({ row }) => (
-        <span className="tabular-nums text-slate-700">
-          {formatRupiah(row.original.thrAmount)}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "grossPay",
-      header: () => (
-        <span className="text-xs font-semibold text-slate-600">Gaji Bruto</span>
-      ),
-      cell: ({ row }) => (
-        <span className="font-semibold tabular-nums text-slate-900">
-          {formatRupiah(row.original.grossPay)}
+          {formatRupiah(row.original.totalEarnings)}
         </span>
       ),
     },
@@ -141,7 +85,7 @@ function buildColumns(
       accessorKey: "totalDeductions",
       header: () => (
         <span className="text-xs font-semibold text-slate-600">
-          Total Potongan
+          Total Deductions
         </span>
       ),
       cell: ({ row }) => (
@@ -151,13 +95,28 @@ function buildColumns(
       ),
     },
     {
-      accessorKey: "netPay",
+      accessorKey: "takeHomePay",
       header: () => (
-        <span className="text-xs font-semibold text-slate-600">Gaji Bersih</span>
+        <span className="text-xs font-semibold text-slate-600">
+          Take Home Pay
+        </span>
       ),
       cell: ({ row }) => (
         <span className="font-semibold tabular-nums text-emerald-700">
-          {formatRupiah(row.original.netPay)}
+          {formatRupiah(row.original.takeHomePay)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "totalBenefits",
+      header: () => (
+        <span className="text-xs font-semibold text-slate-600">
+          Benefits (Info)
+        </span>
+      ),
+      cell: ({ row }) => (
+        <span className="tabular-nums text-slate-500">
+          {formatRupiah(row.original.totalBenefits)}
         </span>
       ),
     },
@@ -187,6 +146,7 @@ function buildColumns(
             size="sm"
             disabled
             className="gap-1.5 border-slate-200 text-xs"
+            title="Finalisasi periode untuk mengaktifkan unduhan"
           >
             <FileDown className="h-3.5 w-3.5" aria-hidden="true" />
             Unduh
@@ -195,8 +155,6 @@ function buildColumns(
     },
   ];
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function PayrollEntryTable({
   entries,
@@ -218,7 +176,7 @@ export function PayrollEntryTable({
           </div>
           <div>
             <p className="text-base font-semibold text-slate-900">
-              Detail Gaji Karyawan
+              Detail Penggajian
             </p>
             <p className="text-xs text-slate-500">
               {entries.length} karyawan pada periode ini

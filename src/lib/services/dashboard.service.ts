@@ -405,7 +405,7 @@ export async function getSuperAdminDashboardData(): Promise<SuperAdminDashboardD
       orderBy: [{ year: "desc" }, { month: "desc" }],
       take: 6,
       include: {
-        entries: { select: { netPay: true } },
+        entries: { select: { takeHomePay: true } },
       },
     }),
     prisma.payrollRun.findUnique({
@@ -484,7 +484,8 @@ export async function getSuperAdminDashboardData(): Promise<SuperAdminDashboardD
   const payrollTrend = payrollRuns
     .map((run) => {
       const total = run.entries.reduce(
-        (sum, e) => sum + Number(e.netPay),
+        (sum: number, e: { takeHomePay: { toString: () => string } }) =>
+          sum + Number(e.takeHomePay),
         0,
       )
       return {
@@ -729,7 +730,7 @@ export async function getHrAdminDashboardData(): Promise<HrAdminDashboardData> {
       select: {
         status: true,
         _count: { select: { entries: true } },
-        entries: { select: { netPay: true } },
+        entries: { select: { takeHomePay: true } },
       },
     }),
     prisma.department.findMany({
@@ -841,7 +842,11 @@ export async function getHrAdminDashboardData(): Promise<HrAdminDashboardData> {
     }))
 
   const payrollNetTotal = currentPayrollRun
-    ? currentPayrollRun.entries.reduce((s, x) => s + Number(x.netPay), 0)
+    ? currentPayrollRun.entries.reduce(
+        (s: number, x: { takeHomePay: { toString: () => string } }) =>
+          s + Number(x.takeHomePay),
+        0,
+      )
     : 0
 
   return {
@@ -1344,7 +1349,7 @@ export async function getEmployeeDashboardData(
           month: latestPayrollEntry.payrollRun.month,
           year: latestPayrollEntry.payrollRun.year,
           monthLabel: `${MONTH_LABELS_ID[latestPayrollEntry.payrollRun.month - 1]} ${latestPayrollEntry.payrollRun.year}`,
-          netPay: Number(latestPayrollEntry.netPay),
+          netPay: Number(latestPayrollEntry.takeHomePay),
           status: latestPayrollEntry.payrollRun.status,
         }
       : null,

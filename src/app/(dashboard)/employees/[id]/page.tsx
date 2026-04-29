@@ -25,7 +25,6 @@ import {
   getAllDepartments,
   getAllPositions,
 } from "@/lib/services/master-data.service";
-import { prisma } from "@/lib/prisma";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,47 +94,6 @@ export default async function EmployeeDetailPage({
     getAllDepartments(),
     getAllPositions(),
   ]);
-
-  let salaryData:
-    | {
-        baseSalary: number;
-        allowances: {
-          id: string;
-          name: string;
-          amount: number;
-          isFixed: boolean;
-        }[];
-      }
-    | undefined;
-
-  if (role === "HR_ADMIN" || role === "SUPER_ADMIN") {
-    const empSalary = await prisma.employee.findUnique({
-      where: { id },
-      select: {
-        baseSalary: true,
-        allowances: {
-          select: {
-            id: true,
-            name: true,
-            amount: true,
-            isFixed: true,
-          },
-        },
-      },
-    });
-
-    if (empSalary) {
-      salaryData = {
-        baseSalary: Number(empSalary.baseSalary),
-        allowances: empSalary.allowances.map((a) => ({
-          id: a.id,
-          name: a.name,
-          amount: Number(a.amount),
-          isFixed: a.isFixed,
-        })),
-      };
-    }
-  }
 
   const serializedEmployee = {
     ...employee,
@@ -330,7 +288,6 @@ export default async function EmployeeDetailPage({
         mode={mode}
         departments={departments}
         positions={positions}
-        salaryData={salaryData}
       />
     </div>
   );
