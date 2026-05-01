@@ -8,7 +8,6 @@ import {
   Plus,
   CalendarDays,
   BadgeDollarSign,
-  Loader2,
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -264,31 +263,24 @@ export function LeaveTypeTab() {
         />
       </section>
 
-      <div className="flex justify-end">
-        <Button
-          onClick={handleCreate}
-          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Tambah Jenis Cuti
-        </Button>
-      </div>
-
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-4 md:p-6">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              Memuat data jenis cuti…
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={leaveTypes}
-              searchKey="name"
-              searchPlaceholder="Cari jenis cuti..."
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={leaveTypes}
+            searchKey="name"
+            searchPlaceholder="Cari jenis cuti..."
+            loading={loading}
+            actions={
+              <Button
+                onClick={handleCreate}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Tambah Jenis Cuti
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
 

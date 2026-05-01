@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryState } from "nuqs";
 import { Building2, Briefcase, MapPin, CalendarDays } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,30 @@ import { DepartmentTab } from "./department-tab";
 import { PositionTab } from "./position-tab";
 import { OfficeLocationTab } from "./office-location-tab";
 import { LeaveTypeTab } from "./leave-type-tab";
+
+function PersistentTabContent({
+  value,
+  activeValue,
+  children,
+}: {
+  value: string;
+  activeValue: string;
+  children: ReactNode;
+}) {
+  const [hasMounted, setHasMounted] = useState(value === activeValue);
+
+  useEffect(() => {
+    if (value === activeValue && !hasMounted) {
+      setHasMounted(true);
+    }
+  }, [value, activeValue, hasMounted]);
+
+  return (
+    <TabsContent value={value} forceMount className="mt-0 data-[state=inactive]:hidden">
+      {hasMounted ? children : null}
+    </TabsContent>
+  );
+}
 
 export function MasterDataTabs() {
   const [tab, setTab] = useQueryState("tab", { defaultValue: "departments" });
@@ -44,21 +69,21 @@ export function MasterDataTabs() {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="departments" className="mt-0">
+      <PersistentTabContent value="departments" activeValue={tab}>
         <DepartmentTab />
-      </TabsContent>
+      </PersistentTabContent>
 
-      <TabsContent value="positions" className="mt-0">
+      <PersistentTabContent value="positions" activeValue={tab}>
         <PositionTab />
-      </TabsContent>
+      </PersistentTabContent>
 
-      <TabsContent value="office-locations" className="mt-0">
+      <PersistentTabContent value="office-locations" activeValue={tab}>
         <OfficeLocationTab />
-      </TabsContent>
+      </PersistentTabContent>
 
-      <TabsContent value="leave-types" className="mt-0">
+      <PersistentTabContent value="leave-types" activeValue={tab}>
         <LeaveTypeTab />
-      </TabsContent>
+      </PersistentTabContent>
     </Tabs>
   );
 }

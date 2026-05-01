@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import {
-  Pencil,
-  Trash2,
-  Plus,
-  Briefcase,
-  Building2,
-  Loader2,
-} from "lucide-react";
+import { Pencil, Trash2, Plus, Briefcase, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -205,31 +198,24 @@ export function PositionTab() {
         />
       </section>
 
-      <div className="flex justify-end">
-        <Button
-          onClick={handleCreate}
-          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Tambah Jabatan
-        </Button>
-      </div>
-
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-4 md:p-6">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              Memuat data jabatan…
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={positions}
-              searchKey="name"
-              searchPlaceholder="Cari jabatan..."
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={positions}
+            searchKey="name"
+            searchPlaceholder="Cari jabatan..."
+            loading={loading}
+            actions={
+              <Button
+                onClick={handleCreate}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Tambah Jabatan
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
 

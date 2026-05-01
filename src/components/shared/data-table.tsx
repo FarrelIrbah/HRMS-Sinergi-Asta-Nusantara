@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
 
 interface DataTableProps<TData, TValue> {
@@ -26,6 +27,9 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   searchKey?: string;
   searchPlaceholder?: string;
+  actions?: ReactNode;
+  loading?: boolean;
+  skeletonRows?: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -33,6 +37,9 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   searchPlaceholder,
+  actions,
+  loading = false,
+  skeletonRows = 5,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -53,20 +60,31 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const showToolbar = Boolean(searchKey) || Boolean(actions);
+
   return (
     <div className="space-y-4">
-      {searchKey && (
-        <div className="flex items-center">
-          <Input
-            placeholder={searchPlaceholder || "Cari..."}
-            value={
-              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+      {showToolbar && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {searchKey ? (
+            <Input
+              placeholder={searchPlaceholder || "Cari..."}
+              value={
+                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn(searchKey)?.setFilterValue(event.target.value)
+              }
+              className="w-full sm:max-w-sm"
+              disabled={loading}
+              aria-label={searchPlaceholder || "Cari"}
+            />
+          ) : (
+            <div />
+          )}
+          {actions ? (
+            <div className="flex items-center justify-end gap-2">{actions}</div>
+          ) : null}
         </div>
       )}
       <div className="rounded-md border">
@@ -88,7 +106,17 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              Array.from({ length: skeletonRows }).map((_, rowIdx) => (
+                <TableRow key={`skeleton-${rowIdx}`}>
+                  {columns.map((_col, colIdx) => (
+                    <TableCell key={`skeleton-${rowIdx}-${colIdx}`}>
+                      <Skeleton className="h-4 w-full max-w-[180px] bg-slate-200/70" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -117,7 +145,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {!loading && <DataTablePagination table={table} />}
     </div>
   );
 }
