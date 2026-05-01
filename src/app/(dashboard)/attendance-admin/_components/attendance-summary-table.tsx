@@ -161,6 +161,7 @@ export function AttendanceSummaryTable({
                           <ManualRecordDialog
                             employees={employees}
                             defaultEmployeeId={employee.id}
+                            compact
                           />
                         )}
                       </div>

@@ -99,7 +99,16 @@ export function SummaryTile({
             </p>
             <div className="flex items-baseline gap-1.5">
               <span
-                className="truncate text-2xl font-bold tabular-nums leading-tight tracking-tight text-slate-900"
+                className={cn(
+                  "font-bold tabular-nums leading-[1.15] tracking-tight text-slate-900",
+                  // Numeric values: keep tight single-line with truncate.
+                  // String values: allow wrap to 2 lines + scale-down for long ones to avoid clipping.
+                  typeof value === "number"
+                    ? "truncate text-2xl"
+                    : (value as string).length > 8
+                      ? "line-clamp-2 [overflow-wrap:anywhere] text-xl"
+                      : "line-clamp-2 [overflow-wrap:anywhere] text-2xl"
+                )}
                 title={title ?? String(formatted)}
               >
                 {formatted}
