@@ -96,7 +96,7 @@ export default async function LeaveManagePage({
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Halaman kelola cuti"
     >
       {/* ─── Header ────────────────────────────────── */}

@@ -123,7 +123,7 @@ export function LeaveHistoryTable({ requests }: LeaveHistoryTableProps) {
           </div>
         ) : (
           <div className="rounded-md border border-slate-200">
-            <Table>
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                   <TableHead className="text-xs font-semibold text-slate-600">

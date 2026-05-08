@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -130,15 +130,21 @@ export function CreateEmployeeForm({
   positions,
 }: CreateEmployeeFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+
+  const prefillFullName = searchParams.get("fullName") ?? "";
+  const prefillEmail = searchParams.get("email") ?? "";
+  const prefillPhone = searchParams.get("phone") ?? "";
+  const prefillDepartmentId = searchParams.get("departmentId") ?? "";
 
   const form = useForm<CreateEmployeeInput>({
     resolver: zodResolver(createEmployeeSchema) as Resolver<CreateEmployeeInput>,
     defaultValues: {
-      namaLengkap: "",
-      email: "",
+      namaLengkap: prefillFullName,
+      email: prefillEmail,
       initialPassword: "",
-      departmentId: "",
+      departmentId: prefillDepartmentId,
       positionId: "",
       contractType: undefined,
       joinDate: undefined,
@@ -149,7 +155,7 @@ export function CreateEmployeeForm({
       statusPernikahan: undefined,
       agama: undefined,
       alamat: "",
-      nomorHp: "",
+      nomorHp: prefillPhone,
       npwp: "",
       ptkpStatus: undefined,
       bpjsKesehatanNo: "",

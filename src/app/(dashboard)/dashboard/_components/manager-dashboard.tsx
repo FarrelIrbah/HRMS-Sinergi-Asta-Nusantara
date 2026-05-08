@@ -114,7 +114,7 @@ export function ManagerDashboard({ data, name }: ManagerDashboardProps) {
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Dashboard Manager"
     >
       <section
@@ -168,7 +168,7 @@ export function ManagerDashboard({ data, name }: ManagerDashboardProps) {
 
       <section
         aria-label="Statistik tim"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         <SummaryTile
           icon={Users2}

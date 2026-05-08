@@ -21,8 +21,8 @@ export function DataTablePagination<TData>({
   pageSizeOptions = [25, 50],
 }: DataTablePaginationProps<TData>) {
   return (
-    <div className="flex items-center justify-between px-2">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-xs text-muted-foreground sm:text-sm">
         Menampilkan{" "}
         {table.getFilteredRowModel().rows.length > 0
           ? table.getState().pagination.pageIndex *
@@ -37,9 +37,10 @@ export function DataTablePagination<TData>({
         )}{" "}
         dari {table.getFilteredRowModel().rows.length} data
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end sm:gap-4">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium">Baris per halaman</p>
+          <p className="hidden text-sm font-medium sm:block">Baris per halaman</p>
+          <p className="text-xs font-medium sm:hidden">Baris</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
@@ -64,17 +65,19 @@ export function DataTablePagination<TData>({
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            aria-label="Halaman sebelumnya"
           >
             <ChevronLeft className="h-4 w-4" />
-            Sebelumnya
+            <span className="hidden sm:inline">Sebelumnya</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            aria-label="Halaman selanjutnya"
           >
-            Selanjutnya
+            <span className="hidden sm:inline">Selanjutnya</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

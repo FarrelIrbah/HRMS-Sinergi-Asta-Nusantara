@@ -36,7 +36,7 @@ export default async function AttendancePage() {
 
   if (!employee) {
     return (
-      <div className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6">
+      <div className="space-y-6">
         <header className="flex items-center gap-2">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm"
@@ -101,7 +101,7 @@ export default async function AttendancePage() {
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Halaman absensi"
     >
       {/* ─── Header ────────────────────────────────── */}

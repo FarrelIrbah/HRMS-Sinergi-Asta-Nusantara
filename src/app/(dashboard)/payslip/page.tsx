@@ -83,7 +83,7 @@ export default async function PayslipPage() {
 
     return (
       <div
-        className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+        className="space-y-6"
         aria-label="Halaman slip gaji karyawan"
       >
         {/* Header */}
@@ -246,7 +246,7 @@ export default async function PayslipPage() {
   if (!employee) {
     return (
       <div
-        className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+        className="space-y-6"
         aria-label="Halaman slip gaji"
       >
         <header>
@@ -310,7 +310,7 @@ export default async function PayslipPage() {
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Halaman slip gaji saya"
     >
       {/* Header */}

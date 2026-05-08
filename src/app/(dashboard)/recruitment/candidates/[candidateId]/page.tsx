@@ -40,15 +40,15 @@ export default async function CandidateDetailPage({ params }: Props) {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
         <a href="/recruitment" className="hover:underline">Rekrutmen</a>
-        <span>›</span>
-        <a href={`/recruitment/${candidate.vacancyId}`} className="hover:underline">
+        <span aria-hidden="true">›</span>
+        <a href={`/recruitment/${candidate.vacancyId}`} className="truncate hover:underline">
           {candidate.vacancy.title}
         </a>
-        <span>›</span>
-        <span>{candidate.name}</span>
+        <span aria-hidden="true">›</span>
+        <span className="truncate">{candidate.name}</span>
       </div>
       <CandidateDetailClient candidate={serialized} />
     </div>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
+import { createAuditLog } from "@/lib/prisma";
 import {
   importPayrollSchema,
   finalizePayrollSchema,
@@ -104,6 +105,19 @@ export async function importPayrollAction(
       createdBy: authResult.data?.userId ?? "system",
     });
 
+    await createAuditLog({
+      userId: authResult.data!.userId,
+      action: "CREATE",
+      module: "Payroll",
+      targetId: result.id,
+      newValue: {
+        month: parsed.data.month,
+        year: parsed.data.year,
+        entryCount: result._count?.entries ?? matched.length,
+        status: "DRAFT",
+      },
+    });
+
     revalidatePath("/payroll");
     revalidatePath(`/payroll/${result.id}`);
 
@@ -141,6 +155,16 @@ export async function finalizePayrollAction(
 
   try {
     await finalizePayroll(parsed.data.payrollRunId);
+
+    await createAuditLog({
+      userId: authResult.data!.userId,
+      action: "UPDATE",
+      module: "Payroll",
+      targetId: parsed.data.payrollRunId,
+      oldValue: { status: "DRAFT" },
+      newValue: { status: "FINALIZED" },
+    });
+
     revalidatePath("/payroll");
     revalidatePath(`/payroll/${parsed.data.payrollRunId}`);
     return { success: true };

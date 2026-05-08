@@ -153,28 +153,28 @@ export function CandidateDetailClient({ candidate }: Props) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{candidate.name}</h1>
-          <p className="text-muted-foreground">{candidate.email}</p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold sm:text-2xl">{candidate.name}</h1>
+          <p className="text-sm text-muted-foreground sm:text-base break-words">{candidate.email}</p>
           {candidate.phone && <p className="text-sm text-muted-foreground">{candidate.phone}</p>}
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
               {STAGE_LABELS[candidate.stage] ?? candidate.stage}
             </span>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground sm:text-sm">
               {candidate.vacancy.title} · {candidate.vacancy.department.name}
             </span>
           </div>
         </div>
         {candidate.stage === CandidateStage.DITERIMA && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:shrink-0">
             {candidate.offerSalary && (
               <a
                 href={`/api/recruitment/offer-letter/${candidate.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted sm:flex-none"
               >
                 Download Surat Penawaran
               </a>
@@ -183,7 +183,7 @@ export function CandidateDetailClient({ candidate }: Props) {
               <button
                 onClick={handleConvert}
                 disabled={isPending}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 sm:flex-none"
               >
                 {isPending ? "Memproses..." : "Konversi ke Karyawan"}
               </button>
@@ -259,7 +259,7 @@ export function CandidateDetailClient({ candidate }: Props) {
         )}
 
         {/* Add interview form */}
-        <form onSubmit={interviewForm.handleSubmit(onInterviewSubmit)} className="space-y-3 max-w-sm">
+        <form onSubmit={interviewForm.handleSubmit(onInterviewSubmit)} className="space-y-3 w-full max-w-sm sm:max-w-md">
           <h3 className="text-sm font-medium">Tambah Jadwal</h3>
           <div>
             <label className="text-xs text-muted-foreground">Tanggal &amp; Waktu</label>
@@ -303,7 +303,7 @@ export function CandidateDetailClient({ candidate }: Props) {
       {(candidate.stage === CandidateStage.PENAWARAN || candidate.stage === CandidateStage.DITERIMA) && (
         <div>
           <h2 className="text-base font-semibold mb-3">Penawaran</h2>
-          <form onSubmit={offerForm.handleSubmit(onOfferSubmit)} className="space-y-3 max-w-sm">
+          <form onSubmit={offerForm.handleSubmit(onOfferSubmit)} className="space-y-3 w-full max-w-sm sm:max-w-md">
             <div>
               <label className="text-xs text-muted-foreground">Gaji Ditawarkan (opsional)</label>
               <input

@@ -307,9 +307,9 @@ export function MobileSidebar() {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-64 border-slate-200 bg-white p-0 text-slate-900"
+        className="flex w-72 max-w-[85vw] flex-col border-slate-200 bg-white p-0 text-slate-900 sm:max-w-sm"
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5">
           <div className="flex items-center gap-2.5">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm"
@@ -333,14 +333,16 @@ export function MobileSidebar() {
             </Button>
           </SheetClose>
         </div>
-        <ScrollArea className="flex-1 h-[calc(100vh-4rem-3.25rem)]">
+        <ScrollArea className="min-h-0 flex-1">
           <SheetClose asChild>
             <div>
               <NavGroups groups={groups} pathname={pathname} />
             </div>
           </SheetClose>
         </ScrollArea>
-        <SidebarFooter role={userRole} />
+        <div className="shrink-0">
+          <SidebarFooter role={userRole} />
+        </div>
       </SheetContent>
     </Sheet>
   );

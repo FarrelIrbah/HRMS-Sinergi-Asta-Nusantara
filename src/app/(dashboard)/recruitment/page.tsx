@@ -44,7 +44,7 @@ export default async function RecruitmentPage({ searchParams }: Props) {
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Halaman rekrutmen"
     >
       {/* ─── Header ───────────────────────────────── */}

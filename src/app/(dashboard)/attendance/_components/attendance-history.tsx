@@ -74,8 +74,8 @@ export function AttendanceHistory({ records }: AttendanceHistoryProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <Table className="table-fixed">
+          <div className="rounded-lg border border-slate-200">
+            <Table className="min-w-[640px] md:table-fixed">
               <colgroup>
                 <col className="w-[20%]" />
                 <col className="w-[11%]" />

@@ -160,7 +160,7 @@ export default async function LeaveReportPage({ searchParams }: PageProps) {
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label="Halaman laporan cuti"
     >
       {/* ─── Header ────────────────────────────────── */}
@@ -210,7 +210,7 @@ export default async function LeaveReportPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="[&_td:first-child]:pl-6 [&_td:last-child]:pr-6 [&_th:first-child]:pl-6 [&_th:last-child]:pr-6">
+              <Table className="min-w-[760px] [&_td:first-child]:pl-6 [&_td:last-child]:pr-6 [&_th:first-child]:pl-6 [&_th:last-child]:pr-6">
                 <TableHeader>
                   <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                     <TableHead className="text-xs font-semibold text-slate-600">

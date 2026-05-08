@@ -183,6 +183,15 @@ export async function cancelLeaveAction(
 
   try {
     await cancelLeaveRequest(leaveRequestId, employee.id);
+
+    await createAuditLog({
+      userId: session.user.id,
+      action: "UPDATE",
+      module: "Permintaan Cuti",
+      targetId: leaveRequestId,
+      newValue: { status: "CANCELLED" },
+    });
+
     revalidatePath("/leave");
     return { success: true };
   } catch (e) {

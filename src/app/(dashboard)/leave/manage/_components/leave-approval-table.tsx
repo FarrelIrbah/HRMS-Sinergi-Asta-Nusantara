@@ -149,7 +149,7 @@ export function LeaveApprovalTable({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[820px]">
                 <TableHeader>
                   <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                     <TableHead className="text-xs font-semibold text-slate-600">

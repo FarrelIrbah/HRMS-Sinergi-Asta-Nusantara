@@ -99,7 +99,7 @@ export default async function EmployeeAttendanceDetailPage({
 
   return (
     <div
-      className="-m-4 min-h-[calc(100vh-4rem)] space-y-6 bg-slate-50 p-4 md:-m-6 md:p-6"
+      className="space-y-6"
       aria-label={`Detail absensi ${employee.namaLengkap}`}
     >
       {/* ─── Back + Header ─────────────────────────── */}
@@ -180,9 +180,9 @@ export default async function EmployeeAttendanceDetailPage({
         </Card>
       ) : (
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <div className="overflow-hidden rounded-lg border border-slate-200">
-              <Table className="table-fixed">
+          <CardContent className="p-3 sm:p-6">
+            <div className="rounded-lg border border-slate-200">
+              <Table className="min-w-[640px] md:table-fixed">
                 <colgroup>
                   <col className="w-[20%]" />
                   <col className="w-[11%]" />

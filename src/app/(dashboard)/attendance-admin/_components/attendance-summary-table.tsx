@@ -65,9 +65,9 @@ export function AttendanceSummaryTable({
 
   return (
     <Card className="border-slate-200 shadow-sm">
-      <CardContent className="p-6">
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <Table>
+      <CardContent className="p-3 sm:p-6">
+        <div className="rounded-lg border border-slate-200">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow className="bg-slate-50/60 hover:bg-slate-50/60">
                 <TableHead className="text-xs font-semibold text-slate-600">

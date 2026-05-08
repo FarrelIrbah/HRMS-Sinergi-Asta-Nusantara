@@ -258,8 +258,19 @@ export async function updatePosition(
 export async function deletePosition(id: string, actorId: string) {
   const position = await prisma.position.findUniqueOrThrow({
     where: { id, deletedAt: null },
-    include: { department: { select: { name: true } } },
+    include: {
+      department: { select: { name: true } },
+      _count: {
+        select: { employees: { where: { isActive: true } } },
+      },
+    },
   });
+
+  if (position._count.employees > 0) {
+    throw new Error(
+      `Jabatan masih dipakai ${position._count.employees} karyawan aktif, tidak dapat dihapus`
+    );
+  }
 
   await prisma.position.update({
     where: { id },
@@ -401,7 +412,18 @@ export async function updateOfficeLocation(
 export async function deleteOfficeLocation(id: string, actorId: string) {
   const location = await prisma.officeLocation.findUniqueOrThrow({
     where: { id, deletedAt: null },
+    include: {
+      _count: {
+        select: { employees: { where: { isActive: true } } },
+      },
+    },
   });
+
+  if (location._count.employees > 0) {
+    throw new Error(
+      `Lokasi kantor masih dipakai ${location._count.employees} karyawan aktif, tidak dapat dihapus`
+    );
+  }
 
   await prisma.officeLocation.update({
     where: { id },
@@ -536,7 +558,24 @@ export async function updateLeaveType(
 export async function deleteLeaveType(id: string, actorId: string) {
   const leaveType = await prisma.leaveType.findUniqueOrThrow({
     where: { id, deletedAt: null },
+    include: {
+      _count: {
+        select: {
+          leaveRequests: {
+            where: {
+              status: { in: ["PENDING_MANAGER", "PENDING_HR", "APPROVED"] },
+            },
+          },
+        },
+      },
+    },
   });
+
+  if (leaveType._count.leaveRequests > 0) {
+    throw new Error(
+      `Jenis cuti masih terkait ${leaveType._count.leaveRequests} pengajuan aktif, tidak dapat dihapus`
+    );
+  }
 
   await prisma.leaveType.update({
     where: { id },

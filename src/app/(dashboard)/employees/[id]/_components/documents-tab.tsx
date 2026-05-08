@@ -294,8 +294,8 @@ export function DocumentsTab({
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <Table>
+          <div className="rounded-lg border border-slate-200">
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
                   <TableHead className="text-xs font-medium uppercase tracking-wide text-slate-500">

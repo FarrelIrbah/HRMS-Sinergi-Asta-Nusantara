@@ -196,6 +196,16 @@ export async function updateOfferAction(
         offerNotes: parsed.data.offerNotes ?? null,
       },
     });
+    await createAuditLog({
+      userId: auth.userId,
+      action: "UPDATE",
+      module: "Kandidat",
+      targetId: candidateId,
+      newValue: {
+        offerSalary: parsed.data.offerSalary ?? null,
+        offerNotes: parsed.data.offerNotes ?? null,
+      },
+    });
     revalidatePath(`/recruitment/candidates/${candidateId}`);
     return { success: true };
   } catch {
@@ -218,8 +228,19 @@ export async function createInterviewAction(
   }
 
   try {
-    await prisma.interview.create({
+    const interview = await prisma.interview.create({
       data: { ...parsed.data, candidateId },
+    });
+    await createAuditLog({
+      userId: auth.userId,
+      action: "CREATE",
+      module: "Wawancara",
+      targetId: interview.id,
+      newValue: {
+        candidateId,
+        scheduledAt: parsed.data.scheduledAt.toISOString(),
+        interviewerName: parsed.data.interviewerName ?? null,
+      },
     });
     const candidate = await prisma.candidate.findUnique({ where: { id: candidateId } });
     revalidatePath(`/recruitment/candidates/${candidateId}`);

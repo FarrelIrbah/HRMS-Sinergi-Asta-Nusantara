@@ -1,5 +1,4 @@
 import { eachDayOfInterval, isWeekend } from "date-fns";
-import type { LeaveStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/types/enums";
 
@@ -106,8 +105,6 @@ export async function submitLeaveRequest(input: {
   startDate: Date;
   endDate: Date;
   reason: string;
-  attachmentPath?: string;
-  attachmentName?: string;
 }) {
   const workingDays = countWorkingDays(input.startDate, input.endDate);
   if (workingDays === 0) {
@@ -145,8 +142,6 @@ export async function submitLeaveRequest(input: {
       endDate: input.endDate,
       workingDays,
       reason: input.reason,
-      attachmentPath: input.attachmentPath,
-      attachmentName: input.attachmentName,
       status: initialStatus,
     },
   });
@@ -375,30 +370,3 @@ export async function getLeaveRequests(filter: {
   });
 }
 
-// ─── Pending Count (for dashboard widget) ────────────────────────────
-// stage: undefined = both pending stages; "manager" = PENDING_MANAGER only;
-// "hr" = PENDING_HR only.
-
-export async function getPendingLeaveCount(
-  options: {
-    departmentId?: string;
-    stage?: "manager" | "hr";
-  } = {}
-): Promise<number> {
-  const pendingBoth: LeaveStatus[] = ["PENDING_MANAGER", "PENDING_HR"];
-  const statusFilter =
-    options.stage === "manager"
-      ? { status: "PENDING_MANAGER" as LeaveStatus }
-      : options.stage === "hr"
-        ? { status: "PENDING_HR" as LeaveStatus }
-        : { status: { in: pendingBoth } };
-
-  return prisma.leaveRequest.count({
-    where: {
-      ...statusFilter,
-      ...(options.departmentId
-        ? { employee: { departmentId: options.departmentId } }
-        : {}),
-    },
-  });
-}

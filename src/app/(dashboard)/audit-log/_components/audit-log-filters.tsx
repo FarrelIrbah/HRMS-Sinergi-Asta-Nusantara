@@ -77,8 +77,8 @@ export function AuditLogFilters({ users, modules }: AuditLogFiltersProps) {
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex min-w-[180px] flex-col gap-1.5">
+        <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
+          <div className="flex flex-col gap-1.5 lg:min-w-[180px]">
             <Label htmlFor="filter-user" className="text-xs text-slate-600">
               Pengguna
             </Label>
@@ -103,7 +103,7 @@ export function AuditLogFilters({ users, modules }: AuditLogFiltersProps) {
             </Select>
           </div>
 
-          <div className="flex min-w-[180px] flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 lg:min-w-[180px]">
             <Label htmlFor="filter-module" className="text-xs text-slate-600">
               Modul
             </Label>
@@ -138,7 +138,7 @@ export function AuditLogFilters({ users, modules }: AuditLogFiltersProps) {
             <Input
               id="filter-date-from"
               type="date"
-              className="h-9 w-[160px] border-slate-200 bg-white"
+              className="h-9 w-full border-slate-200 bg-white lg:w-[160px]"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
@@ -151,17 +151,17 @@ export function AuditLogFilters({ users, modules }: AuditLogFiltersProps) {
             <Input
               id="filter-date-to"
               type="date"
-              className="h-9 w-[160px] border-slate-200 bg-white"
+              className="h-9 w-full border-slate-200 bg-white lg:w-[160px]"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="col-span-full flex flex-wrap gap-2 sm:col-span-2 lg:col-auto">
             <Button
               size="sm"
               onClick={handleApply}
-              className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+              className="h-9 flex-1 gap-1.5 bg-emerald-600 hover:bg-emerald-700 sm:flex-none"
             >
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
               Terapkan
@@ -170,7 +170,7 @@ export function AuditLogFilters({ users, modules }: AuditLogFiltersProps) {
               size="sm"
               variant="outline"
               onClick={handleReset}
-              className="h-9 gap-1.5 border-slate-200"
+              className="h-9 flex-1 gap-1.5 border-slate-200 sm:flex-none"
               disabled={!hasActiveFilter}
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />

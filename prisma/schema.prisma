@@ -234,7 +234,6 @@ model Employee {
   ptkpStatus             PTKPStatus?
   bpjsKesehatanNo        String?
   bpjsKetenagakerjaanNo  String?
-  baseSalary             Decimal        @default(0) @db.Decimal(15, 2)
   isTaxBorneByCompany    Boolean        @default(false)
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
@@ -248,7 +247,6 @@ model Employee {
   attendances       AttendanceRecord[]
   leaveRequests     LeaveRequest[]
   leaveBalances     LeaveBalance[]
-  allowances        EmployeeAllowance[]
   payrollEntries    PayrollEntry[]
 
   @@map("employees")
@@ -325,8 +323,6 @@ model LeaveRequest {
   endDate             DateTime    @db.Date
   workingDays         Int
   reason              String
-  attachmentPath      String?
-  attachmentName      String?
   status              LeaveStatus @default(PENDING_MANAGER)
   managerApprovedById String?
   managerNotes        String?
@@ -362,20 +358,6 @@ model LeaveBalance {
 
   @@unique([employeeId, leaveTypeId, year])
   @@map("leave_balances")
-}
-
-model EmployeeAllowance {
-  id          String   @id @default(cuid())
-  employeeId  String
-  name        String
-  amount      Decimal  @db.Decimal(15, 2)
-  isFixed     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
-  @@map("employee_allowances")
 }
 
 model PayrollRun {
