@@ -1,0 +1,68 @@
+@startuml sequence_manage_candidate
+title Sequence Diagram — UC-HRMS-17 Mengelola Kandidat
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/recruitment/[vacancyId]" as UI <<boundary>>
+participant "CandidateDialog" as Dlg <<boundary>>
+participant "POST /api/\nrecruitment/cv" as Route <<control>>
+participant "createCandidateAction" as Act <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "createCandidateSchema\n(zod)" as Val <<control>>
+participant "fs.writeFile" as FS <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Candidate" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+HR -> UI : klik "Tambah Kandidat"
+UI -> Dlg : buka dialog
+HR -> Dlg : isi nama, email, telepon, catatan
+HR -> Dlg : pilih file CV (PDF/JPEG/PNG, ≤ 5 MB)
+HR -> Dlg : klik "Simpan"
+Dlg -> Act : createCandidateAction(vacancyId,\n  { name, email, phone, notes })
+Act -> Guard : auth + cek role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> Dlg : { success: false, error: "Akses ditolak" }
+  Dlg --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : createCandidateSchema.safeParse(data)
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> Dlg : error
+  else Validasi berhasil
+    Val --> Act : data
+    Act -> E1 : candidate.create({ ...data, vacancyId,\n  stage: MELAMAR })
+    E1 --> Act : candidate
+    Act -> Audit : createAuditLog(CREATE, "Kandidat")
+    Audit -> E2 : auditLog.create
+    Act --> Dlg : revalidatePath\n("/recruitment/[vacancyId]"), sukses
+
+    alt File CV dipilih
+      Dlg -> Route : POST formData(file, candidateId)
+      Route -> Route : auth + cek role HR/Superadmin
+      Route -> Route : validasi MIME & ukuran
+
+      alt CV tidak valid
+        Route --> Dlg : 400 + pesan error
+        Dlg --> HR : toast warning (kandidat dibuat,\nCV gagal unggah)
+      else CV valid
+        Route -> E1 : findUnique({ id: candidateId })
+        Route -> FS : mkdir uploads/cv + writeFile
+        Route -> E1 : candidate.update({ cvPath })
+        Route --> Dlg : { success: true, cvPath }
+        Dlg --> HR : toast sukses + kandidat muncul\ndi kolom MELAMAR
+      end
+    end
+  end
+end
+@enduml

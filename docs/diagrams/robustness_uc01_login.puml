@@ -1,0 +1,55 @@
+@startuml robustness_uc01_login
+title Robustness Diagram — UC-HRMS-01 Login
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Pengguna" as A
+
+boundary "Halaman\nLogin" as B1
+control "Validasi\nInput" as C1
+control "Autentikasi\nCredentials" as C2
+entity "User" as E1
+control "Verifikasi\nPassword" as C3
+control "Membuat\nSesi JWT" as C4
+boundary "Halaman\nDashboard" as B2
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> BErr : Tidak
+C1 --> C2 : Ya
+C2 --> E1
+C2 --> C3
+C3 --> BErr : Tidak
+C3 --> C4 : Ya
+C4 --> B2
+
+@enduml

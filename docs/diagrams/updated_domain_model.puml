@@ -1,0 +1,264 @@
+@startuml updated_domain_model
+title Updated Domain Model — HRMS PT Sinergi Asta Nusantara
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam classFontStyle bold
+
+class User {
+  + id: String
+  + name: String
+  + email: String
+  - hashedPassword: String
+  + role: Role
+  + isActive: Boolean
+}
+
+class Employee {
+  + id: String
+  + nik: String
+  + userId: String
+  + namaLengkap: String
+  + nikKtp: String?
+  + tempatLahir: String?
+  + tanggalLahir: DateTime?
+  + jenisKelamin: Gender?
+  + statusPernikahan: MaritalStatus?
+  + agama: Religion?
+  + alamat: String?
+  + nomorHp: String?
+  + email: String
+  + departmentId: String
+  + positionId: String
+  + officeLocationId: String?
+  + contractType: ContractType
+  + joinDate: DateTime
+  + isActive: Boolean
+  + terminationDate: DateTime?
+  + terminationReason: String?
+  + npwp: String?
+  + ptkpStatus: PTKPStatus?
+  + bpjsKesehatanNo: String?
+  + bpjsKetenagakerjaanNo: String?
+  + isTaxBorneByCompany: Boolean
+}
+
+class Department {
+  + id: String
+  + name: String
+  + description: String?
+  + deletedAt: DateTime?
+}
+
+class Position {
+  + id: String
+  + name: String
+  + departmentId: String
+  + deletedAt: DateTime?
+}
+
+class OfficeLocation {
+  + id: String
+  + name: String
+  + address: String?
+  + allowedIPs: String[]
+  + latitude: Float?
+  + longitude: Float?
+  + radiusMeters: Int?
+  + workStartTime: String?
+  + workEndTime: String?
+  + deletedAt: DateTime?
+}
+
+class LeaveType {
+  + id: String
+  + name: String
+  + annualQuota: Int
+  + isPaid: Boolean
+  + genderRestriction: String?
+  + deletedAt: DateTime?
+}
+
+class EmployeeDocument {
+  + id: String
+  + employeeId: String
+  + documentType: DocumentType
+  + fileName: String
+  + filePath: String
+  + fileSize: Int
+  + mimeType: String
+}
+
+class EmergencyContact {
+  + id: String
+  + employeeId: String
+  + name: String
+  + relationship: String
+  + phone: String
+  + address: String?
+}
+
+class AttendanceRecord {
+  + id: String
+  + employeeId: String
+  + officeLocationId: String
+  + date: Date
+  + clockIn: DateTime?
+  + clockOut: DateTime?
+  + clockInIp: String?
+  + clockOutIp: String?
+  + clockInLat: Float?
+  + clockInLon: Float?
+  + isLate: Boolean
+  + lateMinutes: Int
+  + isEarlyOut: Boolean
+  + earlyOutMinutes: Int
+  + overtimeMinutes: Int
+  + totalMinutes: Int
+  + isManualOverride: Boolean
+  + overrideById: String?
+  + overrideReason: String?
+}
+
+class LeaveRequest {
+  + id: String
+  + employeeId: String
+  + leaveTypeId: String
+  + startDate: Date
+  + endDate: Date
+  + workingDays: Int
+  + reason: String
+  + status: LeaveStatus
+  + managerApprovedById: String?
+  + managerNotes: String?
+  + managerApprovedAt: DateTime?
+  + hrApprovedById: String?
+  + hrNotes: String?
+  + hrApprovedAt: DateTime?
+}
+
+class LeaveBalance {
+  + id: String
+  + employeeId: String
+  + leaveTypeId: String
+  + year: Int
+  + allocatedDays: Int
+  + usedDays: Int
+}
+
+class PayrollRun {
+  + id: String
+  + month: Int
+  + year: Int
+  + status: PayrollStatus
+  + createdBy: String
+}
+
+class PayrollEntry {
+  + id: String
+  + payrollRunId: String
+  + employeeId: String
+  + employeeNik: String
+  + employeeName: String
+  + jobPosition: String
+  + organization: String
+  + gradeLevel: String
+  + ptkpStatus: String
+  + npwp: String?
+  + basicSalary: Decimal
+  + tunjanganKomunikasi: Decimal
+  + tunjanganKehadiran: Decimal
+  + tunjanganJabatan: Decimal
+  + tunjanganLainnya: Decimal
+  + taxAllowance: Decimal
+  + thr: Decimal
+  + totalEarnings: Decimal
+  + bpjsKesehatanEmployee: Decimal
+  + jhtEmployee: Decimal
+  + jaminanPensiunEmployee: Decimal
+  + pph21: Decimal
+  + potonganKeterlambatan: Decimal
+  + potonganKoperasi: Decimal
+  + potonganLainnya: Decimal
+  + totalDeductions: Decimal
+  + takeHomePay: Decimal
+  + jkk: Decimal
+  + jkm: Decimal
+  + jhtCompany: Decimal
+  + jaminanPensiunCompany: Decimal
+  + bpjsKesehatanCompany: Decimal
+  + totalBenefits: Decimal
+  + actualWorkingDay: Int
+  + scheduleWorkingDay: Int
+  + dayoff: Int
+  + nationalHoliday: Int
+  + companyHoliday: Int
+  + specialHoliday: Int
+  + attendanceCodes: String
+}
+
+class Vacancy {
+  + id: String
+  + title: String
+  + departmentId: String
+  + description: String
+  + requirements: String
+  + status: VacancyStatus
+  + openDate: DateTime
+  + closeDate: DateTime?
+}
+
+class Candidate {
+  + id: String
+  + vacancyId: String
+  + name: String
+  + email: String
+  + phone: String?
+  + stage: CandidateStage
+  + cvPath: String?
+  + notes: String?
+  + offerSalary: Decimal?
+  + offerNotes: String?
+  + hiredAt: DateTime?
+}
+
+class Interview {
+  + id: String
+  + candidateId: String
+  + scheduledAt: DateTime
+  + interviewerName: String?
+  + notes: String?
+}
+
+class AuditLog {
+  + id: String
+  + userId: String
+  + action: AuditAction
+  + module: String
+  + targetId: String
+  + oldValue: Json?
+  + newValue: Json?
+  + createdAt: DateTime
+}
+
+User "1" -- "0..1" Employee
+User "1" -- "*" AuditLog
+Department "1" -- "*" Position
+Department "1" -- "*" Employee
+Department "1" -- "*" Vacancy
+Position "1" -- "*" Employee
+OfficeLocation "1" -- "*" Employee
+OfficeLocation "1" -- "*" AttendanceRecord
+Employee "1" o-- "*" EmployeeDocument
+Employee "1" o-- "*" EmergencyContact
+Employee "1" -- "*" AttendanceRecord
+Employee "1" -- "*" LeaveRequest
+Employee "1" -- "*" LeaveBalance
+Employee "1" -- "*" PayrollEntry
+LeaveType "1" -- "*" LeaveRequest
+LeaveType "1" -- "*" LeaveBalance
+PayrollRun "1" o-- "*" PayrollEntry
+Vacancy "1" o-- "*" Candidate
+Candidate "1" o-- "*" Interview
+@enduml

@@ -1,0 +1,54 @@
+@startuml robustness_uc28_cancel
+title Robustness Diagram — UC-HRMS-28 Membatalkan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Employee" as A
+
+boundary "Tabel Riwayat\nCuti" as B1
+control "Cek Status\nPengajuan" as C1
+control "Membatalkan\nPengajuan Cuti" as C2
+entity "LeaveRequest" as E1
+control "Mencatat\nAudit Log" as C3
+entity "AuditLog" as E2
+boundary "Notifikasi\nBerhasil" as B2
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> BErr : Tidak
+C1 --> C2 : Ya
+C2 --> E1
+C2 --> C3
+C3 --> E2
+C2 --> B2
+
+@enduml

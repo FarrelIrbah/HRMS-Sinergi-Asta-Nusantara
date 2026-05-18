@@ -1,0 +1,100 @@
+@startuml sequence_manage_user
+title Sequence Diagram — UC-HRMS-04 Mengelola Pengguna Sistem
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Superadmin" as SA
+participant "Halaman /users\n(UserFormDialog)" as UI <<boundary>>
+participant "createUserAction" as ActC <<control>>
+participant "updateUserAction" as ActU <<control>>
+participant "toggleUserActive\nAction" as ActT <<control>>
+participant "requireSuperAdmin" as Guard <<control>>
+participant "createUserSchema /\nupdateUserSchema" as Val <<control>>
+participant "createUser /\nupdateUser /\ntoggleUserActive\n(service)" as Svc <<control>>
+participant "bcrypt.hash" as Bcrypt <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "User" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Pengguna
+  SA -> UI : klik "Tambah Pengguna"
+  UI --> SA : tampilkan dialog form
+  SA -> UI : isi nama, email, password, role,\nklik "Simpan"
+  UI -> ActC : createUserAction(formData)
+  ActC -> Guard : cek session.role
+  Guard --> ActC : authResult
+
+  alt Tidak otorisasi
+    ActC --> UI : { success: false, error }
+    UI --> SA : toast error
+  else Otorisasi sukses
+    ActC -> Val : safeParse(formData)
+
+    alt Validasi gagal
+      Val --> ActC : ZodError
+      ActC --> UI : pesan error
+    else Validasi berhasil
+      Val --> ActC : data valid
+      ActC -> Svc : createUser(data, actorId)
+      Svc -> E1 : user.findUnique({ email })
+
+      alt Email sudah dipakai
+        E1 --> Svc : existing
+        Svc --> ActC : { success: false,\n  error: "Email sudah terdaftar" }
+        ActC --> UI : pesan duplikasi
+      else Email unik
+        E1 --> Svc : null
+        Svc -> Bcrypt : hash(password, 12)
+        Bcrypt --> Svc : hashedPassword
+        Svc -> E1 : user.create({ name, email,\n  hashedPassword, role })
+        E1 --> Svc : user
+        Svc -> Audit : createAuditLog(CREATE, USER)
+        Audit -> E2 : auditLog.create
+        Svc --> ActC : { success: true, data: user }
+        ActC --> UI : revalidatePath("/users"),\nsukses
+        UI --> SA : toast sukses + refresh tabel
+      end
+    end
+  end
+else Ubah Pengguna
+  SA -> UI : klik ikon edit, ubah field, simpan
+  UI -> ActU : updateUserAction(id, formData)
+  ActU -> Guard : cek session.role
+  Guard --> ActU : authResult
+  ActU -> Val : updateUserSchema.safeParse
+  Val --> ActU : data valid
+  ActU -> Svc : updateUser(id, data, actorId)
+  Svc -> E1 : findUnique({ id }) - oldUser
+  Svc -> E1 : findFirst email unik (selain id)
+  Svc -> E1 : user.update({ name, email, role })
+  Svc -> Audit : createAuditLog(UPDATE, USER,\n  oldValue, newValue)
+  Audit -> E2 : auditLog.create
+  Svc --> ActU : sukses
+  ActU --> UI : revalidatePath, sukses
+  UI --> SA : toast sukses
+else Aktifkan/Nonaktifkan
+  SA -> UI : klik toggle aktif
+  UI -> ActT : toggleUserActiveAction(id)
+  ActT -> Guard : cek session.role
+  Guard --> ActT : authResult
+  ActT -> Svc : toggleUserActive(id, actorId)
+
+  alt Toggle akun sendiri
+    Svc --> ActT : error "Tidak dapat\nmenonaktifkan akun sendiri"
+  else Akun lain
+    Svc -> E1 : findUnique({ id })
+    Svc -> E1 : user.update({ isActive: !isActive })
+    Svc -> Audit : createAuditLog(UPDATE, USER)
+    Audit -> E2 : auditLog.create
+    Svc --> ActT : sukses
+  end
+  ActT --> UI : revalidatePath, hasil
+  UI --> SA : toast hasil
+end
+@enduml

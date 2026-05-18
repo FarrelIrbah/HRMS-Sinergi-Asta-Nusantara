@@ -1,0 +1,26 @@
+@startuml sequence_logout
+title Sequence Diagram — UC-HRMS-02 Logout
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Pengguna" as U
+participant "Header\nUserMenu" as UI <<boundary>>
+participant "signOut\n(NextAuth)" as Out <<control>>
+participant "JWT Cookie\nHandler" as Cookie <<control>>
+participant "Halaman\n/login" as Login <<boundary>>
+
+U -> UI : klik menu profil
+U -> UI : pilih "Keluar"
+UI -> Out : signOut({ callbackUrl: "/login" })
+Out -> Cookie : hapus cookie sesi JWT
+Cookie --> Out : ok
+Out --> UI : redirect /login
+UI --> Login : navigate
+Login --> U : tampilkan halaman login
+@enduml

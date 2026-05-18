@@ -1,0 +1,68 @@
+@startuml robustness_uc05_department
+title Robustness Diagram — UC-HRMS-05 Mengelola Master Departemen
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Superadmin" as A
+
+boundary "Tab\nDepartemen" as B1
+control "Menampilkan\nForm Tambah" as C1
+boundary "Form Tambah\nDepartemen" as B2
+control "Validasi\nInput" as C2
+control "Menyimpan\ndata Departemen" as C3
+entity "Department" as E1
+control "Mencatat\nAudit Log" as C4
+entity "AuditLog" as E2
+
+control "Menghapus\ndata Departemen" as CDel
+control "Menampilkan\nForm Edit" as CEdit
+boundary "Form Edit\nDepartemen" as BEdit
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> B2
+B2 --> C2
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> E1
+C3 --> C4
+C4 --> E2
+
+B1 --> CEdit
+CEdit --> BEdit
+BEdit --> C2
+
+B1 --> CDel
+CDel --> E1
+CDel --> C4
+
+@enduml

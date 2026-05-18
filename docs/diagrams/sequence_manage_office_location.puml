@@ -1,0 +1,81 @@
+@startuml sequence_manage_office_location
+title Sequence Diagram — UC-HRMS-07 Mengelola Master Lokasi Kantor
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Superadmin" as SA
+participant "Tab Lokasi Kantor\n(/master-data)" as UI <<boundary>>
+participant "OfficeLocationDialog" as Dlg <<boundary>>
+participant "createOfficeLocation\nAction" as ActC <<control>>
+participant "updateOfficeLocation\nAction" as ActU <<control>>
+participant "deleteOfficeLocation\nAction" as ActD <<control>>
+participant "getAuthenticated\nSuperAdmin" as Guard <<control>>
+participant "officeLocationSchema\n(zod)" as Val <<control>>
+participant "createOfficeLocation /\nupdateOfficeLocation /\ndeleteOfficeLocation\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "OfficeLocation" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Lokasi
+  SA -> UI : klik "Tambah Lokasi"
+  UI -> Dlg : buka dialog
+  SA -> Dlg : isi nama, alamat, allowedIPs[],\nlatitude, longitude, radiusMeters
+  SA -> Dlg : klik "Simpan"
+  Dlg -> ActC : createOfficeLocationAction(formData)
+  ActC -> Guard : auth + role SUPER_ADMIN
+  Guard --> ActC : actorId
+  ActC -> Val : officeLocationSchema.parse(formData)
+
+  alt Validasi gagal (radius < 50 atau > 10.000)
+    Val --> ActC : ZodError
+    ActC --> Dlg : error
+  else Valid
+    Val --> ActC : data
+    ActC -> Svc : createOfficeLocation(data, actorId)
+    Svc -> E1 : officeLocation.create({\n  name, address, allowedIPs,\n  latitude, longitude, radiusMeters })
+    E1 --> Svc : location
+    Svc -> Audit : createAuditLog(CREATE, OFFICE_LOCATION)
+    Audit -> E2 : auditLog.create
+    Svc --> ActC : location
+    ActC --> Dlg : revalidatePath, sukses
+    Dlg --> SA : toast sukses
+  end
+else Ubah Lokasi
+  SA -> UI : klik ikon edit
+  UI -> Dlg : buka dialog dengan data lama
+  SA -> Dlg : ubah field, simpan
+  Dlg -> ActU : updateOfficeLocationAction(id, formData)
+  ActU -> Guard : auth + role
+  ActU -> Val : officeLocationSchema.parse
+  ActU -> Svc : updateOfficeLocation(id, data, actorId)
+  Svc -> E1 : findUniqueOrThrow - old
+  Svc -> E1 : officeLocation.update
+  Svc -> Audit : createAuditLog(UPDATE, OFFICE_LOCATION,\n  oldValue, newValue)
+  Audit -> E2 : auditLog.create
+  ActU --> Dlg : revalidatePath, sukses
+  Dlg --> SA : toast sukses
+else Hapus Lokasi
+  SA -> UI : klik ikon hapus + konfirmasi
+  UI -> ActD : deleteOfficeLocationAction(id)
+  ActD -> Guard : auth + role
+  ActD -> Svc : deleteOfficeLocation(id, actorId)
+  Svc -> E1 : findUniqueOrThrow include _count.employees
+
+  alt Masih dipakai karyawan aktif
+    Svc --> ActD : throw "Lokasi masih dipakai N karyawan"
+    ActD --> UI : pesan error
+  else Tidak terpakai
+    Svc -> E1 : officeLocation.update({ deletedAt: now })
+    Svc -> Audit : createAuditLog(DELETE, OFFICE_LOCATION)
+    Audit -> E2 : auditLog.create
+    ActD --> UI : revalidatePath, sukses
+    UI --> SA : toast sukses
+  end
+end
+@enduml

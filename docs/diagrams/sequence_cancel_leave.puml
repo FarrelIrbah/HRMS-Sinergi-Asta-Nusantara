@@ -1,0 +1,57 @@
+@startuml sequence_cancel_leave
+title Sequence Diagram — UC-HRMS-28 Membatalkan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Karyawan" as EM
+participant "Halaman /leave\n(LeaveRequestHistory)" as UI <<boundary>>
+participant "cancelLeaveAction" as Act <<control>>
+participant "auth()" as Sess <<control>>
+participant "cancelLeaveRequest\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Employee" as E1 <<entity>>
+database "LeaveRequest" as E2 <<entity>>
+database "AuditLog" as E3 <<entity>>
+
+EM -> UI : buka riwayat cuti
+EM -> UI : klik "Batalkan" pada pengajuan
+UI -> Act : cancelLeaveAction(leaveRequestId)
+Act -> Sess : auth()
+Sess --> Act : session
+
+alt Session tidak valid
+  Act --> UI : { success: false, error: "Sesi tidak valid" }
+  UI --> EM : toast error
+else Session valid
+  Act -> E1 : employee.findUnique({ userId })
+
+  alt Profil karyawan tidak ditemukan
+    Act --> UI : "Profil karyawan tidak ditemukan"
+  else Profil ada
+    E1 --> Act : { id: employeeId }
+    Act -> Svc : cancelLeaveRequest(leaveRequestId, employeeId)
+    Svc -> E2 : leaveRequest.findUnique({ id })
+
+    alt Pengajuan tidak ditemukan
+      Svc --> Act : throw "Permintaan cuti tidak ditemukan"
+    else Bukan milik karyawan
+      Svc --> Act : throw "Anda tidak memiliki akses\nuntuk membatalkan permintaan ini"
+    else Bukan PENDING (APPROVED/REJECTED/CANCELLED)
+      Svc --> Act : throw "Hanya permintaan Menunggu\nyang dapat dibatalkan"
+    else Status PENDING_MANAGER / PENDING_HR
+      Svc -> E2 : leaveRequest.update({ status: CANCELLED })
+      Svc --> Act : ok
+      Act -> Audit : createAuditLog(UPDATE,\n  "Permintaan Cuti",\n  newValue: { status: CANCELLED })
+      Audit -> E3 : auditLog.create
+      Act --> UI : revalidatePath("/leave"), sukses
+      UI --> EM : toast sukses + riwayat refresh
+    end
+  end
+end
+@enduml

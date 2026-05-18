@@ -1,0 +1,70 @@
+@startuml robustness_uc04_users
+title Robustness Diagram — UC-HRMS-04 Mengelola Pengguna Sistem
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Superadmin" as A
+
+boundary "Halaman\nPengguna" as B1
+control "Menampilkan\nForm Tambah" as C1
+boundary "Form Tambah\nPengguna" as B2
+control "Validasi\nInput" as C2
+control "Hash\nPassword" as C3
+control "Menyimpan\nUser" as C4
+entity "User" as E1
+control "Mencatat\nAudit Log" as C5
+entity "AuditLog" as E2
+
+control "Mengaktifkan/\nMenonaktifkan User" as CTog
+control "Menampilkan\nForm Edit" as CEdit
+boundary "Form Edit\nPengguna" as BEdit
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> B2
+B2 --> C2
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> C4
+C4 --> E1
+C4 --> C5
+C5 --> E2
+
+B1 --> CEdit
+CEdit --> BEdit
+BEdit --> C2
+
+B1 --> CTog
+CTog --> E1
+CTog --> C5
+
+@enduml

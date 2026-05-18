@@ -1,0 +1,51 @@
+@startuml sequence_export_attendance
+title Sequence Diagram — UC-HRMS-25 Mengekspor Rekap Absensi
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin /\nManager" as U
+participant "Halaman\n/attendance-admin" as UI <<boundary>>
+participant "GET /api/\nattendance/export" as Route <<control>>
+participant "auth()" as Sess <<control>>
+participant "getMonthlyAttendance\nRecap" as Get <<control>>
+participant "XLSX.write\n(xlsx)" as Xls <<control>>
+participant "AttendancePDFDocument\n(react-pdf)" as PDF <<control>>
+database "AttendanceRecord" as E1 <<entity>>
+database "Employee /\nDepartment /\nPosition" as E2 <<entity>>
+
+U -> UI : pilih format (Excel / PDF) + filter
+U -> UI : klik "Ekspor"
+UI -> Route : GET /api/attendance/export\n?month=&year=&format=&departmentId=
+Route -> Sess : auth()
+Sess --> Route : session
+
+alt Tidak otorisasi (bukan HR/Superadmin)
+  Route --> UI : 401 Unauthorized
+  UI --> U : toast error
+else Otorisasi sukses
+  Route -> Get : getMonthlyAttendanceRecap({\n  month, year, departmentId })
+  Get -> E1 : findMany where (date range,\n  employee.departmentId?),\n  include employee, department, position
+  E1 --> Get : records
+  E2 --> Get : metadata join
+  Get --> Route : records
+
+  alt format = "pdf"
+    Route -> PDF : renderToStream(\n  <AttendancePDFDocument\n    data, month, year />)
+    PDF --> Route : pdfBuffer
+    Route --> UI : Response(application/pdf,\n  Content-Disposition: attachment;\n  filename="absensi-YYYY-MM.pdf")
+    UI --> U : trigger download PDF
+  else format = "xlsx" (default)
+    Route -> Route : map records → rows\n  (NIK, Nama, Departemen, Jabatan,\n   Tanggal, Jam Masuk/Pulang,\n   Total Jam, Terlambat, Lembur,\n   Override Manual)
+    Route -> Xls : json_to_sheet + book_append_sheet
+    Xls --> Route : workbook buffer
+    Route --> UI : Response(application/vnd.openxmlformats…,\n  Content-Disposition: attachment;\n  filename="absensi-YYYY-MM.xlsx")
+    UI --> U : trigger download Excel
+  end
+end
+@enduml

@@ -1,0 +1,72 @@
+@startuml domain_model
+title Domain Model — HRMS PT Sinergi Asta Nusantara
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+package "Akun dan Audit" {
+  class User
+  class AuditLog
+}
+
+package "Data Master" {
+  class Department
+  class Position
+  class OfficeLocation
+  class LeaveType
+}
+
+package "Data Karyawan" {
+  class Employee
+  class EmployeeDocument
+  class EmergencyContact
+}
+
+package "Absensi dan Cuti" {
+  class AttendanceRecord
+  class LeaveRequest
+  class LeaveBalance
+}
+
+package "Penggajian" {
+  class PayrollRun
+  class PayrollEntry
+}
+
+package "Rekrutmen" {
+  class Vacancy
+  class Candidate
+  class Interview
+}
+
+User "1" -- "0..1" Employee
+User "1" -- "*" AuditLog
+
+Department "1" -- "*" Position
+Department "1" -- "*" Employee
+Department "1" -- "*" Vacancy
+Position "1" -- "*" Employee
+OfficeLocation "1" -- "*" Employee
+OfficeLocation "1" -- "*" AttendanceRecord
+
+Employee "1" o-- "*" EmployeeDocument
+Employee "1" o-- "*" EmergencyContact
+Employee "1" -- "*" AttendanceRecord
+Employee "1" -- "*" LeaveRequest
+Employee "1" -- "*" LeaveBalance
+Employee "1" -- "*" PayrollEntry
+
+LeaveType "1" -- "*" LeaveRequest
+LeaveType "1" -- "*" LeaveBalance
+
+PayrollRun "1" o-- "*" PayrollEntry
+
+Vacancy "1" o-- "*" Candidate
+Candidate "1" o-- "*" Interview
+@enduml

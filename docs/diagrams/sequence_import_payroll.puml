@@ -1,0 +1,85 @@
+@startuml sequence_import_payroll
+title Sequence Diagram — UC-HRMS-30 Mengimpor Data Payroll
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman /payroll\n(ImportPayrollForm)" as UI <<boundary>>
+participant "importPayroll\nAction" as Act <<control>>
+participant "requireHR\nAdmin()" as Guard <<control>>
+participant "importPayroll\nSchema (zod)" as Val <<control>>
+participant "parsePayroll\nWorkbook" as Parse <<control>>
+participant "matchRowsTo\nEmployees" as Match <<control>>
+participant "persistImported\nPayroll" as Persist <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Employee" as E1 <<entity>>
+database "PayrollRun" as E2 <<entity>>
+database "PayrollEntry" as E3 <<entity>>
+database "AuditLog" as E4 <<entity>>
+
+HR -> UI : unduh template via\nGET /api/payroll/template
+UI --> HR : payroll-template.xlsx
+HR -> UI : pilih bulan, tahun, unggah file
+HR -> UI : klik "Impor"
+UI -> Act : importPayrollAction(formData)
+Act -> Guard : cek session.role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> UI : { success: false, error: "Akses ditolak" }
+  UI --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : safeParse({ month, year })
+
+  alt Periode tidak valid
+    Val --> Act : ZodError
+    Act --> UI : { success: false, error }
+    UI --> HR : pesan validasi
+  else Periode valid
+    Val --> Act : { month, year }
+    Act -> Act : cek ekstensi file\n(.xlsx, .xls, .csv)
+
+    alt Format file tidak diizinkan
+      Act --> UI : { success: false,\n  error: "Format file salah" }
+      UI --> HR : toast error
+    else Format file valid
+      Act -> Parse : parsePayrollWorkbook(buffer)
+      Parse --> Act : { rows, errors }
+
+      alt errors.length > 0
+        Act --> UI : { success: false,\n  error: "Validasi gagal:\n  Baris N (kolom)..." }
+        UI --> HR : tampilkan daftar error
+      else Struktur file valid
+        Act -> Match : matchRowsToEmployees(rows)
+        Match -> E1 : findMany NIK IN (rows.nik)
+        E1 --> Match : employees
+        Match --> Act : { matched, errors: matchErrors }
+
+        alt matchErrors.length > 0
+          Act --> UI : { success: false,\n  error: "NIK tidak valid: ..." }
+          UI --> HR : daftar NIK invalid
+        else Semua NIK cocok
+          Act -> Persist : persistImportedPayroll({\n  month, year, rows: matched,\n  createdBy })
+          Persist -> E2 : upsert PayrollRun\n(month, year, DRAFT)
+          E2 --> Persist : payrollRun
+          Persist -> E3 : deleteMany entries\nuntuk payrollRunId
+          Persist -> E3 : createMany PayrollEntry\n(snapshot earnings, deductions,\nbenefits, attendance summary)
+          E3 --> Persist : entries
+          Persist --> Act : { id, _count: { entries } }
+          Act -> Audit : createAuditLog(CREATE,\n  "Payroll")
+          Audit -> E4 : auditLog.create
+          E4 --> Audit : ok
+          Act --> UI : revalidatePath("/payroll"),\nreturn { payrollRunId,\n  entryCount, warnings }
+          UI --> HR : redirect /payroll/[id]\n+ toast sukses
+        end
+      end
+    end
+  end
+end
+@enduml

@@ -1,0 +1,68 @@
+@startuml robustness_uc26_submitleave
+title Robustness Diagram — UC-HRMS-26 Mengajukan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Employee" as A
+
+boundary "Halaman\nCuti" as B1
+control "Menampilkan\nSaldo & Form" as C1
+boundary "Form Pengajuan\nCuti" as B2
+control "Validasi\nInput" as C2
+control "Hitung Hari\nKerja" as C3
+control "Cek Saldo\nCuti" as C4
+control "Menyimpan\nPengajuan" as C5
+entity "LeaveType" as E1
+entity "LeaveBalance" as E2
+entity "LeaveRequest" as E3
+control "Mencatat\nAudit Log" as C6
+entity "AuditLog" as E4
+boundary "Notifikasi\nBerhasil" as B3
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> E1
+C1 --> E2
+C1 --> B2
+B2 --> C2
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> C4
+C4 --> E2
+C4 --> BErr : Tidak
+C4 --> C5 : Ya
+C5 --> E3
+C5 --> C6
+C6 --> E4
+C5 --> B3
+
+@enduml

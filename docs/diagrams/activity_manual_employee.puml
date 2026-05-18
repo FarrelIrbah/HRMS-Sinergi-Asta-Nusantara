@@ -1,0 +1,35 @@
+@startuml activity_manual_employee
+title Activity Diagram Proses Bisnis Manual\nPengelolaan Data Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|Karyawan Baru|
+start
+:Menyerahkan berkas administrasi\n(KTP, NPWP, BPJS, dokumen kontrak);
+
+|HR Admin|
+:Memeriksa kelengkapan berkas;
+if (Berkas lengkap?) then (Tidak)
+  |HR Admin|
+  :Meminta kelengkapan berkas\nkepada karyawan baru;
+  stop
+else (Ya)
+  :Mencatat data karyawan\nke dalam berkas spreadsheet;
+  :Menyalin berkas fisik\nke dalam map arsip;
+  :Memberi nomor induk\nkaryawan (NIK) secara manual;
+endif
+
+|Manager Departemen|
+:Memverifikasi penempatan\ndepartemen dan jabatan;
+
+|HR Admin|
+:Memperbarui status karyawan\npada spreadsheet master;
+:Menyimpan map arsip fisik\ndi lemari berkas;
+stop
+@enduml

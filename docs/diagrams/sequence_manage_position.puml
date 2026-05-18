@@ -1,0 +1,92 @@
+@startuml sequence_manage_position
+title Sequence Diagram — UC-HRMS-06 Mengelola Master Jabatan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Superadmin" as SA
+participant "Tab Jabatan\n(/master-data)" as UI <<boundary>>
+participant "PositionDialog" as Dlg <<boundary>>
+participant "createPositionAction" as ActC <<control>>
+participant "updatePositionAction" as ActU <<control>>
+participant "deletePositionAction" as ActD <<control>>
+participant "getAuthenticated\nSuperAdmin" as Guard <<control>>
+participant "positionSchema\n(zod)" as Val <<control>>
+participant "createPosition /\nupdatePosition /\ndeletePosition\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Department" as Dept <<entity>>
+database "Position" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Jabatan
+  SA -> UI : klik "Tambah Jabatan"
+  UI -> Dlg : buka dialog (load opsi departemen)
+  SA -> Dlg : isi nama & pilih departemen, simpan
+  Dlg -> ActC : createPositionAction(formData)
+  ActC -> Guard : auth() + cek role SUPER_ADMIN
+  Guard --> ActC : actorId
+  ActC -> Val : positionSchema.parse(formData)
+
+  alt Validasi gagal
+    Val --> ActC : ZodError
+    ActC --> Dlg : error
+  else Valid
+    Val --> ActC : { name, departmentId }
+    ActC -> Svc : createPosition(data, actorId)
+    Svc -> Dept : department.findUniqueOrThrow({ id, deletedAt: null })
+
+    alt Departemen tidak ada / terhapus
+      Dept --> Svc : throw
+      Svc --> ActC : error
+    else Departemen valid
+      Dept --> Svc : department
+      Svc -> E1 : position.create({ name, departmentId })
+      E1 --> Svc : position
+      Svc -> Audit : createAuditLog(CREATE, POSITION)
+      Audit -> E2 : auditLog.create
+      Svc --> ActC : position
+      ActC --> Dlg : revalidatePath, sukses
+      Dlg --> SA : toast sukses
+    end
+  end
+else Ubah Jabatan
+  SA -> UI : klik ikon edit
+  UI -> Dlg : buka dialog dengan data lama
+  SA -> Dlg : ubah field, simpan
+  Dlg -> ActU : updatePositionAction(id, formData)
+  ActU -> Guard : auth + role
+  ActU -> Val : positionSchema.parse
+  ActU -> Svc : updatePosition(id, data, actorId)
+  Svc -> E1 : findUniqueOrThrow include department - old
+  Svc -> Dept : department.findUniqueOrThrow (validasi tujuan)
+  Svc -> E1 : position.update({ name, departmentId })
+  Svc -> Audit : createAuditLog(UPDATE, POSITION,\n  oldValue, newValue)
+  Audit -> E2 : auditLog.create
+  ActU --> Dlg : revalidatePath, sukses
+  Dlg --> SA : toast sukses
+else Hapus Jabatan
+  SA -> UI : klik ikon hapus + konfirmasi
+  UI -> ActD : deletePositionAction(id)
+  ActD -> Guard : auth + role
+  ActD -> Svc : deletePosition(id, actorId)
+  Svc -> E1 : findUniqueOrThrow include _count.employees
+
+  alt Masih dipakai karyawan aktif
+    Svc --> ActD : throw "Jabatan masih dipakai N karyawan"
+    ActD --> UI : pesan error
+    UI --> SA : toast error
+  else Tidak terpakai
+    Svc -> E1 : position.update({ deletedAt: now })
+    Svc -> Audit : createAuditLog(DELETE, POSITION)
+    Audit -> E2 : auditLog.create
+    Svc --> ActD : ok
+    ActD --> UI : revalidatePath, sukses
+    UI --> SA : toast sukses
+  end
+end
+@enduml

@@ -1,0 +1,44 @@
+@startuml sequence_leave_report
+title Sequence Diagram — UC-HRMS-29 Melihat Laporan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/leave/report" as UI <<boundary>>
+participant "LeaveReportFilters" as Flt <<boundary>>
+participant "auth()" as Sess <<control>>
+participant "getLeaveRequests /\nagregasi service" as Get <<control>>
+participant "KPI Cards +\nTrend Chart\n(Recharts)" as Chart <<boundary>>
+database "LeaveRequest" as E1 <<entity>>
+database "LeaveType /\nEmployee" as E2 <<entity>>
+
+HR -> UI : akses /leave/report
+UI -> Sess : auth()
+Sess --> UI : session
+
+alt Tidak otorisasi (bukan HR/Superadmin)
+  UI --> HR : redirect /dashboard
+else Otorisasi sukses
+  UI -> Get : getLeaveRequests({ year })\n+ agregasi per status / per jenis
+  Get -> E1 : findMany where (startDate gte/lte year),\n  include employee, leaveType
+  E1 --> Get : leaveRequests
+  E2 --> Get : metadata join
+  Get -> Get : group by status (PENDING_MANAGER,\n  PENDING_HR, APPROVED, REJECTED,\n  CANCELLED), per leaveType,\n  per bulan
+  Get --> UI : { kpis, trend, byType, byStatus }
+  UI -> Chart : render KPI cards + trend chart
+  Chart --> HR : tampilkan grafik & ringkasan
+
+  HR -> Flt : ubah filter periode
+  Flt -> UI : update searchParams URL
+  UI -> Get : getLeaveRequests(filterBaru)
+  Get --> UI : data hasil filter
+  UI -> Chart : re-render charts
+  Chart --> HR : update tampilan
+end
+@enduml

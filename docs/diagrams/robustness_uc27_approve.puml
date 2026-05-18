@@ -1,0 +1,64 @@
+@startuml robustness_uc27_approve
+title Robustness Diagram — UC-HRMS-27 Menyetujui / Menolak Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Manager /\nHR Admin" as A
+
+boundary "Halaman Kelola\nCuti" as B1
+control "Menampilkan\nDialog Keputusan" as C1
+boundary "Dialog Setujui/\nTolak Cuti" as B2
+control "Validasi\nInput" as C2
+control "Memperbarui\nStatus Cuti" as C3
+control "Memperbarui\nSaldo Cuti" as C4
+entity "LeaveRequest" as E1
+entity "LeaveBalance" as E2
+entity "User" as E3
+control "Mencatat\nAudit Log" as C5
+entity "AuditLog" as E4
+boundary "Notifikasi\nBerhasil" as B3
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> B2
+B2 --> C2
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> E1
+C3 --> E3
+C3 --> C4
+C4 --> E2
+C3 --> C5
+C5 --> E4
+C3 --> B3
+
+@enduml

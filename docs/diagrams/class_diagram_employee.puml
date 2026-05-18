@@ -1,0 +1,156 @@
+@startuml class_diagram_employee
+title Class Diagram — Modul Employee Data Management
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MaritalStatus {
+  TK
+  K
+}
+
+enum Religion {
+  ISLAM
+  KRISTEN
+  KATOLIK
+  HINDU
+  BUDDHA
+  KONGHUCU
+}
+
+enum ContractType {
+  PKWT
+  PKWTT
+}
+
+enum PTKPStatus {
+  TK_0
+  TK_1
+  TK_2
+  TK_3
+  K_0
+  K_1
+  K_2
+  K_3
+}
+
+enum DocumentType {
+  KTP
+  NPWP
+  BPJS_KESEHATAN
+  BPJS_KETENAGAKERJAAN
+  KONTRAK
+  FOTO
+  LAINNYA
+}
+
+class User {
+  + id: String
+  + email: String
+  + role: Role
+  + isActive: Boolean
+}
+
+class Employee {
+  + id: String
+  + nik: String
+  + userId: String
+  + namaLengkap: String
+  + nikKtp: String?
+  + tempatLahir: String?
+  + tanggalLahir: DateTime?
+  + jenisKelamin: Gender?
+  + statusPernikahan: MaritalStatus?
+  + agama: Religion?
+  + alamat: String?
+  + nomorHp: String?
+  + email: String
+  + departmentId: String
+  + positionId: String
+  + officeLocationId: String?
+  + contractType: ContractType
+  + joinDate: DateTime
+  + isActive: Boolean
+  + terminationDate: DateTime?
+  + terminationReason: String?
+  + npwp: String?
+  + ptkpStatus: PTKPStatus?
+  + bpjsKesehatanNo: String?
+  + bpjsKetenagakerjaanNo: String?
+  + isTaxBorneByCompany: Boolean
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createEmployeeAction(data): ServiceResult
+  + updatePersonalInfoAction(id, data): ServiceResult
+  + updateEmploymentAction(id, data): ServiceResult
+  + updateTaxBpjsAction(id, data): ServiceResult
+  + deactivateEmployeeAction(id, data): ServiceResult
+  + getEmployees(params): EmployeeList
+  + getEmployeeById(id): Employee
+}
+
+class EmployeeDocument {
+  + id: String
+  + employeeId: String
+  + documentType: DocumentType
+  + fileName: String
+  + filePath: String
+  + fileSize: Int
+  + mimeType: String
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + uploadDocument(file): EmployeeDocument
+  + downloadDocument(id): Stream
+  + deleteDocument(id): void
+}
+
+class EmergencyContact {
+  + id: String
+  + employeeId: String
+  + name: String
+  + relationship: String
+  + phone: String
+  + address: String?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createEmergencyContactAction(data): ServiceResult
+  + updateEmergencyContactAction(id, data): ServiceResult
+  + deleteEmergencyContactAction(id): ServiceResult
+}
+
+class Department {
+  + id: String
+  + name: String
+}
+
+class Position {
+  + id: String
+  + name: String
+  + departmentId: String
+}
+
+class OfficeLocation {
+  + id: String
+  + name: String
+}
+
+User "1" -- "0..1" Employee : owns >
+Department "1" -- "*" Employee : employs >
+Position "1" -- "*" Employee : assigns >
+OfficeLocation "1" -- "0..*" Employee : based at >
+Employee "1" *-- "*" EmployeeDocument : has >
+Employee "1" *-- "*" EmergencyContact : declares >
+@enduml

@@ -1,0 +1,53 @@
+@startuml sequence_update_candidate_stage
+title Sequence Diagram — UC-HRMS-18 Mengubah Tahap Kandidat
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Kanban Board\n(/recruitment/[id])" as UI <<boundary>>
+participant "dnd-kit\nonDragEnd" as Dnd <<control>>
+participant "updateCandidate\nStageAction" as Act <<control>>
+participant "requireHR\nAdmin()" as Guard <<control>>
+participant "updateCandidate\nStageSchema" as Val <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Candidate" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+HR -> UI : menggeser kartu kandidat antar kolom
+UI -> Dnd : onDragEnd(event)
+Dnd -> UI : optimistic update stage di state
+Dnd -> Act : updateCandidateStageAction(candidateId,\n{ stage })
+Act -> Guard : cek session.role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> Dnd : { success: false, error: "Akses ditolak" }
+  Dnd --> UI : rollback kartu ke kolom semula
+  UI --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : safeParse({ stage })
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> Dnd : { success: false, error }
+    Dnd --> UI : rollback kartu
+    UI --> HR : toast "Tahap tidak valid"
+  else Validasi berhasil
+    Val --> Act : { stage }
+    Act -> E1 : prisma.candidate.update({\nid: candidateId, data: { stage } })
+    E1 --> Act : candidate (updated)
+    Act -> Audit : createAuditLog(UPDATE, "Kandidat")
+    Audit -> E2 : auditLog.create
+    E2 --> Audit : ok
+    Act --> Dnd : revalidatePath\n("/recruitment/[vacancyId]"),\nreturn success
+    Dnd --> UI : commit perubahan
+    UI --> HR : toast sukses + kanban ter-update
+  end
+end
+@enduml

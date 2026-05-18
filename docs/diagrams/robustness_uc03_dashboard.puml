@@ -1,0 +1,57 @@
+@startuml robustness_uc03_dashboard
+title Robustness Diagram — UC-HRMS-03 Melihat Dashboard
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Pengguna" as A
+
+boundary "Halaman\nDashboard" as B1
+control "Dispatcher\nPeran" as C1
+control "Mengambil\nData Dashboard" as C2
+
+entity "User" as E1
+entity "Employee" as E2
+entity "AttendanceRecord" as E3
+entity "LeaveRequest" as E4
+entity "PayrollEntry" as E5
+
+boundary "Menampilkan\nRingkasan" as B2
+
+A --> B1
+B1 --> C1
+C1 --> C2
+C2 --> E1
+C2 --> E2
+C2 --> E3
+C2 --> E4
+C2 --> E5
+C2 --> B2
+
+@enduml

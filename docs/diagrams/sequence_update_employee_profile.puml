@@ -1,0 +1,62 @@
+@startuml sequence_update_employee_profile
+title Sequence Diagram — UC-HRMS-12 Mengubah Profil Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/employees/[id]" as UI <<boundary>>
+participant "PersonalInfoTab /\nEmploymentTab /\nTaxBpjsTab" as Tab <<boundary>>
+participant "updatePersonalInfoAction /\nupdateEmploymentAction /\nupdateTaxBpjsAction" as Act <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "updatePersonalInfoSchema /\nupdateEmploymentSchema /\nupdateTaxBpjsSchema" as Val <<control>>
+participant "updatePersonalInfo /\nupdateEmploymentDetails /\nupdateTaxBpjs\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Employee" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+HR -> UI : akses /employees/[id]
+HR -> UI : pilih tab (Personal / Kepegawaian / Pajak & BPJS)
+UI -> Tab : tampilkan form tab
+HR -> Tab : ubah field, klik "Simpan"
+Tab -> Act : action(employeeId, formData)
+Act -> Guard : auth() + cek role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> Tab : { success: false, error: "Akses ditolak" }
+  Tab --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : schema.safeParse(formData)
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> Tab : { success: false, error }
+    Tab --> HR : pesan validasi
+  else Validasi berhasil
+    Val --> Act : data valid
+    Act -> Svc : service(employeeId, data, actorId)
+    Svc -> E1 : employee.findUnique({ id }) - old
+
+    alt Employee tidak ditemukan
+      Svc --> Act : { success: false,\n  error: "Karyawan tidak ditemukan" }
+      Act --> Tab : error
+      Tab --> HR : toast error
+    else Employee ada
+      E1 --> Svc : oldEmployee
+      Svc -> E1 : employee.update({ field tab terkait })
+      E1 --> Svc : updatedEmployee
+      Svc -> Audit : createAuditLog(UPDATE, EMPLOYEE,\n  oldValue, newValue)
+      Audit -> E2 : auditLog.create
+      Svc --> Act : { success: true, data }
+      Act --> Tab : revalidatePath("/employees"),\nsukses
+      Tab --> HR : toast sukses + form refresh
+    end
+  end
+end
+@enduml

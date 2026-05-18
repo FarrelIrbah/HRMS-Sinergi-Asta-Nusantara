@@ -1,0 +1,119 @@
+@startuml class_diagram_auth_admin
+title Class Diagram — Modul Autentikasi, Administrasi Sistem & Audit
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+class User {
+  + id: String
+  + name: String
+  + email: String
+  - hashedPassword: String
+  + role: Role
+  + isActive: Boolean
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + signIn(email, password): Session
+  + signOut(): void
+  + createUserAction(data): ServiceResult
+  + updateUserAction(id, data): ServiceResult
+  + toggleUserActiveAction(id): ServiceResult
+}
+
+class Department {
+  + id: String
+  + name: String
+  + description: String?
+  + deletedAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createDepartmentAction(data): ServiceResult
+  + updateDepartmentAction(id, data): ServiceResult
+  + deleteDepartmentAction(id): ServiceResult
+}
+
+class Position {
+  + id: String
+  + name: String
+  + departmentId: String
+  + deletedAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createPositionAction(data): ServiceResult
+  + updatePositionAction(id, data): ServiceResult
+  + deletePositionAction(id): ServiceResult
+}
+
+class OfficeLocation {
+  + id: String
+  + name: String
+  + address: String?
+  + allowedIPs: String[]
+  + latitude: Float?
+  + longitude: Float?
+  + radiusMeters: Int?
+  + workStartTime: String?
+  + workEndTime: String?
+  + deletedAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createOfficeLocationAction(data): ServiceResult
+  + updateOfficeLocationAction(id, data): ServiceResult
+  + deleteOfficeLocationAction(id): ServiceResult
+  + verifyLocation(ip, coords): VerifyResult
+}
+
+class LeaveType {
+  + id: String
+  + name: String
+  + annualQuota: Int
+  + isPaid: Boolean
+  + genderRestriction: String?
+  + deletedAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createLeaveTypeAction(data): ServiceResult
+  + updateLeaveTypeAction(id, data): ServiceResult
+  + deleteLeaveTypeAction(id): ServiceResult
+}
+
+class AuditLog {
+  + id: String
+  + userId: String
+  + action: AuditAction
+  + module: String
+  + targetId: String
+  + oldValue: Json?
+  + newValue: Json?
+  + createdAt: DateTime
+  --
+  + createAuditLog(input): void
+  + listAuditLogs(filter): AuditLog[]
+}
+
+User "1" -- "*" AuditLog : performs >
+Department "1" -- "*" Position : has >
+@enduml

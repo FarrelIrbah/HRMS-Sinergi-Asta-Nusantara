@@ -1,0 +1,62 @@
+@startuml sequence_finalize_payroll
+title Sequence Diagram — UC-HRMS-31 Memfinalisasi Payroll
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/payroll/[periodId]" as UI <<boundary>>
+participant "FinalizeDialog" as Dlg <<boundary>>
+participant "finalizePayroll\nAction" as Act <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "finalizePayroll\nSchema (zod)" as Val <<control>>
+participant "finalizePayroll\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "PayrollRun" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+HR -> UI : tinjau seluruh entries
+HR -> UI : klik "Finalisasi"
+UI -> Dlg : tampilkan konfirmasi
+HR -> Dlg : klik "Konfirmasi Finalisasi"
+Dlg -> Act : finalizePayrollAction({ payrollRunId })
+Act -> Guard : auth() + cek role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> Dlg : { success: false, error: "Akses ditolak" }
+  Dlg --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : finalizePayrollSchema.safeParse(input)
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> Dlg : error
+  else Valid
+    Val --> Act : { payrollRunId }
+    Act -> Svc : finalizePayroll(payrollRunId)
+    Svc -> E1 : payrollRun.findUnique({\n  id, select: { status } })
+
+    alt Run tidak ditemukan
+      Svc --> Act : throw "PayrollRun tidak ditemukan"
+      Act --> Dlg : error
+    else Sudah FINALIZED
+      Svc --> Act : throw "Payroll sudah difinalisasi"
+      Act --> Dlg : error
+    else Status DRAFT
+      Svc -> E1 : payrollRun.update({\n  id, data: { status: FINALIZED } })
+      E1 --> Svc : run
+      Svc --> Act : run
+      Act -> Audit : createAuditLog(UPDATE, "Payroll",\n  oldValue: { status: "DRAFT" },\n  newValue: { status: "FINALIZED" })
+      Audit -> E2 : auditLog.create
+      Act --> Dlg : revalidatePath("/payroll"\n+ "/payroll/[id]"), sukses
+      Dlg --> HR : toast sukses + status FINALIZED\ntampil + tombol Finalisasi disembunyikan
+    end
+  end
+end
+@enduml

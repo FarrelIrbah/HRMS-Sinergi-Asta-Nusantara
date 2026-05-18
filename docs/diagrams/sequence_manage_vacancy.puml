@@ -1,0 +1,77 @@
+@startuml sequence_manage_vacancy
+title Sequence Diagram — UC-HRMS-16 Mengelola Lowongan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/recruitment" as UI <<boundary>>
+participant "VacancyForm\n(/recruitment/new\natau detail edit)" as Form <<boundary>>
+participant "createVacancyAction" as ActC <<control>>
+participant "updateVacancyAction" as ActU <<control>>
+participant "toggleVacancyStatus\nAction" as ActT <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "createVacancySchema /\nupdateVacancySchema" as Val <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Vacancy" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Lowongan
+  HR -> UI : klik "Tambah Lowongan"
+  UI --> HR : navigate /recruitment/new
+  HR -> Form : isi judul, departemen, deskripsi,\npersyaratan, tanggal buka/tutup
+  HR -> Form : klik "Simpan"
+  Form -> ActC : createVacancyAction(data)
+  ActC -> Guard : auth + cek role
+  Guard --> ActC : authResult
+
+  alt Tidak otorisasi
+    ActC --> Form : { success: false, error }
+    Form --> HR : toast error
+  else Otorisasi sukses
+    ActC -> Val : createVacancySchema.safeParse(data)
+
+    alt Validasi gagal
+      Val --> ActC : ZodError
+      ActC --> Form : { success: false, error }
+    else Valid
+      Val --> ActC : data
+      ActC -> E1 : vacancy.create({ ...data, status: OPEN })
+      E1 --> ActC : vacancy
+      ActC -> Audit : createAuditLog(CREATE, "Lowongan")
+      Audit -> E2 : auditLog.create
+      ActC --> Form : revalidatePath("/recruitment"),\nsukses
+      Form --> HR : redirect ke detail + toast sukses
+    end
+  end
+else Ubah Lowongan
+  HR -> UI : buka detail lowongan, klik edit
+  UI -> Form : tampilkan form dengan data lama
+  HR -> Form : ubah field, simpan
+  Form -> ActU : updateVacancyAction(id, data)
+  ActU -> Guard : auth + role
+  ActU -> Val : updateVacancySchema.safeParse
+  ActU -> E1 : vacancy.update({ where: id })
+  ActU -> Audit : createAuditLog(UPDATE, "Lowongan")
+  Audit -> E2 : auditLog.create
+  ActU --> Form : revalidatePath, sukses
+  Form --> HR : toast sukses
+else Toggle status OPEN ⇔ CLOSED
+  HR -> UI : klik tombol "Buka/Tutup"
+  UI -> ActT : toggleVacancyStatusAction(id)
+  ActT -> Guard : auth + role
+  ActT -> E1 : findUniqueOrThrow({ id })
+  E1 --> ActT : vacancy
+  ActT -> ActT : newStatus = (status === OPEN ? CLOSED : OPEN)
+  ActT -> E1 : vacancy.update({ status: newStatus })
+  ActT -> Audit : createAuditLog(UPDATE, "Lowongan",\n  newValue: { status })
+  Audit -> E2 : auditLog.create
+  ActT --> UI : revalidatePath("/recruitment"), sukses
+  UI --> HR : toast sukses + badge status berubah
+end
+@enduml

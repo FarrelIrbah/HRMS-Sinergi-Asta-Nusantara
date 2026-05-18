@@ -1,0 +1,32 @@
+@startuml activity_manual_payroll
+title Activity Diagram Proses Bisnis Manual\nPenggajian
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|HR Admin|
+start
+:Mengumpulkan spreadsheet\nkehadiran bulanan;
+:Mengumpulkan data potongan,\ntunjangan, dan THR;
+:Menghitung BPJS, PPh21, dan\nkomponen gaji secara manual\ndi Excel;
+
+if (Hasil perhitungan sesuai?) then (Tidak)
+  :Memperbaiki rumus dan\nmengulangi perhitungan;
+  stop
+else (Ya)
+  :Mencetak slip gaji satu per satu\nmenggunakan template Word;
+endif
+
+|Manager Keuangan|
+:Memverifikasi total nominal\ndan menandatangani slip;
+
+|HR Admin|
+:Membagikan slip gaji fisik\nkepada karyawan;
+:Mengarsipkan rekap gaji\ndi map fisik;
+stop
+@enduml

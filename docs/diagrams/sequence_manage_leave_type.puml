@@ -1,0 +1,81 @@
+@startuml sequence_manage_leave_type
+title Sequence Diagram — UC-HRMS-08 Mengelola Master Jenis Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Superadmin" as SA
+participant "Tab Jenis Cuti\n(/master-data)" as UI <<boundary>>
+participant "LeaveTypeDialog" as Dlg <<boundary>>
+participant "createLeaveTypeAction" as ActC <<control>>
+participant "updateLeaveTypeAction" as ActU <<control>>
+participant "deleteLeaveTypeAction" as ActD <<control>>
+participant "getAuthenticated\nSuperAdmin" as Guard <<control>>
+participant "leaveTypeSchema\n(zod)" as Val <<control>>
+participant "createLeaveType /\nupdateLeaveType /\ndeleteLeaveType\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "LeaveType" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Jenis Cuti
+  SA -> UI : klik "Tambah Jenis Cuti"
+  UI -> Dlg : buka dialog
+  SA -> Dlg : isi nama, annualQuota,\nisPaid, genderRestriction
+  SA -> Dlg : klik "Simpan"
+  Dlg -> ActC : createLeaveTypeAction(formData)
+  ActC -> Guard : auth + role SUPER_ADMIN
+  Guard --> ActC : actorId
+  ActC -> Val : leaveTypeSchema.parse(formData)
+
+  alt Validasi gagal
+    Val --> ActC : ZodError
+    ActC --> Dlg : error
+  else Valid
+    Val --> ActC : data
+    ActC -> Svc : createLeaveType(data, actorId)
+    Svc -> E1 : leaveType.create({\n  name, annualQuota,\n  isPaid, genderRestriction })
+    E1 --> Svc : leaveType
+    Svc -> Audit : createAuditLog(CREATE, LEAVE_TYPE)
+    Audit -> E2 : auditLog.create
+    Svc --> ActC : leaveType
+    ActC --> Dlg : revalidatePath, sukses
+    Dlg --> SA : toast sukses
+  end
+else Ubah Jenis Cuti
+  SA -> UI : klik ikon edit
+  UI -> Dlg : buka dialog dengan data lama
+  SA -> Dlg : ubah field, simpan
+  Dlg -> ActU : updateLeaveTypeAction(id, formData)
+  ActU -> Guard : auth + role
+  ActU -> Val : leaveTypeSchema.parse
+  ActU -> Svc : updateLeaveType(id, data, actorId)
+  Svc -> E1 : findUniqueOrThrow - old
+  Svc -> E1 : leaveType.update
+  Svc -> Audit : createAuditLog(UPDATE, LEAVE_TYPE,\n  oldValue, newValue)
+  Audit -> E2 : auditLog.create
+  ActU --> Dlg : revalidatePath, sukses
+  Dlg --> SA : toast sukses
+else Hapus Jenis Cuti
+  SA -> UI : klik ikon hapus + konfirmasi
+  UI -> ActD : deleteLeaveTypeAction(id)
+  ActD -> Guard : auth + role
+  ActD -> Svc : deleteLeaveType(id, actorId)
+  Svc -> E1 : findUniqueOrThrow include _count.leaveRequests
+
+  alt Masih terkait permintaan aktif
+    Svc --> ActD : throw "Jenis cuti masih terkait\nN pengajuan aktif"
+    ActD --> UI : pesan error
+  else Tidak terpakai
+    Svc -> E1 : leaveType.update({ deletedAt: now })
+    Svc -> Audit : createAuditLog(DELETE, LEAVE_TYPE)
+    Audit -> E2 : auditLog.create
+    ActD --> UI : revalidatePath, sukses
+    UI --> SA : toast sukses
+  end
+end
+@enduml

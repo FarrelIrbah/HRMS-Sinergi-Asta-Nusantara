@@ -1,0 +1,70 @@
+@startuml robustness_uc30_importpayroll
+title Robustness Diagram — UC-HRMS-30 Mengimpor Data Payroll
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "HR Admin" as A
+
+boundary "Halaman\nPayroll" as B1
+control "Validasi\nPeriode & File" as C1
+control "Parsing\nWorkbook" as C2
+control "Mencocokkan\nNIK" as C3
+entity "Employee" as E1
+control "Menyimpan\nPayroll DRAFT" as C4
+entity "PayrollRun" as E2
+entity "PayrollEntry" as E3
+control "Mencatat\nAudit Log" as C5
+entity "AuditLog" as E4
+boundary "Halaman Detail\nPayroll" as B2
+
+control "Mengunduh\nTemplate Excel" as CTpl
+boundary "Berkas Template\nExcel" as B3
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> BErr : Tidak
+C1 --> C2 : Ya
+C2 --> BErr : error struktur
+C2 --> C3 : Ya
+C3 --> E1
+C3 --> BErr : NIK tidak cocok
+C3 --> C4 : Ya
+C4 --> E2
+C4 --> E3
+C4 --> C5
+C5 --> E4
+C4 --> B2
+
+B1 --> CTpl
+CTpl --> B3
+
+@enduml

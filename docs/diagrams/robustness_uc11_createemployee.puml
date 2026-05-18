@@ -1,0 +1,64 @@
+@startuml robustness_uc11_createemployee
+title Robustness Diagram — UC-HRMS-11 Menambah Data Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "HR Admin" as A
+
+boundary "Halaman\nDaftar Karyawan" as B1
+control "Menampilkan\nForm Tambah" as C1
+boundary "Form Tambah\nKaryawan" as B2
+control "Validasi\nInput" as C2
+control "Generate\nNIK" as C3
+control "Hash\nPassword" as C4
+control "Menyimpan\ndata Karyawan" as C5
+entity "User" as E1
+entity "Employee" as E2
+control "Mencatat\nAudit Log" as C6
+entity "AuditLog" as E3
+boundary "Halaman\nProfil Karyawan" as B3
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> B2
+B2 --> C2
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> C4
+C4 --> E1
+C4 --> C5
+C5 --> E2
+C5 --> C6
+C6 --> E3
+C5 --> B3
+
+@enduml

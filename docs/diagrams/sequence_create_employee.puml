@@ -1,0 +1,74 @@
+@startuml sequence_create_employee
+title Sequence Diagram — UC-HRMS-11 Menambah Data Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/employees/new" as UI <<boundary>>
+participant "createEmployee\nAction" as Act <<control>>
+participant "requireHR\nAdmin()" as Guard <<control>>
+participant "createEmployee\nSchema (zod)" as Val <<control>>
+participant "createEmployee\n(service)" as Svc <<control>>
+participant "bcrypt.hash" as Bcrypt <<control>>
+participant "generateEmployee\nNIK" as NIK <<control>>
+participant "createAuditLog" as Audit <<control>>
+participant "Prisma\n$transaction" as TX <<control>>
+database "User" as E1 <<entity>>
+database "Employee" as E2 <<entity>>
+database "AuditLog" as E3 <<entity>>
+
+HR -> UI : mengisi form (akun, personal,\nkepegawaian, pajak/BPJS)
+HR -> UI : klik "Simpan"
+UI -> Act : createEmployeeAction(formData)
+Act -> Guard : cek session.role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> UI : { success: false, error: "Akses ditolak" }
+  UI --> HR : tampilkan pesan error
+else Otorisasi sukses
+  Act -> Val : safeParse(formData)
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> UI : { success: false, error }
+    UI --> HR : tampilkan pesan validasi
+  else Validasi berhasil
+    Val --> Act : data valid
+    Act -> Svc : createEmployee(data, actorId)
+    Svc -> TX : prisma.$transaction(tx => ...)
+    TX -> E1 : tx.user.findUnique({email})
+
+    alt Email sudah terdaftar
+      E1 --> TX : existingUser
+      TX --> Svc : throw "Email sudah terdaftar"
+      Svc --> Act : { success: false, error }
+      Act --> UI : pesan duplikasi
+    else Email belum dipakai
+      E1 --> TX : null
+      TX -> NIK : generateEmployeeNIK(tx)
+      NIK -> E2 : findFirst nik LIKE "EMP-YYYY-%"
+      NIK --> TX : "EMP-2026-NNNN"
+      TX -> Bcrypt : hash(initialPassword, 12)
+      Bcrypt --> TX : hashedPassword
+      TX -> E1 : tx.user.create({name, email,\nhashedPassword, role: EMPLOYEE})
+      E1 --> TX : user
+      TX -> E2 : tx.employee.create({nik,\nuserId, namaLengkap, ...})
+      E2 --> TX : employee
+      TX --> Svc : employee
+      Svc -> Audit : createAuditLog(CREATE, EMPLOYEE)
+      Audit -> E3 : auditLog.create
+      E3 --> Audit : ok
+      Svc --> Act : { success: true, data: { id } }
+      Act --> UI : revalidatePath("/employees"),\nreturn success
+      UI --> HR : redirect ke /employees/[id]\n+ toast sukses
+    end
+  end
+end
+@enduml

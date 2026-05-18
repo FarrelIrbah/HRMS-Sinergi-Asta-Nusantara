@@ -1,0 +1,40 @@
+@startuml activity_app_employee
+title Activity Diagram Proses Bisnis Aplikasi\nPengelolaan Data Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|HR Admin|
+start
+:Membuka halaman /employees;
+:Klik tombol "Tambah Karyawan";
+
+|Sistem HRMS|
+:Menampilkan form tambah karyawan\n(informasi akun, personal,\nkepegawaian, pajak & BPJS);
+
+|HR Admin|
+:Mengisi data karyawan\ndan password awal;
+:Klik tombol "Simpan";
+
+|Sistem HRMS|
+:Memvalidasi input menggunakan\nZod schema (createEmployeeSchema);
+if (Input valid?) then (Tidak)
+  :Menampilkan pesan kesalahan\npada field terkait;
+  stop
+else (Ya)
+  :Melakukan hash password\nmenggunakan bcrypt;
+  :Membuat entitas User\ndi tabel users;
+  :Membuat entitas Employee\ndi tabel employees;
+  :Mencatat audit log\n(action=CREATE, module=Employee);
+  :Menampilkan notifikasi\n"Karyawan berhasil ditambahkan";
+endif
+
+|HR Admin|
+:Mengarahkan ke halaman\nprofil karyawan;
+stop
+@enduml

@@ -1,0 +1,128 @@
+@startuml use_case_diagram
+title Use Case Diagram — HRMS PT Sinergi Asta Nusantara
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 11
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+
+left to right direction
+
+actor "Superadmin" as SA
+actor "HR Admin" as HR
+actor "Manager" as MG
+actor "Employee" as EM
+
+rectangle "Sistem HRMS PT SAN" {
+
+  package "Umum" {
+    usecase "Login" as UC01
+    usecase "Logout" as UC02
+    usecase "Melihat Dashboard" as UC03
+  }
+
+  package "Administrasi Sistem" {
+    usecase "Mengelola Pengguna Sistem" as UC04
+    usecase "Mengelola Master Departemen" as UC05
+    usecase "Mengelola Master Jabatan" as UC06
+    usecase "Mengelola Master Lokasi Kantor" as UC07
+    usecase "Mengelola Master Jenis Cuti" as UC08
+    usecase "Melihat Log Audit" as UC09
+  }
+
+  package "Employee Data Management" {
+    usecase "Melihat Daftar Karyawan" as UC10
+    usecase "Menambah Data Karyawan" as UC11
+    usecase "Mengubah Profil Karyawan" as UC12
+    usecase "Mengelola Dokumen Karyawan" as UC13
+    usecase "Mengelola Kontak Darurat" as UC14
+    usecase "Menonaktifkan Karyawan" as UC15
+  }
+
+  package "Recruitment Management" {
+    usecase "Mengelola Lowongan" as UC16
+    usecase "Mengelola Kandidat" as UC17
+    usecase "Mengubah Tahap Kandidat" as UC18
+    usecase "Menjadwalkan Interview" as UC19
+    usecase "Mengelola Penawaran Kerja" as UC20
+    usecase "Mengonversi Kandidat\nmenjadi Karyawan" as UC21
+  }
+
+  package "Attendance & Leave" {
+    usecase "Mencatat Kehadiran" as UC22
+    usecase "Melihat Rekap Absensi" as UC23
+    usecase "Koreksi Manual Absensi" as UC24
+    usecase "Mengekspor Rekap Absensi" as UC25
+    usecase "Mengajukan Cuti" as UC26
+    usecase "Menyetujui / Menolak Cuti" as UC27
+    usecase "Membatalkan Cuti" as UC28
+    usecase "Melihat Laporan Cuti" as UC29
+  }
+
+  package "Payroll Management" {
+    usecase "Mengimpor Data Payroll" as UC30
+    usecase "Memfinalisasi Payroll" as UC31
+    usecase "Melihat dan Mengunduh\nSlip Gaji" as UC32
+  }
+}
+
+SA --> UC01
+HR --> UC01
+MG --> UC01
+EM --> UC01
+
+SA --> UC02
+HR --> UC02
+MG --> UC02
+EM --> UC02
+
+SA --> UC03
+HR --> UC03
+MG --> UC03
+EM --> UC03
+
+SA --> UC04
+SA --> UC05
+SA --> UC06
+SA --> UC07
+SA --> UC08
+SA --> UC09
+
+HR --> UC10
+HR --> UC11
+HR --> UC12
+HR --> UC13
+HR --> UC14
+HR --> UC15
+MG --> UC10
+EM --> UC10
+EM --> UC12
+
+HR --> UC16
+HR --> UC17
+HR --> UC18
+HR --> UC19
+HR --> UC20
+HR --> UC21
+
+EM --> UC22
+EM --> UC26
+EM --> UC28
+HR --> UC23
+HR --> UC24
+HR --> UC25
+HR --> UC27
+HR --> UC29
+MG --> UC23
+MG --> UC27
+
+HR --> UC30
+HR --> UC31
+HR --> UC32
+EM --> UC32
+MG --> UC32
+@enduml

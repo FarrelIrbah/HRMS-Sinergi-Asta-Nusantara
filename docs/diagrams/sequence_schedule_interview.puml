@@ -1,0 +1,52 @@
+@startuml sequence_schedule_interview
+title Sequence Diagram — UC-HRMS-19 Menjadwalkan Interview
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/recruitment/candidates/\n[candidateId]" as UI <<boundary>>
+participant "InterviewDialog" as Dlg <<boundary>>
+participant "createInterview\nAction" as Act <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "createInterview\nSchema (zod)" as Val <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Interview" as E1 <<entity>>
+database "Candidate" as E2 <<entity>>
+database "AuditLog" as E3 <<entity>>
+
+HR -> UI : klik "Tambah Interview"
+UI -> Dlg : buka dialog
+HR -> Dlg : isi scheduledAt, interviewerName, notes
+HR -> Dlg : klik "Simpan"
+Dlg -> Act : createInterviewAction(candidateId, data)
+Act -> Guard : auth + cek role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> Dlg : { success: false, error: "Akses ditolak" }
+  Dlg --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : createInterviewSchema.safeParse(data)
+
+  alt Validasi gagal
+    Val --> Act : ZodError
+    Act --> Dlg : error
+  else Validasi berhasil
+    Val --> Act : { scheduledAt, interviewerName?, notes? }
+    Act -> E1 : interview.create({ ...data, candidateId })
+    E1 --> Act : interview
+    Act -> Audit : createAuditLog(CREATE, "Wawancara")
+    Audit -> E3 : auditLog.create
+    Act -> E2 : candidate.findUnique({ id }) → vacancyId
+    E2 --> Act : candidate
+    Act --> Dlg : revalidatePath\n("/recruitment/candidates/[id]"\n+ "/recruitment/[vacancyId]"),\nsukses
+    Dlg --> HR : toast sukses + jadwal muncul
+  end
+end
+@enduml

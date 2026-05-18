@@ -1,0 +1,49 @@
+@startuml robustness_uc29_leavereport
+title Robustness Diagram — UC-HRMS-29 Melihat Laporan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "HR Admin" as A
+
+boundary "Halaman\nLaporan Cuti" as B1
+control "Memproses\nFilter Periode" as C1
+control "Mengagregasi\nData Cuti" as C2
+entity "LeaveRequest" as E1
+entity "LeaveType" as E2
+boundary "KPI &\nTrend Chart" as B2
+
+A --> B1
+B1 --> C1
+C1 --> C2
+C2 --> E1
+C2 --> E2
+C2 --> B2
+
+@enduml

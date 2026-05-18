@@ -1,0 +1,57 @@
+@startuml sequence_convert_candidate
+title Sequence Diagram — UC-HRMS-21 Mengonversi Kandidat menjadi Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "CandidateDetail\n(/recruitment/candidates/[id])" as UI <<boundary>>
+participant "convertCandidateTo\nEmployeeAction" as Act <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "createAuditLog" as Audit <<control>>
+participant "Halaman /employees/new\n(prefill)" as NewPage <<boundary>>
+participant "createEmployeeAction" as ActE <<control>>
+database "Candidate" as E1 <<entity>>
+database "Vacancy /\nDepartment" as E2 <<entity>>
+database "AuditLog" as E3 <<entity>>
+database "User + Employee\n(via TX)" as E4 <<entity>>
+
+HR -> UI : pastikan tahap kandidat = DITERIMA
+HR -> UI : klik "Konversi ke Karyawan"
+UI -> Act : convertCandidateToEmployeeAction(candidateId)
+Act -> Guard : auth + cek role
+Guard --> Act : authResult
+
+alt Tidak otorisasi
+  Act --> UI : { success: false, error: "Akses ditolak" }
+  UI --> HR : toast error
+else Otorisasi sukses
+  Act -> E1 : candidate.findUniqueOrThrow\n  include vacancy.department
+
+  alt Kandidat tidak ditemukan
+    E1 --> Act : throw
+    Act --> UI : { success: false, error }
+  else Stage bukan DITERIMA
+    E1 --> Act : candidate (stage !== DITERIMA)
+    Act --> UI : { success: false,\n  error: "Hanya kandidat status\nDiterima yang dapat dikonversi" }
+    UI --> HR : toast error
+  else Valid
+    E1 --> Act : candidate + vacancy + department
+    E2 --> Act : department info
+    Act -> E1 : candidate.update({ hiredAt: now })
+    Act -> Audit : createAuditLog(UPDATE, "Kandidat",\n  newValue: { hiredAt, converted: true })
+    Audit -> E3 : auditLog.create
+    Act --> UI : { success: true, prefill: {\n  fullName, email, phone,\n  departmentId, cvPath, candidateId } }
+    UI --> HR : redirect /employees/new\n  dengan prefill data
+    HR -> NewPage : tinjau prefill, lengkapi data\nakun (password awal), simpan
+    NewPage -> ActE : createEmployeeAction(formData)\n  (lihat SD-HRMS-11)
+    ActE --> NewPage : { success: true,\n  data: { id } }
+    NewPage --> HR : redirect /employees/[id]\n  + toast sukses
+  end
+end
+@enduml

@@ -1,0 +1,61 @@
+@startuml activity_app_attendance
+title Activity Diagram Proses Bisnis Aplikasi\nAbsensi dan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|Karyawan|
+start
+:Membuka halaman /attendance;
+:Klik tombol "Absen Masuk";
+
+|Sistem HRMS|
+:Mengambil koordinat GPS\ndari browser;
+:Mengambil IP klien dari header;
+:Menjalankan clockInAction;
+:Memverifikasi lokasi melalui\nverifyLocation (allowedIPs +\nradius GPS);
+if (Lokasi valid?) then (Tidak)
+  :Mengembalikan pesan error\n"Lokasi tidak diizinkan";
+  stop
+else (Ya)
+  :Menghitung isLate dan\nlateMinutes melalui\ncalculateAttendanceFlags;
+  :Menyimpan AttendanceRecord\n(unique per employee per date);
+  :Menampilkan notifikasi sukses;
+endif
+
+|Karyawan|
+:Pada akhir jam kerja\nklik "Absen Pulang";
+
+|Sistem HRMS|
+:Menjalankan clockOutAction;
+:Memperbarui clockOut,\nisEarlyOut, overtimeMinutes;
+
+|Karyawan|
+:Membuka /leave;
+:Mengisi form pengajuan cuti\n(jenis cuti, tanggal, alasan);
+
+|Sistem HRMS|
+:Memvalidasi submitLeaveSchema;
+:Menghitung workingDays;
+:Menyimpan LeaveRequest\n(status = PENDING_MANAGER);
+
+|Manager|
+:Membuka /leave/manage;
+:Klik Setujui atau Tolak;
+
+|Sistem HRMS|
+:Memperbarui status menjadi\nPENDING_HR atau REJECTED;
+
+|HR Admin|
+:Memberi keputusan akhir\nsetuju atau tolak;
+
+|Sistem HRMS|
+:Memperbarui LeaveBalance\n(usedDays bertambah);
+:Mencatat audit log;
+stop
+@enduml

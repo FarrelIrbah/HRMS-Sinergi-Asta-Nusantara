@@ -1,0 +1,56 @@
+@startuml sequence_dashboard
+title Sequence Diagram — UC-HRMS-03 Melihat Dashboard
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Pengguna" as U
+participant "Halaman\n/dashboard" as UI <<boundary>>
+participant "auth()" as Sess <<control>>
+participant "getSuperAdmin\nDashboardData" as SA <<control>>
+participant "getHrAdmin\nDashboardData" as HR <<control>>
+participant "getManager\nDashboardData" as MG <<control>>
+participant "getEmployee\nDashboardData" as EM <<control>>
+database "Employee /\nLeaveRequest /\nAttendanceRecord /\nPayrollEntry" as DB <<entity>>
+
+U -> UI : akses /dashboard
+UI -> Sess : auth()
+Sess --> UI : session
+
+alt session tidak valid
+  UI --> U : redirect /login
+else session valid
+  UI -> UI : baca session.user.role
+
+  alt role = SUPER_ADMIN
+    UI -> SA : getSuperAdminDashboardData()
+    SA -> DB : count() & findMany() agregasi sistem
+    DB --> SA : metrik sistem
+    SA --> UI : data
+    UI --> U : render SuperAdminDashboard
+  else role = HR_ADMIN
+    UI -> HR : getHrAdminDashboardData()
+    HR -> DB : count karyawan, cuti pending,\nstatus payroll terbaru, tren
+    DB --> HR : data HR
+    HR --> UI : data
+    UI --> U : render HRAdminDashboard
+  else role = MANAGER
+    UI -> MG : getManagerDashboardData(userId)
+    MG -> DB : data tim & cuti pending divisi
+    DB --> MG : data manager
+    MG --> UI : data
+    UI --> U : render ManagerDashboard
+  else role = EMPLOYEE
+    UI -> EM : getEmployeeDashboardData(userId)
+    EM -> DB : absensi hari ini, saldo cuti,\nslip gaji terakhir
+    DB --> EM : data karyawan
+    EM --> UI : data
+    UI --> U : render EmployeeDashboard
+  end
+end
+@enduml

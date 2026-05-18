@@ -1,0 +1,61 @@
+@startuml sequence_login
+title Sequence Diagram — UC-HRMS-01 Login
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Pengguna" as U
+participant "Halaman\n/login" as UI <<boundary>>
+participant "loginSchema\n(zod)" as Val <<control>>
+participant "signIn\n(credentials)" as SignIn <<control>>
+participant "authorize\ncallback" as Auth <<control>>
+participant "bcrypt.compare" as Bcrypt <<control>>
+participant "JWT/Session\nCallback" as JWT <<control>>
+participant "Prisma Client" as DB <<control>>
+database "User" as E <<entity>>
+
+U -> UI : isi email & password
+U -> UI : klik "Masuk"
+UI -> Val : safeParse({email, password})
+
+alt Validasi gagal
+  Val --> UI : ZodError
+  UI --> U : tampilkan pesan error pada field
+else Validasi berhasil
+  Val --> UI : data valid
+  UI -> SignIn : signIn("credentials", {email, password})
+  SignIn -> Auth : authorize(credentials)
+  Auth -> DB : user.findUnique({email, isActive: true})
+  DB -> E : SELECT * FROM users
+  E --> DB : User row
+  DB --> Auth : User | null
+
+  alt User tidak ditemukan / nonaktif
+    Auth --> SignIn : return null
+    SignIn --> UI : CredentialsSignin error
+    UI --> U : "Email atau password salah"
+  else User ditemukan
+    Auth -> Bcrypt : compare(password, hashedPassword)
+    Bcrypt --> Auth : isPasswordValid
+
+    alt Password salah
+      Auth --> SignIn : return null
+      SignIn --> UI : CredentialsSignin error
+      UI --> U : "Email atau password salah"
+    else Password cocok
+      Auth --> SignIn : {id, name, email, role}
+      SignIn -> JWT : jwt({token, user})
+      JWT --> SignIn : token (with id, role)
+      SignIn -> JWT : session({session, token})
+      JWT --> SignIn : session (maxAge 8 jam)
+      SignIn --> UI : redirect /dashboard
+      UI --> U : tampilkan dashboard sesuai peran
+    end
+  end
+end
+@enduml

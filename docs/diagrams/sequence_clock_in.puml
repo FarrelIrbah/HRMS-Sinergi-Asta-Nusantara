@@ -1,0 +1,68 @@
+@startuml sequence_clock_in
+title Sequence Diagram — UC-HRMS-22 Mencatat Kehadiran (Clock In)
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Karyawan" as EM
+participant "Halaman\n/attendance" as UI <<boundary>>
+participant "Geolocation\nAPI (browser)" as Geo <<control>>
+participant "clockInAction" as Act <<control>>
+participant "auth()" as Sess <<control>>
+participant "headers()" as Hdr <<control>>
+participant "verifyLocation" as Loc <<control>>
+participant "calculateAttendance\nFlags" as Calc <<control>>
+database "Employee" as E1 <<entity>>
+database "OfficeLocation" as E2 <<entity>>
+database "AttendanceRecord" as E3 <<entity>>
+
+EM -> UI : klik "Absen Masuk"
+UI -> Geo : getCurrentPosition()
+Geo --> UI : { latitude, longitude }
+UI -> Act : clockInAction({ latitude, longitude })
+Act -> Sess : auth()
+Sess --> Act : session
+
+alt Tidak ada session
+  Act --> UI : { success: false, error: "Sesi tidak valid" }
+  UI --> EM : toast error
+else Session valid
+  Act -> Hdr : headers()
+  Hdr --> Act : x-forwarded-for / x-real-ip
+  Act -> E1 : employee.findUnique({\n  userId: session.user.id,\n  include: { officeLocation } })
+  E1 --> Act : employee + officeLocation
+
+  alt Employee tidak ditemukan / nonaktif / belum punya lokasi
+    Act --> UI : { success: false, error }
+    UI --> EM : toast error
+  else Data lengkap
+    Act -> Loc : verifyLocation(clientIp, coords,\n             officeLocation)
+    Loc -> E2 : baca allowedIPs, latitude,\n         longitude, radiusMeters
+    Loc --> Act : { allowed, reason? }
+
+    alt Lokasi tidak diizinkan
+      Act --> UI : { success: false,\n            error: "Lokasi tidak diizinkan" }
+      UI --> EM : toast error
+    else Lokasi valid
+      Act -> Calc : calculateAttendanceFlags(\n    nowUtc, null,\n    workStartTime, workEndTime)
+      Calc --> Act : { isLate, lateMinutes }
+      Act -> E3 : attendanceRecord.create({\n  employeeId, officeLocationId,\n  date, clockIn: nowUtc,\n  clockInIp, clockInLat,\n  clockInLon, isLate,\n  lateMinutes })
+
+      alt P2002 unique constraint
+        E3 --> Act : Prisma error (P2002)
+        Act --> UI : { success: false,\n   error: "Sudah absen masuk hari ini" }
+        UI --> EM : toast error
+      else Berhasil disimpan
+        E3 --> Act : record
+        Act --> UI : revalidatePath("/attendance"),\nreturn success
+        UI --> EM : tampilkan status hari ini\n+ toast sukses
+      end
+    end
+  end
+end
+@enduml

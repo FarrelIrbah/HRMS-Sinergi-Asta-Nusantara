@@ -1,0 +1,129 @@
+@startuml class_diagram_attendance_leave
+title Class Diagram — Modul Attendance & Leave Management
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+enum LeaveStatus {
+  PENDING_MANAGER
+  PENDING_HR
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+class Employee {
+  + id: String
+  + nik: String
+  + departmentId: String
+  + officeLocationId: String?
+  + isActive: Boolean
+}
+
+class OfficeLocation {
+  + id: String
+  + allowedIPs: String[]
+  + latitude: Float?
+  + longitude: Float?
+  + radiusMeters: Int?
+  + workStartTime: String?
+  + workEndTime: String?
+}
+
+class User {
+  + id: String
+  + role: Role
+}
+
+class AttendanceRecord {
+  + id: String
+  + employeeId: String
+  + officeLocationId: String
+  + date: Date
+  + clockIn: DateTime?
+  + clockOut: DateTime?
+  + clockInIp: String?
+  + clockOutIp: String?
+  + clockInLat: Float?
+  + clockInLon: Float?
+  + isLate: Boolean
+  + lateMinutes: Int
+  + isEarlyOut: Boolean
+  + earlyOutMinutes: Int
+  + overtimeMinutes: Int
+  + totalMinutes: Int
+  + isManualOverride: Boolean
+  + overrideById: String?
+  + overrideReason: String?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + clockInAction(coords): ActionResult
+  + clockOutAction(coords): ActionResult
+  + manualOverrideAction(input): ActionResult
+  + getMonthlyAttendanceRecap(filter): Recap
+  + calculateAttendanceFlags(in, out, sched): Flags
+}
+
+class LeaveType {
+  + id: String
+  + name: String
+  + annualQuota: Int
+  + isPaid: Boolean
+  + genderRestriction: String?
+  + deletedAt: DateTime?
+}
+
+class LeaveRequest {
+  + id: String
+  + employeeId: String
+  + leaveTypeId: String
+  + startDate: Date
+  + endDate: Date
+  + workingDays: Int
+  + reason: String
+  + status: LeaveStatus
+  + managerApprovedById: String?
+  + managerNotes: String?
+  + managerApprovedAt: DateTime?
+  + hrApprovedById: String?
+  + hrNotes: String?
+  + hrApprovedAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + submitLeaveAction(data): ActionResult
+  + approveLeaveAction(input): ActionResult
+  + rejectLeaveAction(input): ActionResult
+  + cancelLeaveAction(id): ActionResult
+  + countWorkingDays(start, end): Int
+}
+
+class LeaveBalance {
+  + id: String
+  + employeeId: String
+  + leaveTypeId: String
+  + year: Int
+  + allocatedDays: Int
+  + usedDays: Int
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + ensureLeaveBalances(employeeId): void
+  + getLeaveBalances(employeeId, year): LeaveBalance[]
+}
+
+Employee "1" -- "*" AttendanceRecord : records >
+OfficeLocation "1" -- "*" AttendanceRecord : verifies >
+User "1" -- "0..*" AttendanceRecord : overrides >
+Employee "1" -- "*" LeaveRequest : submits >
+LeaveType "1" -- "*" LeaveRequest : classifies >
+User "1" -- "0..*" LeaveRequest : approves (Manager/HR) >
+Employee "1" -- "*" LeaveBalance : holds >
+LeaveType "1" -- "*" LeaveBalance : defines quota >
+@enduml

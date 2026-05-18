@@ -1,0 +1,91 @@
+@startuml sequence_manage_department
+title Sequence Diagram — UC-HRMS-05 Mengelola Master Departemen
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Superadmin" as SA
+participant "Tab Departemen\n(/master-data)" as UI <<boundary>>
+participant "DepartmentDialog" as Dlg <<boundary>>
+participant "createDepartment\nAction" as ActC <<control>>
+participant "updateDepartment\nAction" as ActU <<control>>
+participant "deleteDepartment\nAction" as ActD <<control>>
+participant "getAuthenticated\nSuperAdmin" as Guard <<control>>
+participant "departmentSchema\n(zod)" as Val <<control>>
+participant "createDepartment /\nupdateDepartment /\ndeleteDepartment\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Department" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Departemen
+  SA -> UI : klik "Tambah Departemen"
+  UI -> Dlg : buka dialog
+  SA -> Dlg : isi nama & deskripsi, klik "Simpan"
+  Dlg -> ActC : createDepartmentAction(formData)
+  ActC -> Guard : auth() + cek role SUPER_ADMIN
+  Guard --> ActC : actorId
+
+  alt Tidak otorisasi
+    ActC --> Dlg : { success: false, error }
+    Dlg --> SA : toast error
+  else Otorisasi sukses
+    ActC -> Val : departmentSchema.parse(formData)
+
+    alt Validasi gagal
+      Val --> ActC : ZodError (throw)
+      ActC --> Dlg : { success: false, error }
+    else Valid
+      Val --> ActC : data
+      ActC -> Svc : createDepartment(data, actorId)
+      Svc -> E1 : department.create({ name, description })
+      E1 --> Svc : department
+      Svc -> Audit : createAuditLog(CREATE, DEPARTMENT)
+      Audit -> E2 : auditLog.create
+      Svc --> ActC : department
+      ActC --> Dlg : revalidatePath, sukses
+      Dlg --> SA : toast sukses
+    end
+  end
+else Ubah Departemen
+  SA -> UI : klik ikon edit
+  UI -> Dlg : buka dialog dengan data lama
+  SA -> Dlg : ubah field, simpan
+  Dlg -> ActU : updateDepartmentAction(id, formData)
+  ActU -> Guard : auth() + cek role
+  ActU -> Val : departmentSchema.parse
+  ActU -> Svc : updateDepartment(id, data, actorId)
+  Svc -> E1 : findUniqueOrThrow({ id, deletedAt: null }) - old
+  Svc -> E1 : department.update({ name, description })
+  Svc -> Audit : createAuditLog(UPDATE, DEPARTMENT,\n  oldValue, newValue)
+  Audit -> E2 : auditLog.create
+  Svc --> ActU : department
+  ActU --> Dlg : revalidatePath, sukses
+  Dlg --> SA : toast sukses
+else Hapus Departemen (soft delete)
+  SA -> UI : klik ikon hapus
+  UI --> SA : konfirmasi
+  SA -> UI : konfirmasi hapus
+  UI -> ActD : deleteDepartmentAction(id)
+  ActD -> Guard : auth() + cek role
+  ActD -> Svc : deleteDepartment(id, actorId)
+  Svc -> E1 : findUniqueOrThrow include _count.positions
+
+  alt Masih punya jabatan aktif
+    Svc --> ActD : throw "Departemen memiliki jabatan aktif"
+    ActD --> UI : pesan error
+    UI --> SA : toast error
+  else Tidak ada jabatan aktif
+    Svc -> E1 : department.update({ deletedAt: now })
+    Svc -> Audit : createAuditLog(DELETE, DEPARTMENT)
+    Audit -> E2 : auditLog.create
+    Svc --> ActD : ok
+    ActD --> UI : revalidatePath, sukses
+    UI --> SA : toast sukses
+  end
+end
+@enduml

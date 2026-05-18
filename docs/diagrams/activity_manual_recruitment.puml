@@ -1,0 +1,49 @@
+@startuml activity_manual_recruitment
+title Activity Diagram Proses Bisnis Manual\nManajemen Rekrutmen
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|Manager Departemen|
+start
+:Mengajukan kebutuhan\nperekrutan kepada HR;
+
+|HR Admin|
+:Membuat poster lowongan\nsecara manual;
+:Menyebarkan poster ke\nmedia sosial dan job board;
+:Menerima berkas lamaran\n(email/WhatsApp/fisik);
+:Mencatat data pelamar\nke dalam spreadsheet;
+:Menyaring berkas kandidat;
+
+if (Lolos seleksi berkas?) then (Tidak)
+  :Memberi tahu kandidat\nbahwa tidak lolos;
+  stop
+else (Ya)
+  :Menjadwalkan interview\nmelalui telepon/email;
+endif
+
+|Manager Departemen|
+:Melakukan interview\ndan memberi penilaian;
+
+|HR Admin|
+:Mencatat hasil interview\ndi spreadsheet;
+if (Lolos interview?) then (Tidak)
+  :Menginformasikan penolakan;
+  stop
+else (Ya)
+  :Menyusun surat penawaran\n(offer letter) di Microsoft Word;
+  :Mengirim offer letter\nmelalui email;
+endif
+
+|Kandidat|
+:Menandatangani offer letter;
+
+|HR Admin|
+:Memindahkan data kandidat\nke spreadsheet karyawan;
+stop
+@enduml

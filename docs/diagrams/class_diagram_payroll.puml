@@ -1,0 +1,94 @@
+@startuml class_diagram_payroll
+title Class Diagram — Modul Payroll Management
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+enum PayrollStatus {
+  DRAFT
+  FINALIZED
+}
+
+class Employee {
+  + id: String
+  + nik: String
+  + namaLengkap: String
+}
+
+class PayrollRun {
+  + id: String
+  + month: Int
+  + year: Int
+  + status: PayrollStatus
+  + createdBy: String
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + importPayrollAction(formData): ServiceResult
+  + finalizePayrollAction(input): ServiceResult
+  + getPayrollRuns(): PayrollRun[]
+  + buildPayrollTemplate(): Buffer
+}
+
+class PayrollEntry {
+  + id: String
+  + payrollRunId: String
+  + employeeId: String
+  .. Employee snapshot ..
+  + employeeNik: String
+  + employeeName: String
+  + jobPosition: String
+  + organization: String
+  + gradeLevel: String
+  + ptkpStatus: String
+  + npwp: String?
+  .. Earnings ..
+  + basicSalary: Decimal
+  + tunjanganKomunikasi: Decimal
+  + tunjanganKehadiran: Decimal
+  + tunjanganJabatan: Decimal
+  + tunjanganLainnya: Decimal
+  + taxAllowance: Decimal
+  + thr: Decimal
+  + totalEarnings: Decimal
+  .. Deductions ..
+  + bpjsKesehatanEmployee: Decimal
+  + jhtEmployee: Decimal
+  + jaminanPensiunEmployee: Decimal
+  + pph21: Decimal
+  + potonganKeterlambatan: Decimal
+  + potonganKoperasi: Decimal
+  + potonganLainnya: Decimal
+  + totalDeductions: Decimal
+  .. Take-home pay ..
+  + takeHomePay: Decimal
+  .. Benefits (informational) ..
+  + jkk: Decimal
+  + jkm: Decimal
+  + jhtCompany: Decimal
+  + jaminanPensiunCompany: Decimal
+  + bpjsKesehatanCompany: Decimal
+  + totalBenefits: Decimal
+  .. Attendance summary ..
+  + actualWorkingDay: Int
+  + scheduleWorkingDay: Int
+  + dayoff: Int
+  + nationalHoliday: Int
+  + companyHoliday: Int
+  + specialHoliday: Int
+  + attendanceCodes: String
+  --
+  + parsePayrollWorkbook(buffer): {rows, errors}
+  + matchRowsToEmployees(rows): {matched, errors}
+  + persistImportedPayroll(input): PayrollRun
+  + renderPayslipPDF(entryId): Stream
+}
+
+Employee "1" -- "*" PayrollEntry : compensated by >
+PayrollRun "1" *-- "*" PayrollEntry : aggregates >
+@enduml

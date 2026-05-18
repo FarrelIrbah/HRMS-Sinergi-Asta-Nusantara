@@ -1,0 +1,94 @@
+@startuml sequence_approve_leave
+title Sequence Diagram — UC-HRMS-27 Menyetujui / Menolak Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Manager /\nHR Admin" as U
+participant "Halaman\n/leave/manage" as UI <<boundary>>
+participant "ApproveRejectDialog" as Dlg <<boundary>>
+participant "approveLeaveAction /\nrejectLeaveAction" as Act <<control>>
+participant "auth()" as Sess <<control>>
+participant "approveLeaveSchema /\nrejectLeaveSchema" as Val <<control>>
+participant "approveLeaveRequest /\nrejectLeaveRequest\n(service)" as Svc <<control>>
+participant "Prisma\n$transaction" as TX <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "LeaveRequest" as E1 <<entity>>
+database "Employee" as E2 <<entity>>
+database "LeaveBalance" as E3 <<entity>>
+database "AuditLog" as E4 <<entity>>
+
+U -> UI : akses /leave/manage
+UI --> U : daftar permintaan PENDING_MANAGER /\n PENDING_HR yang relevan
+U -> Dlg : klik "Setujui" / "Tolak" + isi catatan
+Dlg -> Act : action({ leaveRequestId, notes })
+Act -> Sess : auth()
+Sess --> Act : session
+
+alt Tidak otorisasi
+  Act --> Dlg : { success: false, error: "Akses ditolak" }
+  Dlg --> U : toast error
+else Otorisasi sukses
+  Act -> Val : schema.safeParse(input)
+
+  alt Validasi gagal (catatan kosong saat reject)
+    Val --> Act : ZodError
+    Act --> Dlg : { success: false, error }
+  else Valid
+    Val --> Act : { leaveRequestId, notes }
+
+    alt Aksi Setujui
+      Act -> Svc : approveLeaveRequest(\n  id, approverUserId, role, notes)
+      Svc -> TX : prisma.$transaction(tx => ...)
+      TX -> E1 : leaveRequest.findUnique\n  include employee.userId,\n  employee.departmentId
+
+      alt Self-approval (request.employee.userId === approverUserId)
+        TX --> Svc : throw "Tidak dapat menyetujui\npengajuan Anda sendiri"
+      else status = PENDING_MANAGER
+        alt Bukan MANAGER
+          TX --> Svc : throw "Tahap ini hanya\ndapat disetujui Manager"
+        else MANAGER lain divisi
+          TX -> E2 : employee.findUnique\n  ({ userId: approver })\n  → approver.departmentId
+          TX --> Svc : throw "Hanya cuti dari divisi Anda"
+        else MANAGER sama divisi
+          TX -> E1 : update({ status: PENDING_HR,\n  managerApprovedById,\n  managerNotes, managerApprovedAt })
+        end
+      else status = PENDING_HR
+        alt Bukan HR_ADMIN/SUPER_ADMIN
+          TX --> Svc : throw "Hanya Admin HR"
+        else HR_ADMIN/SUPER_ADMIN
+          TX -> E3 : leaveBalance.update({\n  where: { employeeId_leaveTypeId_year },\n  data: { usedDays: { increment:\n    workingDays } } })
+          TX -> E1 : update({ status: APPROVED,\n  hrApprovedById,\n  hrNotes, hrApprovedAt })
+        end
+      else status lain
+        TX --> Svc : throw "Permintaan sudah diproses"
+      end
+      Svc -> Audit : createAuditLog(UPDATE,\n  "Permintaan Cuti",\n  newValue: { approvedBy, notes })
+      Audit -> E4 : auditLog.create
+      Svc --> Act : ok
+      Act --> Dlg : revalidatePath("/leave/manage"\n+ "/leave"), sukses
+      Dlg --> U : toast sukses
+    else Aksi Tolak
+      Act -> Svc : rejectLeaveRequest(\n  id, approverUserId, role, notes)
+      Svc -> E1 : findUnique include employee
+      Svc -> Svc : self-rejection guard
+      alt status = PENDING_MANAGER
+        Svc -> E2 : cek approver.departmentId\nsama dengan request.departmentId
+        Svc -> E1 : update({ status: REJECTED,\n  managerApprovedById,\n  managerNotes, managerApprovedAt })
+      else status = PENDING_HR
+        Svc -> E1 : update({ status: REJECTED,\n  hrApprovedById,\n  hrNotes, hrApprovedAt })
+      end
+      Svc -> Audit : createAuditLog(UPDATE,\n  newValue: { status: REJECTED,\n  rejectedBy, notes })
+      Audit -> E4 : auditLog.create
+      Svc --> Act : ok
+      Act --> Dlg : revalidatePath, sukses
+      Dlg --> U : toast sukses
+    end
+  end
+end
+@enduml

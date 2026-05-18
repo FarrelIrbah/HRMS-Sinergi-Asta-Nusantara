@@ -1,0 +1,99 @@
+@startuml class_diagram_recruitment
+title Class Diagram — Modul Recruitment Management
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam classFontStyle bold
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+enum VacancyStatus {
+  OPEN
+  CLOSED
+}
+
+enum CandidateStage {
+  MELAMAR
+  SELEKSI_BERKAS
+  INTERVIEW
+  PENAWARAN
+  DITERIMA
+  DITOLAK
+}
+
+class Department {
+  + id: String
+  + name: String
+}
+
+class Vacancy {
+  + id: String
+  + title: String
+  + departmentId: String
+  + description: String
+  + requirements: String
+  + status: VacancyStatus
+  + openDate: DateTime
+  + closeDate: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createVacancyAction(data): ActionResult
+  + updateVacancyAction(id, data): ActionResult
+  + toggleVacancyStatusAction(id): ActionResult
+}
+
+class Candidate {
+  + id: String
+  + vacancyId: String
+  + name: String
+  + email: String
+  + phone: String?
+  + stage: CandidateStage
+  + cvPath: String?
+  + notes: String?
+  + offerSalary: Decimal?
+  + offerNotes: String?
+  + hiredAt: DateTime?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createCandidateAction(data): ActionResult
+  + updateCandidateStageAction(id, data): ActionResult
+  + updateOfferAction(id, data): ActionResult
+  + convertCandidateToEmployeeAction(id): ActionResult
+  + renderOfferLetterPDF(id): Stream
+}
+
+class Interview {
+  + id: String
+  + candidateId: String
+  + scheduledAt: DateTime
+  + interviewerName: String?
+  + notes: String?
+  + createdAt: DateTime
+  + updatedAt: DateTime
+  --
+  + createInterviewAction(data): ActionResult
+}
+
+class Employee {
+  + id: String
+  + userId: String
+  + namaLengkap: String
+}
+
+class User {
+  + id: String
+  + email: String
+  + role: Role
+}
+
+Department "1" -- "*" Vacancy : opens >
+Vacancy "1" *-- "*" Candidate : receives >
+Candidate "1" *-- "*" Interview : schedules >
+Candidate "1" ..> "0..1" Employee : convertCandidateTo\nEmployeeAction creates >
+Candidate "1" ..> "0..1" User : also creates User\naccount >
+@enduml

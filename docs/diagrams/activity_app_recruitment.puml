@@ -1,0 +1,58 @@
+@startuml activity_app_recruitment
+title Activity Diagram Proses Bisnis Aplikasi\nManajemen Rekrutmen
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|HR Admin|
+start
+:Membuka /recruitment;
+:Klik "Tambah Lowongan";
+
+|Sistem HRMS|
+:Menampilkan form\nvacancy (title, departemen,\ndeskripsi, persyaratan);
+
+|HR Admin|
+:Mengisi data lowongan;
+:Klik "Simpan";
+
+|Sistem HRMS|
+:Memvalidasi createVacancySchema;
+:Menyimpan Vacancy (status OPEN);
+
+|HR Admin|
+:Membuka detail lowongan\n(Kanban board);
+:Klik "Tambah Kandidat",\nmengunggah file CV;
+
+|Sistem HRMS|
+:Memvalidasi createCandidateSchema;
+:Menyimpan file CV ke storage\nlokal melalui /api/recruitment/cv;
+:Menyimpan Candidate\n(stage = MELAMAR);
+
+|HR Admin|
+:Menggeser kartu kandidat\nantar kolom Kanban;
+
+|Sistem HRMS|
+:Menjalankan updateCandidateStageAction;
+:Memperbarui field stage\npada tabel candidates;
+
+|HR Admin|
+:Menjadwalkan interview\ndan mencatat penawaran;
+
+|Sistem HRMS|
+:Menyimpan Interview\ndan menyimpan offerSalary;
+:Menghasilkan PDF offer letter\nmelalui /api/recruitment/offer-letter;
+
+|HR Admin|
+:Klik "Konversi ke Karyawan";
+
+|Sistem HRMS|
+:Menjalankan\nconvertCandidateToEmployeeAction;
+:Membuat User dan Employee\nberdasarkan data kandidat;
+stop
+@enduml

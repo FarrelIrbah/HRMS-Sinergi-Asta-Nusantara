@@ -1,0 +1,90 @@
+@startuml sequence_manage_documents
+title Sequence Diagram — UC-HRMS-13 Mengelola Dokumen Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin /\nPengguna ber-akses" as U
+participant "Tab Dokumen\n(/employees/[id])" as UI <<boundary>>
+participant "POST /api/employees/\n[id]/documents" as RouteP <<control>>
+participant "GET /api/employees/\n[id]/documents/[docId]" as RouteG <<control>>
+participant "DELETE /api/employees/\n[id]/documents/[docId]" as RouteD <<control>>
+participant "auth()" as Sess <<control>>
+participant "canAccessEmployee\nDocuments" as Acl <<control>>
+participant "fs.writeFile /\nfs.readFile" as FS <<control>>
+participant "createDocumentRecord /\ngetDocumentById /\ndeleteDocument\n(service)" as Svc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "EmployeeDocument" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Unggah Dokumen
+  U -> UI : pilih jenis dokumen + file
+  U -> UI : klik "Unggah"
+  UI -> RouteP : POST formData(file, documentType)
+  RouteP -> Sess : auth()
+  Sess --> RouteP : session
+
+  alt Tidak otorisasi (bukan HR/Superadmin)
+    RouteP --> UI : 401/403
+    UI --> U : toast error
+  else Otorisasi sukses
+    RouteP -> RouteP : validasi MIME (PDF/JPEG/PNG)
+    RouteP -> RouteP : validasi ukuran ≤ 5 MB
+    RouteP -> RouteP : validasi documentType ∈ enum
+
+    alt Validasi gagal
+      RouteP --> UI : 400 + pesan error
+      UI --> U : toast error
+    else Validasi berhasil
+      RouteP -> FS : mkdir uploads/employees/[id]
+      RouteP -> FS : writeFile(filePath, buffer)
+      FS --> RouteP : ok
+      RouteP -> Svc : createDocumentRecord({\n  employeeId, documentType,\n  fileName, filePath, fileSize,\n  mimeType, actorId })
+      Svc -> E1 : employeeDocument.create
+      Svc -> Audit : createAuditLog(CREATE)
+      Audit -> E2 : auditLog.create
+      Svc --> RouteP : document
+      RouteP --> UI : { success: true, data }
+      UI --> U : toast sukses + refresh daftar
+    end
+  end
+else Unduh Dokumen
+  U -> UI : klik tombol unduh
+  UI -> RouteG : GET /api/employees/[id]/documents/[docId]
+  RouteG -> Sess : auth()
+  RouteG -> Acl : canAccessEmployeeDocuments(\n  userId, role, employeeId)
+
+  alt Tidak ber-akses
+    Acl --> RouteG : false
+    RouteG --> UI : 403 Forbidden
+    UI --> U : toast error
+  else Ber-akses
+    Acl --> RouteG : true
+    RouteG -> Svc : getDocumentById(docId)
+    Svc -> E1 : findUnique({ id })
+    E1 --> Svc : document
+    RouteG -> FS : readFile(absolutePath)
+    FS --> RouteG : buffer
+    RouteG --> UI : Response(file, Content-Disposition: attachment)
+    UI --> U : trigger download
+  end
+else Hapus Dokumen
+  U -> UI : klik ikon hapus + konfirmasi
+  UI -> RouteD : DELETE /api/employees/[id]/documents/[docId]
+  RouteD -> Sess : auth() + cek role HR/Superadmin
+  RouteD -> Svc : deleteDocument(docId, actorId)
+  Svc -> E1 : findUnique - filePath
+  Svc -> FS : unlink(filePath)
+  Svc -> E1 : employeeDocument.delete
+  Svc -> Audit : createAuditLog(DELETE)
+  Audit -> E2 : auditLog.create
+  Svc --> RouteD : ok
+  RouteD --> UI : { success: true }
+  UI --> U : toast sukses + refresh daftar
+end
+@enduml

@@ -1,0 +1,68 @@
+@startuml sequence_manual_override
+title Sequence Diagram — UC-HRMS-24 Koreksi Manual Absensi
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/attendance-admin" as UI <<boundary>>
+participant "ManualOverride\nDialog" as Dlg <<boundary>>
+participant "manualOverrideAction" as Act <<control>>
+participant "auth()" as Sess <<control>>
+participant "manualAttendance\nSchema (zod)" as Val <<control>>
+participant "calculateAttendance\nFlags" as Calc <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Employee" as E1 <<entity>>
+database "OfficeLocation" as E2 <<entity>>
+database "AttendanceRecord" as E3 <<entity>>
+database "AuditLog" as E4 <<entity>>
+
+HR -> UI : klik "Koreksi Manual"
+UI -> Dlg : buka dialog
+HR -> Dlg : pilih karyawan, tanggal,\nclockIn (HH:MM), clockOut (HH:MM),\nalasan
+HR -> Dlg : klik "Simpan"
+Dlg -> Act : manualOverrideAction(input)
+Act -> Sess : auth()
+Sess --> Act : session
+
+alt Tidak otorisasi (bukan HR/Superadmin)
+  Act --> Dlg : { success: false, error: "Akses ditolak" }
+  Dlg --> HR : toast error
+else Otorisasi sukses
+  Act -> Val : manualAttendanceSchema.safeParse(input)
+
+  alt Validasi gagal\n(format HH:MM atau alasan kosong)
+    Val --> Act : ZodError
+    Act --> Dlg : { success: false, error }
+    Dlg --> HR : pesan validasi
+  else Validasi berhasil
+    Val --> Act : { employeeId, date, clockIn,\n  clockOut?, overrideReason }
+    Act -> E1 : employee.findUnique({ id })\n  include officeLocation
+
+    alt Employee tidak ditemukan
+      Act --> Dlg : "Karyawan tidak ditemukan"
+    else Employee ditemukan
+      E1 --> Act : employee
+      Act -> Act : konversi WIB → UTC\n  (jam - 7, atur dateOnly UTC)
+      Act -> Calc : calculateAttendanceFlags(\n  clockInUtc, clockOutUtc,\n  scheduleStart, scheduleEnd)
+      Calc --> Act : { isLate, lateMinutes,\n  isEarlyOut, earlyOutMinutes,\n  overtimeMinutes, totalMinutes }
+
+      alt officeLocationId null & ada fallback
+        Act -> E2 : officeLocation.findFirst\n  (ambil id default)
+      end
+
+      Act -> E3 : attendanceRecord.upsert({\n  where: { employeeId_date },\n  create: { clockIn, clockOut?,\n    isManualOverride: true,\n    overrideById, overrideReason,\n    ...flags },\n  update: { idem } })
+      E3 --> Act : record
+      Act -> Audit : createAuditLog(UPDATE, "Absensi",\n  newValue: { date, clockIn,\n    clockOut, overrideReason })
+      Audit -> E4 : auditLog.create
+      Act --> Dlg : revalidatePath("/attendance-admin"),\nsukses
+      Dlg --> HR : toast sukses + tabel refresh
+    end
+  end
+end
+@enduml

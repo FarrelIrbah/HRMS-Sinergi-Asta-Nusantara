@@ -1,0 +1,49 @@
+@startuml activity_manual_attendance
+title Activity Diagram Proses Bisnis Manual\nAbsensi dan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|Karyawan|
+start
+:Datang ke kantor;
+:Menandatangani daftar hadir\nfisik di meja resepsionis;
+
+note right
+  Pengajuan cuti dilakukan
+  pada alur paralel di bawah.
+end note
+
+|HR Admin|
+:Mengumpulkan daftar hadir\npada akhir hari;
+:Memasukkan data kehadiran\nke spreadsheet bulanan;
+:Menghitung keterlambatan,\npulang cepat, dan lembur\nsecara manual;
+
+|Karyawan|
+:Mengisi form cuti fisik\natau mengirim email cuti;
+
+|Manager Departemen|
+:Memeriksa pengajuan cuti;
+if (Disetujui Manager?) then (Tidak)
+  :Memberi tahu karyawan\ndan mengembalikan form;
+  stop
+else (Ya)
+  :Menandatangani form\ndan meneruskan ke HR;
+endif
+
+|HR Admin|
+:Memeriksa saldo cuti\nkaryawan di spreadsheet;
+if (Saldo cuti cukup?) then (Tidak)
+  :Menolak pengajuan;
+  stop
+else (Ya)
+  :Menyetujui dan mencatat\npengurangan saldo cuti;
+  :Mengarsipkan form\ndi map fisik;
+endif
+stop
+@enduml

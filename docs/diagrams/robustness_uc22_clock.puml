@@ -1,0 +1,58 @@
+@startuml robustness_uc22_clock
+title Robustness Diagram — UC-HRMS-22 Mencatat Kehadiran
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Employee" as A
+
+boundary "Halaman\nAbsensi" as B1
+control "Mengambil\nKoordinat GPS" as C1
+control "Verifikasi\nLokasi" as C2
+entity "OfficeLocation" as E1
+control "Menghitung\nFlags Absensi" as C3
+control "Menyimpan\nClock In/Out" as C4
+entity "Employee" as E2
+entity "AttendanceRecord" as E3
+boundary "Notifikasi\nBerhasil" as B2
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> C2
+C2 --> E1
+C2 --> BErr : Tidak
+C2 --> C3 : Ya
+C3 --> C4
+C4 --> E2
+C4 --> E3
+C4 --> B2
+
+@enduml

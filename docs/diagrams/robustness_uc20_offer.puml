@@ -1,0 +1,57 @@
+@startuml robustness_uc20_offer
+title Robustness Diagram — UC-HRMS-20 Mengelola Penawaran Kerja
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "HR Admin" as A
+
+boundary "Halaman Detail\nKandidat" as B1
+control "Validasi\nOffer" as C1
+control "Menyimpan\nPenawaran" as C2
+entity "Candidate" as E1
+boundary "Notifikasi\nBerhasil" as B2
+
+control "Membuat\nOffer Letter" as CPdf
+boundary "Berkas PDF\nOffer Letter" as B3
+
+boundary "Menampilkan\nNotifikasi Gagal" as BErr
+
+A --> B1
+B1 --> C1
+C1 --> BErr : Tidak
+C1 --> C2 : Ya
+C2 --> E1
+C2 --> B2
+
+B1 --> CPdf
+CPdf --> E1
+CPdf --> B3
+
+@enduml

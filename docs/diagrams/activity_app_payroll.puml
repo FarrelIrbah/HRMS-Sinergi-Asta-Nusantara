@@ -1,0 +1,62 @@
+@startuml activity_app_payroll
+title Activity Diagram Proses Bisnis Aplikasi\nPenggajian
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+|HR Admin|
+start
+:Membuka /payroll;
+:Klik "Unduh Template";
+
+|Sistem HRMS|
+:Memanggil /api/payroll/template;
+:Menghasilkan workbook Excel\nmelalui buildPayrollTemplate;
+
+|HR Admin|
+:Mengisi template di Excel\n(NIK, earnings, deductions,\nbenefits, attendance);
+:Memilih bulan dan tahun;
+:Mengunggah file ke\nform Impor Penggajian;
+
+|Sistem HRMS|
+:Menjalankan importPayrollAction;
+:Memvalidasi tipe file\n(xlsx/xls/csv);
+:parsePayrollWorkbook(buffer);
+
+if (Struktur file valid?) then (Tidak)
+  :Menampilkan pesan validasi\nbaris dan kolom yang gagal;
+  stop
+else (Ya)
+  :matchRowsToEmployees\n(mencocokkan NIK);
+  if (Semua NIK cocok?) then (Tidak)
+    :Menampilkan daftar NIK\nyang tidak ditemukan;
+    stop
+  else (Ya)
+    :persistImportedPayroll\n(menyimpan PayrollRun dan\nPayrollEntry, status DRAFT);
+    :Mencatat audit log;
+  endif
+endif
+
+|HR Admin|
+:Membuka /payroll/{periodId};
+:Memeriksa setiap entry;
+:Klik "Finalisasi";
+
+|Sistem HRMS|
+:Menjalankan finalizePayrollAction;
+:Mengubah status menjadi\nFINALIZED;
+
+|Karyawan|
+:Membuka /payslip;
+:Mengunduh slip gaji PDF;
+
+|Sistem HRMS|
+:Memanggil\n/api/payroll/payslip/{entryId};
+:Merender PDF melalui\npayslip-pdf.tsx;
+stop
+@enduml

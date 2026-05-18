@@ -1,0 +1,75 @@
+@startuml sequence_manage_offer
+title Sequence Diagram — UC-HRMS-20 Mengelola Penawaran Kerja
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Halaman\n/recruitment/candidates/\n[candidateId]" as UI <<boundary>>
+participant "OfferForm" as Form <<boundary>>
+participant "updateOfferAction" as Act <<control>>
+participant "GET /api/recruitment/\noffer-letter/[candidateId]" as Route <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "updateOfferSchema\n(zod)" as Val <<control>>
+participant "OfferLetter\nDocument (pdf)" as PDF <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Candidate" as E1 <<entity>>
+database "Vacancy /\nDepartment" as E2 <<entity>>
+database "AuditLog" as E3 <<entity>>
+
+alt Catat Penawaran
+  HR -> UI : pindahkan kandidat ke PENAWARAN
+  HR -> Form : isi offerSalary, offerNotes
+  HR -> Form : klik "Simpan"
+  Form -> Act : updateOfferAction(candidateId, data)
+  Act -> Guard : auth + role
+  Guard --> Act : authResult
+  Act -> Val : updateOfferSchema.safeParse
+
+  alt Validasi gagal\n(offerSalary bukan bilangan positif)
+    Val --> Act : ZodError
+    Act --> Form : { success: false, error }
+    Form --> HR : pesan validasi
+  else Valid
+    Val --> Act : { offerSalary, offerNotes }
+    Act -> E1 : candidate.update({\n  offerSalary, offerNotes })
+    E1 --> Act : candidate
+    Act -> Audit : createAuditLog(UPDATE, "Kandidat")
+    Audit -> E3 : auditLog.create
+    Act --> Form : revalidatePath, sukses
+    Form --> HR : toast sukses
+  end
+else Unduh Offer Letter
+  HR -> UI : klik "Unduh Offer Letter"
+  UI -> Route : GET /api/recruitment/offer-letter/[candidateId]
+  Route -> Route : auth + cek role HR/Superadmin
+
+  alt Tidak otorisasi
+    Route --> UI : 401/403
+    UI --> HR : toast error
+  else Otorisasi sukses
+    Route -> E1 : candidate.findUnique include vacancy.department
+
+    alt Kandidat tidak ditemukan
+      E1 --> Route : null
+      Route --> UI : 404
+    else Bukan tahap DITERIMA
+      E1 --> Route : candidate (stage !== DITERIMA)
+      Route --> UI : 400 "Candidate not in DITERIMA stage"
+    else offerSalary belum diisi
+      Route --> UI : 400 "Offer salary not set"
+    else Data lengkap
+      E1 --> Route : candidate + vacancy + department
+      Route -> PDF : renderToStream(\n  <OfferLetterDocument\n    data={ candidateName,\n      position, department,\n      offerSalary, offerNotes,\n      generatedDate } />)
+      PDF --> Route : pdfBuffer
+      Route --> UI : Response(application/pdf,\n  Content-Disposition: attachment;\n  filename="surat-penawaran-NAMA.pdf")
+      UI --> HR : trigger download PDF
+    end
+  end
+end
+@enduml

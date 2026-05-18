@@ -1,0 +1,56 @@
+@startuml robustness_uc32_payslip
+title Robustness Diagram — UC-HRMS-32 Melihat dan Mengunduh Slip Gaji
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+skinparam boundary {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam control {
+  BackgroundColor #FFE0E0
+  BorderColor #CC0000
+  FontStyle plain
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  FontStyle plain
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+left to right direction
+
+actor "Employee /\nHR Admin /\nManager" as A
+
+boundary "Halaman\nSlip Gaji" as B1
+control "Mengambil\nDaftar Slip" as C1
+entity "PayrollEntry" as E1
+entity "PayrollRun" as E2
+entity "Employee" as E3
+boundary "Tabel\nSlip Gaji" as B2
+
+control "Membuat\nPDF Slip Gaji" as C2
+boundary "Berkas PDF\nSlip Gaji" as B3
+
+A --> B1
+B1 --> C1
+C1 --> E1
+C1 --> E2
+C1 --> E3
+C1 --> B2
+
+B2 --> C2
+C2 --> E1
+C2 --> B3
+
+@enduml

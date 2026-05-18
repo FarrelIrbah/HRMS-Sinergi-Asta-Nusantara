@@ -1,0 +1,71 @@
+@startuml sequence_list_employees
+title Sequence Diagram — UC-HRMS-10 Melihat Daftar Karyawan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin /\nManager /\nEmployee" as U
+participant "Halaman\n/employees" as UI <<boundary>>
+participant "EmployeeFilters" as Flt <<boundary>>
+participant "auth()" as Sess <<control>>
+participant "getEmployeeByUserId" as ByUser <<control>>
+participant "getEmployees" as Get <<control>>
+participant "getEmployeesForManager" as GetM <<control>>
+participant "getEmployeeStatsSummary" as Stats <<control>>
+participant "getAllDepartments /\ngetAllPositions" as MD <<control>>
+database "Employee" as E1 <<entity>>
+database "Department /\nPosition" as E2 <<entity>>
+
+U -> UI : akses /employees
+UI -> Sess : auth()
+Sess --> UI : session
+
+alt session tidak valid
+  UI --> U : redirect /login
+else session valid
+  alt role = EMPLOYEE
+    UI -> ByUser : getEmployeeByUserId(userId)
+    ByUser -> E1 : findUnique({ userId })
+    E1 --> ByUser : employee
+    ByUser --> UI : employee
+    UI --> U : redirect /employees/[id]
+  else role = MANAGER
+    UI -> GetM : getEmployeesForManager(userId, params)
+    GetM -> E1 : findUnique({ userId }) → departmentId
+    GetM -> E1 : findMany where departmentId,\n  include department, position
+    GetM -> E1 : count(where)
+    GetM --> UI : { data, total, page, totalPages }
+    UI -> Stats : getEmployeeStatsSummary()
+    Stats -> E1 : count agregasi (active, pkwt, dst.)
+    Stats --> UI : statistik
+    UI -> MD : getAllDepartments(), getAllPositions()
+    MD -> E2 : findMany
+    MD --> UI : daftar opsi filter
+    UI --> U : tampilkan tabel (scoped per dept)
+  else role = HR_ADMIN / SUPER_ADMIN
+    UI -> Get : getEmployees(params:\n  search, departmentId,\n  positionId, isActive,\n  contractType, page)
+    Get -> E1 : findMany where (search OR,\n  filter), include department, position
+    E1 --> Get : data
+    Get -> E1 : count(where)
+    E1 --> Get : total
+    Get --> UI : { data, total, page, totalPages }
+    UI -> Stats : getEmployeeStatsSummary()
+    Stats -> E1 : count agregasi
+    Stats --> UI : statistik
+    UI -> MD : getAllDepartments(), getAllPositions()
+    MD --> UI : daftar opsi filter
+    UI --> U : tampilkan KPI + filter + tabel\n+ tombol Tambah Karyawan
+  end
+
+  U -> Flt : ubah filter / search / page
+  Flt -> UI : update searchParams URL
+  UI -> Get : getEmployees(paramsBaru)
+  Get --> UI : data hasil filter
+  UI --> U : refresh tabel
+end
+@enduml

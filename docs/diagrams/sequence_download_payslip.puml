@@ -1,0 +1,63 @@
+@startuml sequence_download_payslip
+title Sequence Diagram — UC-HRMS-32 Melihat dan Mengunduh Slip Gaji
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Employee /\nHR Admin /\nManager" as U
+participant "Halaman\n/payslip" as UI <<boundary>>
+participant "GET /api/payroll/\npayslip/[entryId]" as Route <<control>>
+participant "auth()" as Sess <<control>>
+participant "PayslipDocument\n(react-pdf)" as PDF <<control>>
+database "PayrollEntry" as E1 <<entity>>
+database "PayrollRun" as E2 <<entity>>
+database "Employee" as E3 <<entity>>
+
+U -> UI : akses /payslip
+UI -> UI : query daftar slip milik\n  pengguna (atau seluruh entries\n  untuk HR/Manager)
+UI --> U : tabel slip gaji per periode
+U -> UI : klik tombol "Unduh PDF"
+UI -> Route : GET /api/payroll/payslip/[entryId]
+Route -> Sess : auth()
+Sess --> Route : session
+
+alt Session tidak valid
+  Route --> UI : 401 Unauthorized
+  UI --> U : toast error
+else Session valid
+  Route -> E1 : payrollEntry.findUnique({ id })\n  include payrollRun
+  E1 --> Route : entry
+
+  alt Entry tidak ditemukan
+    Route --> UI : 404 Not Found
+  else Bukan HR/Superadmin
+    Route -> E3 : employee.findUnique({ userId })
+    E3 --> Route : employee
+
+    alt employee.id !== entry.employeeId
+      Route --> UI : 403 Forbidden
+      UI --> U : toast "Akses ditolak"
+    else Milik sendiri
+      Route -> Route : lanjut
+    end
+  else HR/Superadmin
+    Route -> Route : lewati cek kepemilikan
+  end
+
+  alt payrollRun.status !== FINALIZED
+    Route --> UI : 400 "Payroll belum difinalisasi"
+    UI --> U : toast error
+  else FINALIZED
+    Route -> Route : build PayslipData (earnings,\n  deductions, benefits, attendance)
+    Route -> PDF : renderToStream(\n  <PayslipDocument data={...} />)
+    PDF --> Route : pdfBuffer
+    Route --> UI : Response(application/pdf,\n  Content-Disposition: attachment;\n  filename="Payslip-YYYY-MM-NIK.pdf")
+    UI --> U : trigger download PDF
+  end
+end
+@enduml

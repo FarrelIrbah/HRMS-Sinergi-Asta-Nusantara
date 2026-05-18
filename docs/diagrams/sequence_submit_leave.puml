@@ -1,0 +1,82 @@
+@startuml sequence_submit_leave
+title Sequence Diagram — UC-HRMS-26 Mengajukan Cuti
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "Karyawan" as EM
+participant "Halaman /leave\n(LeaveRequestForm)" as UI <<boundary>>
+participant "submitLeave\nAction" as Act <<control>>
+participant "auth()" as Sess <<control>>
+participant "submitLeave\nSchema (zod)" as Val <<control>>
+participant "submitLeave\nRequest (service)" as Svc <<control>>
+participant "countWorking\nDays" as Cnt <<control>>
+participant "ensureLeave\nBalances" as Ens <<control>>
+participant "resolveInitial\nStage" as Stg <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "Employee" as E1 <<entity>>
+database "LeaveBalance" as E2 <<entity>>
+database "LeaveRequest" as E3 <<entity>>
+database "AuditLog" as E4 <<entity>>
+
+EM -> UI : pilih jenis cuti, rentang tanggal, alasan
+EM -> UI : klik "Kirim Pengajuan"
+UI -> Act : submitLeaveAction(formData)
+Act -> Sess : auth()
+Sess --> Act : session
+Act -> Val : safeParse(formData)
+
+alt Validasi gagal\n(endDate < startDate, dll)
+  Val --> Act : ZodError
+  Act --> UI : { success: false, error }
+  UI --> EM : tampilkan pesan validasi
+else Validasi berhasil
+  Val --> Act : { leaveTypeId, startDate, endDate, reason }
+  Act -> E1 : employee.findUnique({ userId })
+  E1 --> Act : { id, isActive }
+
+  alt Karyawan nonaktif
+    Act --> UI : { success: false,\n  error: "Akun karyawan tidak aktif" }
+    UI --> EM : toast error
+  else Karyawan aktif
+    Act -> Svc : submitLeaveRequest({ employeeId,\n  leaveTypeId, startDate, endDate, reason })
+    Svc -> Cnt : countWorkingDays(startDate, endDate)
+    Cnt --> Svc : workingDays
+
+    alt workingDays === 0
+      Svc --> Act : throw "Rentang tidak\nmencakup hari kerja"
+    else workingDays > 0
+      Svc -> Ens : ensureLeaveBalances(employeeId)
+      Ens -> E2 : create balance default per LeaveType
+      E2 --> Ens : ok
+      Svc -> E2 : leaveBalance.findUnique({\n  employeeId, leaveTypeId, year })
+      E2 --> Svc : balance
+
+      alt Saldo tidak mencukupi
+        Svc --> Act : throw "Saldo cuti\ntidak mencukupi"
+      else Saldo cukup
+        Svc -> Stg : resolveInitialStage(employeeId)
+        Stg --> Svc : "PENDING_MANAGER"\n(atau PENDING_HR jika tanpa manager)
+        Svc -> E3 : leaveRequest.create({\n  employeeId, leaveTypeId,\n  startDate, endDate,\n  workingDays, reason,\n  status })
+        E3 --> Svc : leaveRequest
+        Svc --> Act : leaveRequest
+        Act -> Audit : createAuditLog(CREATE,\n  "Permintaan Cuti")
+        Audit -> E4 : auditLog.create
+        E4 --> Audit : ok
+        Act --> UI : revalidatePath("/leave"),\nreturn success
+        UI --> EM : tampilkan riwayat\n+ toast sukses
+      end
+    end
+
+    alt Service melempar error
+      Act --> UI : { success: false, error: e.message }
+      UI --> EM : tampilkan pesan error
+    end
+  end
+end
+@enduml

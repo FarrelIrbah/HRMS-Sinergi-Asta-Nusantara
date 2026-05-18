@@ -1,0 +1,85 @@
+@startuml sequence_manage_emergency_contact
+title Sequence Diagram — UC-HRMS-14 Mengelola Kontak Darurat
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin" as HR
+participant "Tab Kontak Darurat\n(/employees/[id])" as UI <<boundary>>
+participant "EmergencyContact\nDialog" as Dlg <<boundary>>
+participant "createEmergency\nContactAction" as ActC <<control>>
+participant "updateEmergency\nContactAction" as ActU <<control>>
+participant "deleteEmergency\nContactAction" as ActD <<control>>
+participant "requireHRAdmin" as Guard <<control>>
+participant "emergencyContact\nSchema (zod)" as Val <<control>>
+participant "createAuditLog" as Audit <<control>>
+database "EmergencyContact" as E1 <<entity>>
+database "AuditLog" as E2 <<entity>>
+
+alt Tambah Kontak
+  HR -> UI : klik "Tambah Kontak"
+  UI -> Dlg : buka dialog
+  HR -> Dlg : isi nama, hubungan, telepon, alamat
+  HR -> Dlg : klik "Simpan"
+  Dlg -> ActC : createEmergencyContactAction(employeeId, data)
+  ActC -> Guard : auth + cek role
+  Guard --> ActC : authResult
+  ActC -> Val : emergencyContactSchema.safeParse
+
+  alt Validasi gagal
+    Val --> ActC : ZodError
+    ActC --> Dlg : error
+  else Validasi berhasil
+    ActC -> E1 : count({ employeeId })
+
+    alt Sudah ≥ 3 kontak
+      E1 --> ActC : count >= 3
+      ActC --> Dlg : "Maksimal 3 kontak darurat per karyawan"
+      Dlg --> HR : toast error
+    else < 3 kontak
+      ActC -> E1 : emergencyContact.create({ employeeId, ...data })
+      E1 --> ActC : contact
+      ActC -> Audit : createAuditLog(CREATE, EMERGENCY_CONTACT)
+      Audit -> E2 : auditLog.create
+      ActC --> Dlg : revalidatePath, sukses
+      Dlg --> HR : toast sukses
+    end
+  end
+else Ubah Kontak
+  HR -> UI : klik ikon edit
+  UI -> Dlg : buka dialog dengan data lama
+  HR -> Dlg : ubah field, simpan
+  Dlg -> ActU : updateEmergencyContactAction(contactId, employeeId, data)
+  ActU -> Guard : auth + role
+  ActU -> Val : safeParse
+  ActU -> E1 : findUnique({ id: contactId })
+
+  alt Tidak cocok / tidak ditemukan
+    E1 --> ActU : null / mismatch
+    ActU --> Dlg : "Kontak darurat tidak ditemukan"
+  else Ditemukan
+    E1 --> ActU : existing
+    ActU -> E1 : emergencyContact.update
+    ActU -> Audit : createAuditLog(UPDATE,\n  oldValue, newValue)
+    Audit -> E2 : auditLog.create
+    ActU --> Dlg : revalidatePath, sukses
+    Dlg --> HR : toast sukses
+  end
+else Hapus Kontak
+  HR -> UI : klik ikon hapus + konfirmasi
+  UI -> ActD : deleteEmergencyContactAction(contactId, employeeId)
+  ActD -> Guard : auth + role
+  ActD -> E1 : findUnique({ id })
+  E1 --> ActD : existing
+  ActD -> E1 : emergencyContact.delete
+  ActD -> Audit : createAuditLog(DELETE)
+  Audit -> E2 : auditLog.create
+  ActD --> UI : revalidatePath, sukses
+  UI --> HR : toast sukses
+end
+@enduml

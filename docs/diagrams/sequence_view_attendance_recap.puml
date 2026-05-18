@@ -1,0 +1,58 @@
+@startuml sequence_view_attendance_recap
+title Sequence Diagram — UC-HRMS-23 Melihat Rekap Absensi
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundcorner 8
+skinparam titleFontSize 14
+skinparam titleFontStyle bold
+
+actor "HR Admin /\nManager" as U
+participant "Halaman\n/attendance-admin" as UI <<boundary>>
+participant "AttendanceFilters" as Flt <<boundary>>
+participant "auth()" as Sess <<control>>
+participant "getEmployeeByUserId" as ByUser <<control>>
+participant "getMonthlyAttendance\nRecap" as Get <<control>>
+database "Employee" as E1 <<entity>>
+database "AttendanceRecord" as E2 <<entity>>
+
+U -> UI : akses /attendance-admin?month=&year=
+UI -> Sess : auth()
+Sess --> UI : session
+
+alt session tidak valid
+  UI --> U : redirect /login
+else session valid
+  alt role bukan HR/Manager/Superadmin
+    UI --> U : redirect /dashboard
+  else role HR_ADMIN / SUPER_ADMIN
+    UI -> Get : getMonthlyAttendanceRecap({\n  month, year, departmentId? })
+    Get -> E2 : findMany where date in range,\n  include employee.department, position
+    E2 --> Get : records
+    Get --> UI : data
+    UI --> U : tabel rekap seluruh karyawan
+  else role MANAGER
+    UI -> ByUser : getEmployeeByUserId(userId)
+    ByUser -> E1 : findUnique({ userId })
+    E1 --> ByUser : managerEmployee.departmentId
+    UI -> Get : getMonthlyAttendanceRecap({\n  month, year,\n  departmentId: managerDeptId })
+    Get -> E2 : findMany where date in range,\n  employee.departmentId = managerDeptId
+    E2 --> Get : records
+    Get --> UI : data ter-scope dept
+    UI --> U : tabel rekap divisi
+  end
+
+  U -> Flt : ubah bulan/tahun/departemen
+  Flt -> UI : update URL ?month=&year=&departmentId=
+  UI -> Get : getMonthlyAttendanceRecap(filterBaru)
+  Get --> UI : data hasil filter
+  UI --> U : refresh tabel
+
+  alt Lihat detail per karyawan
+    U -> UI : klik baris karyawan
+    UI --> U : navigate /attendance-admin/[employeeId]
+  end
+end
+@enduml

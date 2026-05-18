@@ -1,0 +1,35 @@
+# BAB V KESIMPULAN DAN SARAN
+
+## 5.1 Kesimpulan
+
+Berdasarkan hasil perancangan, implementasi, dan pengujian sistem HRMS PT Sinergi Asta Nusantara yang telah dipaparkan pada Bab IV, dapat disimpulkan bahwa rumusan masalah penelitian ini telah berhasil dijawab, yaitu sistem *Human Resource Management System* (HRMS) berbasis web untuk pengelolaan data karyawan, rekrutmen, absensi, dan penggajian pada PT Sinergi Asta Nusantara telah berhasil dirancang dan dibangun dengan menggunakan metode ICONIX Process. Adapun simpulan secara terperinci adalah sebagai berikut.
+
+1. Sistem HRMS PT Sinergi Asta Nusantara berhasil dirancang dan dibangun menggunakan metode ICONIX Process dengan menghasilkan seluruh artefak yang dipersyaratkan pada setiap tahap, yaitu *domain model* yang memetakan 16 entitas inti, diagram *use case* yang merangkum 32 *use case*, *robustness diagram* untuk masing-masing *use case* yang memisahkan komponen *boundary*, *controller*, dan *entity*, *sequence diagram* yang menggambarkan alur interaksi antar komponen, serta *class diagram* dan skema basis data PostgreSQL yang menjadi dasar implementasi *source code*.
+
+2. Sistem yang dibangun berhasil mencakup empat modul utama sesuai cakupan penelitian, yaitu modul pengelolaan data karyawan (mencakup pengelolaan profil, dokumen, kontak darurat, serta penonaktifan karyawan), modul rekrutmen (mencakup pengelolaan lowongan, kandidat, *kanban board* tahap rekrutmen, penjadwalan *interview*, penawaran kerja, dan konversi kandidat menjadi karyawan), modul absensi (mencakup *clock in*/*clock out* dengan verifikasi *IP allowlist* dan koordinat GPS, rekap bulanan, koreksi manual, dan ekspor data), serta modul penggajian (mencakup impor data *payroll* dari Excel, finalisasi periode, dan distribusi slip gaji dalam format PDF), beserta modul penunjang berupa pengelolaan akun pengguna, data *master*, dan *log audit*. Secara keseluruhan, sistem mengimplementasikan 39 kebutuhan fungsional dengan kode SRS-HRMS-F-01 sampai SRS-HRMS-F-39.
+
+3. Sistem mengakomodasi empat aktor dengan hak akses yang berbeda, yaitu Superadmin (akses penuh termasuk pengelolaan akun pengguna, data *master*, dan *log audit*), HR Admin (pengelolaan karyawan, rekrutmen, absensi, cuti, dan penggajian), Manager (pemantauan tim dan persetujuan cuti tahap pertama untuk karyawan di departemennya), dan Employee (pencatatan kehadiran pribadi, pengajuan cuti, serta akses slip gaji pribadi). Pemisahan hak akses tersebut diterapkan secara berlapis melalui *middleware* NextAuth, pengecekan peran di setiap halaman, penyaringan menu pada *sidebar*, serta penjagaan pada lapisan *server action*.
+
+4. Hasil pengujian *black box* terhadap sistem menunjukkan bahwa seluruh skenario uji berjalan sesuai harapan, dengan 39 kelas uji dan 67 butir uji yang seluruhnya dinyatakan diterima sebagaimana terlampir pada Lampiran 4 dan Lampiran 5. Hal ini menunjukkan bahwa fitur-fitur yang diimplementasikan telah berfungsi sesuai dengan kebutuhan fungsional yang dirumuskan pada tahap analisis.
+
+5. Penggunaan teknologi *full-stack* Next.js 14 dengan App Router, bahasa pemrograman TypeScript, basis data PostgreSQL melalui Prisma ORM 6, autentikasi berbasis NextAuth v5, validasi formulir berbasis React Hook Form dan Zod, serta komponen antarmuka shadcn/ui di atas Tailwind CSS terbukti sesuai untuk membangun sistem HRMS dengan kebutuhan otorisasi berlapis, formulir kompleks, *audit trail*, generasi PDF (slip gaji dan *offer letter*), serta impor data Excel.
+
+## 5.2 Saran
+
+Sistem HRMS PT Sinergi Asta Nusantara yang dibangun pada penelitian ini telah memenuhi seluruh kebutuhan fungsional yang ditetapkan, namun terdapat beberapa saran pengembangan untuk penelitian dan pengembangan lanjutan sebagai berikut.
+
+1. Penambahan modul evaluasi kinerja karyawan (*performance appraisal*) untuk melengkapi siklus manajemen sumber daya manusia. Modul ini dapat mencakup penetapan *Key Performance Indicator* (KPI) per jabatan, penilaian periodik oleh Manager, *self-assessment* karyawan, serta integrasi dengan modul penggajian untuk perhitungan bonus atau kenaikan gaji berbasis kinerja.
+
+2. Pengembangan engine perhitungan penggajian otomatis untuk menggantikan mekanisme impor Excel saat ini, mencakup komponen BPJS Kesehatan, BPJS Ketenagakerjaan (JHT, JKK, JKM, Jaminan Pensiun), PPh 21 dengan skema Tarif Efektif Rata-rata (TER), THR, serta integrasi otomatis dengan data absensi untuk perhitungan potongan keterlambatan dan tunjangan kehadiran, sehingga proses penggajian tidak lagi bergantung pada perangkat lunak *spreadsheet* eksternal.
+
+3. Integrasi sistem notifikasi melalui kanal *email* (misalnya menggunakan layanan Resend atau SMTP), serta opsional WhatsApp Business API, untuk peristiwa-peristiwa yang sensitif waktu seperti pengajuan cuti yang menunggu persetujuan, status persetujuan cuti, slip gaji yang telah difinalisasi, dan pengingat *interview* bagi kandidat, sehingga pengguna tidak perlu memantau aplikasi secara terus-menerus untuk mengetahui adanya tindakan yang harus dilakukan.
+
+4. Penambahan fitur *self-service* untuk karyawan agar dapat memperbarui sebagian data pribadinya secara mandiri (alamat, nomor HP, kontak darurat) dengan alur persetujuan oleh HR Admin, serta penambahan alur *forgot password* dan *reset password* berbasis tautan satu kali (*one-time token*) yang dikirim melalui *email*, untuk mengurangi beban administratif HR.
+
+5. Migrasi penyimpanan berkas dokumen karyawan dan CV kandidat dari *filesystem* lokal ke layanan penyimpanan objek berbasis *cloud* (misalnya Amazon S3, Google Cloud Storage, atau Cloudflare R2). Migrasi ini akan meningkatkan keandalan, memudahkan *backup*, serta memungkinkan aplikasi di-*deploy* secara *horizontal scaling* tanpa kendala konsistensi berkas antar *instance*.
+
+6. Penambahan rangkaian pengujian otomatis (*automated testing*) menggunakan *framework* seperti Vitest untuk pengujian unit pada lapisan *service* dan *server action*, serta Playwright untuk pengujian *end-to-end* skenario kritis (alur *login*, *clock in*/*clock out*, pengajuan dan persetujuan cuti, impor dan finalisasi *payroll*). Rangkaian pengujian ini dapat diintegrasikan dengan *pipeline* CI/CD agar regresi pada fitur eksisting dapat dideteksi secara dini setiap kali terdapat perubahan kode.
+
+7. Pengembangan aplikasi *mobile* pendamping (*companion app*) untuk perangkat Android dan iOS, khususnya untuk fitur absensi yang membutuhkan koordinat GPS secara akurat, serta fitur pengajuan dan persetujuan cuti yang sering dilakukan saat pengguna berada di luar kantor. Aplikasi *mobile* dapat dibangun menggunakan *framework* lintas-*platform* seperti React Native untuk berbagi sebagian besar logika dengan aplikasi web yang sudah ada.
+
+8. Bagi penelitian akademis lanjutan, sistem ini dapat menjadi dasar untuk penelitian mengenai penerapan kecerdasan buatan dalam manajemen sumber daya manusia, antara lain *resume parsing* otomatis untuk kandidat, prediksi *attrition* (potensi karyawan resign) berdasarkan pola absensi dan riwayat cuti, atau rekomendasi penempatan karyawan ke lowongan internal berbasis kesesuaian kualifikasi.
